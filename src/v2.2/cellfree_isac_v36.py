@@ -81,17 +81,22 @@ class CellFreeISACv36:
         except:
             return np.zeros((M, Nt, K), dtype=complex)
     
-    def robust_mmse_beam(self, H_est, Pmax):
+    def robust_mmse_beam(self, H_est, Pmax, epsilon=None):
         """
-        优化鲁棒MMSE波束成形
-        - 调整正则化系数到最优
+        鲁棒MMSE波束成形 - 保守版本
+        
+        强正则化应对大信道误差
         """
+        if epsilon is None:
+            epsilon = np.sqrt(self.error_var)
+        
         M, K, Nt = H_est.shape
         Hs = H_est.reshape(M * Nt, K)
-        signal_power = np.trace(Hs @ Hs.T.conj()) / (M * Nt)
         
-        # 优化正则化系数 (之前用10，发现5更好平衡鲁棒性与性能)
-        reg_factor = self.sigma2 + 10 * np.sqrt(self.error_var) * signal_power
+        # 强鲁棒正则化：大幅增加对角加载
+        # 基于最坏情况误差分析
+        signal_power = np.trace(Hs @ Hs.T.conj()) / (M * Nt)
+        reg_factor = self.sigma2 + 10 * epsilon * signal_power  # 10倍保守系数
         
         HH = Hs @ Hs.T.conj() + reg_factor * np.eye(M * Nt)
         
@@ -102,6 +107,7 @@ class CellFreeISACv36:
                 W = W * np.sqrt(Pmax / p)
             W = W.reshape(M, Nt, K)
             
+            # 每AP功率约束
             for m in range(M):
                 p_m = np.sum(np.abs(W[m, :, :])**2)
                 if p_m > self.P_m_max:
@@ -111,28 +117,20 @@ class CellFreeISACv36:
         except:
             return np.zeros((M, Nt, K), dtype=complex)
     
-    def adaptive_robust_beam(self, H_est, Pmax):
+    def conservative_beam(self, H_est, Pmax):
         """
-        自适应鲁棒波束成形
-        - 根据信道条件自适应调整正则化
+        超保守波束：仅使用信道方向，忽略幅度
+        
+        对信道误差极度鲁棒
         """
         M, K, Nt = H_est.shape
-        Hs = H_est.reshape(M * Nt, K)
         
-        # 计算信道条件数 (用于自适应正则化)
-        signal_power = np.trace(Hs @ Hs.T.conj()) / (M * Nt)
-        eigenvalues = np.linalg.eigvalsh(Hs @ Hs.T.conj())
-        condition_number = np.max(eigenvalues) / max(np.min(eigenvalues), 1e-10)
+        # 仅使用相位信息
+        H_phase = np.exp(1j * np.angle(H_est))
+        Hs = H_phase.reshape(M * Nt, K)
         
-        # 自适应正则化系数: 条件数越大，正则化越强
-        # 条件数高 → 病态 → 需要强正则化
-        base_reg = np.sqrt(self.error_var) * signal_power
-        adaptive_coeff = 3 + np.log10(condition_number)  # 3-6范围
-        adaptive_coeff = max(3, min(6, adaptive_coeff))  # 限制范围
-        
-        reg_factor = self.sigma2 + adaptive_coeff * base_reg
-        
-        HH = Hs @ Hs.T.conj() + reg_factor * np.eye(M * Nt)
+        # 强正则化
+        HH = Hs @ Hs.T.conj() + 100 * self.sigma2 * np.eye(M * Nt)
         
         try:
             W = np.linalg.inv(HH) @ Hs
@@ -140,12 +138,6 @@ class CellFreeISACv36:
             if p > 0:
                 W = W * np.sqrt(Pmax / p)
             W = W.reshape(M, Nt, K)
-            
-            for m in range(M):
-                p_m = np.sum(np.abs(W[m, :, :])**2)
-                if p_m > self.P_m_max:
-                    W[m, :, :] *= np.sqrt(self.P_m_max / p_m)
-            
             return W
         except:
             return np.zeros((M, Nt, K), dtype=complex)
@@ -284,7 +276,7 @@ class CellFreeISACv36:
     
     # ==================== Optimization Methods with Closed Loop ====================
     def robust_baseline_optimize(self, H_est, G_est, H_true, G_true):
-        """鲁棒Baseline - 使用优化后的鲁棒MMSE"""
+        """鲁棒Baseline - 使用鲁棒MMSE波束成形"""
         rho = 0.6
         g_power = np.sum(np.abs(G_est)**2, axis=(1, 2))
         sorted_idx = np.argsort(-g_power)
@@ -293,6 +285,7 @@ class CellFreeISACv36:
             a = np.zeros(self.M)
             a[sorted_idx[:n]] = 1
             
+            # 使用鲁棒MMSE
             W = self.robust_mmse_beam(H_est, self.Pmax * rho)
             Z = self.optimize_z(G_est, a, rho)
             
@@ -302,28 +295,6 @@ class CellFreeISACv36:
         
         a = np.ones(self.M)
         W = self.robust_mmse_beam(H_est, self.Pmax * rho)
-        Z = self.optimize_z(G_est, a, rho)
-        return W, Z, a, rho
-    
-    def adaptive_robust_baseline_optimize(self, H_est, G_est, H_true, G_true):
-        """自适应鲁棒Baseline"""
-        rho = 0.6
-        g_power = np.sum(np.abs(G_est)**2, axis=(1, 2))
-        sorted_idx = np.argsort(-g_power)
-        
-        for n in range(2, self.M + 1):
-            a = np.zeros(self.M)
-            a[sorted_idx[:n]] = 1
-            
-            W = self.adaptive_robust_beam(H_est, self.Pmax * rho)
-            Z = self.optimize_z(G_est, a, rho)
-            
-            v = self.compute_violation(H_true, G_true, a, W, Z, margin_db=0)
-            if v < 0.1:
-                return W, Z, a, rho
-        
-        a = np.ones(self.M)
-        W = self.adaptive_robust_beam(H_est, self.Pmax * rho)
         Z = self.optimize_z(G_est, a, rho)
         return W, Z, a, rho
     
@@ -468,8 +439,7 @@ class CellFreeISACv36:
         
         methods = {
             'Baseline (标准MMSE)': 'baseline_est',
-            '鲁棒MMSE (优化)': 'robust',
-            '自适应鲁棒': 'adaptive',
+            '鲁棒MMSE': 'robust',
             '超保守波束': 'conservative',
             'SCA优化W': 'sca',
             '联合优化ρ': 'joint_rho',
@@ -492,8 +462,6 @@ class CellFreeISACv36:
                         W, Z, a, rho = self.baseline_optimize(H_est, G_est, H_true, G_true, use_true_for_design=False)
                     elif method == 'robust':
                         W, Z, a, rho = self.robust_baseline_optimize(H_est, G_est, H_true, G_true)
-                    elif method == 'adaptive':
-                        W, Z, a, rho = self.adaptive_robust_baseline_optimize(H_est, G_est, H_true, G_true)
                     elif method == 'conservative':
                         W, Z, a, rho = self.conservative_baseline_optimize(H_est, G_est, H_true, G_true)
                     elif method == 'sca':
