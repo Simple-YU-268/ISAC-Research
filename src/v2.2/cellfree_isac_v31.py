@@ -168,8 +168,51 @@ class CellFreeISACv31:
         return p_ap
     
     def select_sensing_aps(self, G, N_sens):
+        """
+        选择感知AP：基于信道强度 + 完整感知SNR
+        
+        1. 按信道强度初选候选AP
+        2. 计算每个候选AP的完整感知SNR (详细计算)
+        3. 按SNR排序选最高的N_sens个
+        """
         g_power = np.sum(np.abs(G)**2, axis=(1, 2))
-        selected = np.argsort(-g_power)[:N_sens]
+        n_candidate = min(N_sens * 4, self.M)
+        candidates = np.argsort(-g_power)[:n_candidate]
+        
+        # 计算完整感知SNR
+        snr_per_ap = []
+        p_per = (self.Pmax * 0.4) / n_candidate
+        
+        for m in candidates:
+            # 为这个AP计算感知波束 (详细)
+            Z_m = np.zeros((self.Nt, self.Nt), dtype=complex)
+            for p in range(self.P):
+                g = G[m, p, :]
+                if np.linalg.norm(g) > 0:
+                    w = np.conj(g) / np.linalg.norm(g) * np.sqrt(p_per)
+                    Z_m += np.outer(w, w.conj())
+            
+            # 信号功率: |g^H Z g|²
+            signal_m = 0
+            for p in range(self.P):
+                g = G[m, p, :]
+                gH_Z_g = np.dot(g.conj(), Z_m @ g)
+                signal_m += np.abs(gH_Z_g)
+            
+            # 噪声功率: σ² tr(Z)
+            noise = self.sigma2 * np.real(np.trace(Z_m))
+            
+            if noise > 0:
+                snr = 10*np.log10(signal_m/(noise+1e-10)+1e-10)
+            else:
+                snr = -100
+            snr_per_ap.append(snr)
+        
+        # 按SNR排序选最高的N_sens个
+        snr_array = np.array(snr_per_ap)
+        sorted_idx = np.argsort(-snr_array)[:N_sens]
+        selected = candidates[sorted_idx]
+        
         mask = np.zeros(self.M, dtype=bool)
         mask[selected] = True
         return mask
