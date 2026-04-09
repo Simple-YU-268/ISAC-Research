@@ -1,0 +1,38 @@
+flowchart TB
+    subgraph 输入
+        A["信道估计<br>H_u, H_t"]
+    end
+    
+    subgraph 步骤1_初步检测
+        B[AP能量分析]
+        C[估计目标数P_est]
+    end
+    
+    subgraph 步骤2_自适应AP选择
+        D{n_sens=2}
+        E[计算综合得分]
+        F[选择Top-n AP]
+        D --> E --> F
+    end
+    
+    subgraph 步骤3_联合波束成形
+        G[通信波束<br>MMSE]
+        H[感知波束<br>匹配滤波]
+    end
+    
+    subgraph 验证
+        I{SINR≥10dB<br>SNR≥10dB}
+        J[成功输出]
+        K[n_sens+=2重试]
+    end
+    
+    A --> B
+    B --> C
+    C --> D
+    F --> G
+    F --> H
+    G --> I
+    H --> I
+    I -->|是| J
+    I -->|否| K
+    K --> E
