@@ -24,5 +24,5 @@ P_sens_ratio = 0.4
 error_var = 0.05  # 信道估计误差方差
 
 ## AP选择
-n_ap_default = 7  # 默认选择AP数
+n_ap_default = 2  # 默认选择感知AP数 (2个最佳AP)
 alpha = 0.5        # 通信/感知权重 (0.5=均衡)
