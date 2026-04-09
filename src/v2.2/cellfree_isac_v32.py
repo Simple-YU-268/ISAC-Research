@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 
 class CellFreeISACv32:
     def __init__(self, M=64, K=10, P=4, Nt=4, Pmax=3.2, sigma2=0.001,
-                 sinr_req=10, snr_req=10, crb_req=1, alpha=0.5):
+                 sinr_req=10, snr_req=10, crb_req=1, alpha=0.5, error_var=0.05):
         self.M = M
         self.K = K
         self.P = P
@@ -23,6 +23,7 @@ class CellFreeISACv32:
         self.snr_req = snr_req
         self.crb_req = crb_req
         self.alpha = alpha  # 通信权重 (1-α=感知权重)
+        self.epsilon = np.sqrt(error_var)  # √(ε²)
         
         x = np.linspace(-175, 175, 8)
         y = np.linspace(-175, 175, 8)
@@ -47,20 +48,24 @@ class CellFreeISACv32:
         
         return H, G
     
+    def add_estimation_error(self, H):
+        """信道估计误差"""
+        e = self.epsilon * (np.random.randn(*H.shape) + 1j*np.random.randn(*H.shape))
+        return H + e
+    
     def select_joint_aps(self, H, G, N_joint):
         """
-        联合AP选择
+        联合AP选择 - 使用估计的信道
         
-        metric_m = α × Σ_k |h_mk|² + (1-α) × Σ_p |g_mp|²
+        实际系统中：只能获得带误差的信道估计
+        选择metric基于H和G（不是真实位置）
         """
-        # 通信强度
-        h_power = np.sum(np.abs(H)**2, axis=(1, 2))  # (M,)
-        
-        # 感知强度
-        g_power = np.sum(np.abs(G)**2, axis=(1, 2))  # (M,)
-        
-        # 归一化
+        # 归一化通信强度
+        h_power = np.sum(np.abs(H)**2, axis=(1, 2))
         h_power = h_power / (np.max(h_power) + 1e-10)
+        
+        # 归一化感知强度  
+        g_power = np.sum(np.abs(G)**2, axis=(1, 2))
         g_power = g_power / (np.max(g_power) + 1e-10)
         
         # 联合评分
@@ -166,9 +171,12 @@ class CellFreeISACv32:
                     print(f"  {i}/{n_trials}")
                 
                 H_true, G_true = self.generate_trial()
+                # 添加信道估计误差 (实际系统只能得到估计信道)
+                H_est = self.add_estimation_error(H_true)
+                G_est = self.add_estimation_error(G_true)
                 
-                # 联合选择AP
-                joint_mask = self.select_joint_aps(H_true, G_true, N_joint)
+                # 用估计信道选择AP (实际可行的方式)
+                joint_mask = self.select_joint_aps(H_est, G_est, N_joint)
                 H_sel = H_true[joint_mask]
                 G_sel = G_true[joint_mask]
                 
@@ -211,6 +219,7 @@ if __name__ == "__main__":
         Pmax=3.2, sigma2=0.001,
         sinr_req=10, snr_req=10,
         crb_req=1,
-        alpha=0.5  # 50%通信，50%感知
+        alpha=0.5,
+        error_var=0.05
     )
     isac.run(n_joint_list=[4, 8, 16, 32], n_trials=30)
