@@ -15,9 +15,7 @@ ISAC-Research/
 │   │   └── v2.1/                 # 不完美CSI鲁棒优化 (v50-v83)
 │   └── utils/                    # 工具函数
 ├── docs/                         # 文档
-│   ├── Mathematical_Solution.md  # 数学推导
-│   ├── ISAC_Technical_Report.md  # 技术报告
-│   └── ISAC_Progress_Report.md   # 进展报告
+│   └── COMPLETE_PROBLEM_FORMULATION.md  # 完整问题建模
 ├── config/                       # 配置文件
 │   └── params_industry.py        # 工业级参数
 ├── tests/                        # 单元测试
@@ -31,6 +29,12 @@ ISAC-Research/
 ```bash
 cd src/v2.2
 python cellfree_isac_v22_robust_large.py
+```
+
+### 完整约束 MATLAB 求解
+
+```matlab
+run('isac_complete_solver.m')
 ```
 
 **v2.2 特性:**
@@ -99,9 +103,7 @@ pip install numpy scipy
 
 ## 📝 关键文档
 
-- [Mathematical_Solution.md](docs/Mathematical_Solution.md) - 完整数学推导
-- [ISAC_Technical_Report.md](docs/ISAC_Technical_Report.md) - 技术细节
-- [ISAC_Progress_Report.md](docs/ISAC_Progress_Report.md) - 进展记录
+- [COMPLETE_PROBLEM_FORMULATION.md](docs/COMPLETE_PROBLEM_FORMULATION.md) - 完整问题建模、系统模型和约束条件
 
 ## 🔧 开发
 
