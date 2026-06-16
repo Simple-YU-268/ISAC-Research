@@ -223,27 +223,38 @@ $$\mathbf{Z} = \sum_p \mathbf{z}_p \mathbf{z}_p^H \in \mathbb{C}^{MN_t \times MN
 
 $$\mathbf{R}_X = \sum_{k=1}^K \mathbf{W}_k + \mathbf{Z} \tag{17}$$
 
-### 5.2 SDR 松弛
+### 5.2 SDR 松弛与最终凸 SDP 问题
 
-原问题要求 $\text{rank}(\mathbf{W}_k) = 1$ (因为 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$)。
+原问题要求 $\text{rank}(\mathbf{W}_k) = 1$ (因为 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$)。半定松弛（SDR）丢弃秩一约束，仅要求 $\mathbf{W}_k \succeq \mathbf{0}$。进一步地，通过 S-Procedure 将无限维 worst-case SINR 约束精确转化为有限维线性矩阵不等式（LMI），得到如下可直接输入 CVX/MOSEK 求解的**标准凸半定规划问题**。
 
-**SDR 松弛**: 丢弃秩一约束，仅要求 $\mathbf{W}_k \succeq \mathbf{0}$。
+**核心辅助定义**：
 
-**松弛后问题**:
+$$\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j \tag{15a}$$
 
-$$\min_{\{\mathbf{W}_k\}, \mathbf{Z}} \quad \sum_k \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{P2a}$$
+**最终凸 SDP 问题 (P3)**：
 
-$$\text{s.t.} \quad \text{SINR}_k \geq \gamma_k, \quad \forall k \tag{P2b}$$
+$$\min_{\{\mathbf{W}_k\}, \mathbf{Z}, \{\mu_k\}} \quad \sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{P3a}$$
 
-$$\text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \tag{P2c}$$
+$$\text{s.t.} \quad \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0}, \quad \forall k \in \mathcal{K} \tag{P3b}$$
 
-$$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P2d}$$
+$$\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \in \mathcal{P} \tag{P3c}$$
 
-$$\text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}, \quad \forall m \tag{P2e}$$
+$$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P} \tag{P3d}$$
 
-$$\mathbf{W}_k \succeq \mathbf{0}, \mathbf{Z} \succeq \mathbf{0} \tag{P2f}$$
+$$\text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P3e}$$
 
-其中 $\mathbf{E}_m$ 是 AP $m$ 的选择矩阵。
+$$\mathbf{W}_k \succeq \mathbf{0}, \quad \forall k \in \mathcal{K} \tag{P3f}$$
+
+$$\mathbf{Z} \succeq \mathbf{0} \tag{P3g}$$
+
+$$\mu_k \geq 0, \quad \forall k \in \mathcal{K} \tag{P3h}$$
+
+其中 $\mathbf{E}_m$ 为 AP $m$ 的选择矩阵，$\mu_k \geq 0$ 为 S-Procedure 引入的松弛变量。
+
+> **为什么这就是"问题的解"？**
+> 1. **绝对的凸性**：目标函数为线性迹，(P3b) 为标准 LMI，(P3c)-(P3e) 为线性仿射不等式，(P3f)-(P3h) 为半正定锥约束。没有任何分式、二次型或离散变量。
+> 2. **工具链直接对接**：该数学形态是凸优化领域最标准的范式。直接声明 `variable W(N,N) semidefinite`，调用 CVX 配合 MOSEK 求解器，即可在多项式时间内获得全局最优协方差矩阵。
+> 3. **物理约束全覆盖**：(P3b) 兼顾最坏情况通信鲁棒性，(P3c) 保证感知探测概率，(P3d) 满足跟踪精度，(P3e) 约束分布式 AP 峰值功率。
 
 ### 5.3 紧致性条件
 
@@ -325,7 +336,7 @@ $$\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mathbf{Z} + \nu_p \mathbf{I} 
 | 功率 | 线性迹 | 凸 |
 | 半正定 | $\mathbf{W}_k, \mathbf{Z} \succeq \mathbf{0}$ | 凸 |
 
-**最终问题 (P2) 是标准凸 SDP**。
+**最终问题 (P3) 是标准凸 SDP**，可通过内点法在多项式时间内求解到任意精度。结合 Algorithm 1（高斯随机化秩一恢复），该理论框架可直接转化为 MATLAB/CVX 代码。
 
 ---
 

@@ -309,21 +309,32 @@ To transform the non-convex beamforming problem into a convex optimization probl
 \mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z} \tag{17}
 \end{equation}
 
-\subsection{SDR Relaxation}
+\subsection{SDR Relaxation and Final Convex SDP Problem}
 
-The original problem requires $\rank(\mat{W}_k) = 1$ (since $\mat{W}_k = \vect{w}_k \vect{w}_k^H$). Semidefinite relaxation (SDR) discards the rank-one constraint, requiring only $\mat{W}_k \succeq \mat{0}$.
+The original problem requires $\rank(\mat{W}_k) = 1$ (since $\mat{W}_k = \vect{w}_k \vect{w}_k^H$). Semidefinite relaxation (SDR) discards the rank-one constraint, requiring only $\mat{W}_k \succeq \mat{0}$. Furthermore, through the S-Procedure, the infinite-dimensional worst-case SINR constraint is exactly transformed into a finite-dimensional linear matrix inequality (LMI), yielding the following \textbf{standard convex semidefinite programming problem} that can be directly fed into CVX/MOSEK.
 
-The relaxed problem becomes:
+\textbf{Core Auxiliary Definition}:
+\begin{equation}
+\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j
+\end{equation}
+
+\textbf{Final Convex SDP Problem (P3)}:
 \begin{align}
-\min_{\{\mat{W}_k\}, \mat{Z}} \quad & \sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
-\text{s.t.} \quad & \text{SINR}_k \geq \gamma_k, \quad \forall k \label{eq:sinr_sdp} \\
-& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \label{eq:sinr_sens_sdp} \\
+\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
+\text{s.t.} \quad & \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \label{eq:lmi_comm} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \label{eq:sinr_sens_sdp} \\
 & \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
 & \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
-& \mat{W}_k \succeq \mat{0}, \mat{Z} \succeq \mat{0} \label{eq:psd_sdp}
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \label{eq:psd_w} \\
+& \mat{Z} \succeq \mat{0} \label{eq:psd_z} \\
+& \mu_k \geq 0, \quad \forall k \label{eq:mu_nonneg}
 \end{align}
 
-where $\mat{E}_m$ is the selection matrix for AP $m$.
+where $\mat{E}_m$ is the selection matrix for AP $m$, and $\mu_k \geq 0$ is the S-Procedure slack variable.
+
+\begin{remark}[Why This Is the ``Solution to the Problem'']
+Notice that every line in the above model: the objective function is a linear trace, \eqref{eq:lmi_comm} is a standard LMI, \eqref{eq:sinr_sens_sdp}--\eqref{eq:power_sdp} are linear affine inequalities, and \eqref{eq:psd_w}--\eqref{eq:mu_nonneg} are positive semidefinite cone constraints. There are no fractions, no quadratic forms, and no discrete variables. This mathematical form is the most standard paradigm in convex optimization. One simply declares \texttt{variable W(N,N) semidefinite}, calls CVX with the MOSEK solver, and the engine returns the globally optimal covariance matrix in polynomial time. Meanwhile, \eqref{eq:lmi_comm} covers worst-case communication robustness, \eqref{eq:sinr_sens_sdp} guarantees sensing detection probability, \eqref{eq:pcrb_sdp} satisfies tracking accuracy, and \eqref{eq:power_sdp} constrains distributed AP peak power---full coverage of physical constraints.
+\end{remark}
 
 \subsection{Tightness Conditions}
 
@@ -446,7 +457,7 @@ Positive Semidefinite & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & Convex \\
 \end{table}
 
 \begin{theorem}[Final Problem Convexity]
-Problem (P2) is a standard convex SDP, solvable to arbitrary precision via interior-point methods in polynomial time.
+Problem (P3) is a standard convex SDP, solvable to arbitrary precision via interior-point methods in polynomial time. Combined with Algorithm~\ref{alg:rank1} (Gaussian randomization rank-one recovery), this theoretical framework can be directly translated into MATLAB/CVX code.
 \end{theorem}
 
 %==============================================================================
