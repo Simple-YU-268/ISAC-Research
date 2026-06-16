@@ -60,7 +60,7 @@ $$\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track},p} \tag{10}$$
 
 **Fisher信息矩阵**：
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\} \tag{11}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\} \tag{11}$$
 
 **误差影响**：感知信道误差 $\Delta\mathbf{g}_p$ 影响梯度 $\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p$，进而影响FIM。
 
@@ -143,7 +143,7 @@ $$\text{tr}(\mathbf{E}_m \mathbf{Z}_p) \leq b_{mp} \cdot P_{\max}, \quad \forall
 
 每个目标有独立的Fisher信息矩阵：
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\} \tag{17}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\} \tag{17}$$
 
 其中 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \sum_p \mathbf{Z}_p$。
 
@@ -204,7 +204,7 @@ $$\|\hat{\mathbf{g}}_p\|_2^2 \gg \epsilon_g^2, \quad \forall p \tag{25}$$
 **定理**：若满足以下条件，则可行性区域非空：
 
 1. $M^{\text{all}} N_t \geq K + 1$（冗余自由度）
-2. $P_{\max} \geq \max\left\{ \frac{P_{\text{comm}}^{\min}}{M^{\text{all}}}, \frac{P_{\text{sens}}^{\min}}{M^{\text{all}}} \right\}$
+2. $P_{\max} \geq \max\left\{ \frac{P_{\text{comm}}^{\min}}{M^{\text{all}}}, \frac{P_{\text{sens}}^{\min}}{M^{\text{all}}} \Big\}$
 3. $\epsilon_k \leq 0.3, \epsilon_g \leq 0.3$（误差界适中）
 
 ### 4.4 不可行情形

@@ -77,7 +77,7 @@ $$\text{tr}(\mathbf{E}_m \mathbf{Z}_p) \leq b_{mp} \cdot P_{\max}, \quad \forall
 
 每个目标有独立的Fisher信息矩阵：
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\} \tag{10}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\} \tag{10}$$
 
 其中 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \sum_p \mathbf{Z}_p$。
 

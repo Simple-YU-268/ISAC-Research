@@ -230,7 +230,7 @@ $$\mathbf{R}_X = \sum_{k=1}^K \mathbf{W}_k + \mathbf{Z} \tag{32}$$
 
 Fisher信息矩阵（数据部分）：
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\} \tag{33}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\} \tag{33}$$
 
 **关键观察**：$\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的线性函数。
 
@@ -242,9 +242,9 @@ $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\{ \mathbf{G}_p \ma
 
 展开：
 
-$$\left(\mathbf{J}_p^{\text{data}}\right)_{ab} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \sum_{i,j} (\mathbf{G}_p)_{ai} (\mathbf{R}_X)_{ij} (\mathbf{G}_p^H)_{jb} \right\} \tag{35}$$
+$$\left(\mathbf{J}_p^{\text{data}}\right)_{ab} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \sum_{i,j} (\mathbf{G}_p)_{ai} (\mathbf{R}_X)_{ij} (\mathbf{G}_p^H)_{jb} \Big\} \tag{35}$$
 
-$$= \frac{2}{\sigma_s^2} \text{Re}\left\{ \sum_{i,j} \frac{\partial g_{p,i}^*}{\partial \theta_{p,a}} (\mathbf{R}_X)_{ij} \frac{\partial g_{p,j}}{\partial \theta_{p,b}} \right\} \tag{36}$$
+$$= \frac{2}{\sigma_s^2} \text{Re}\Big\{ \sum_{i,j} \frac{\partial g_{p,i}^*}{\partial \theta_{p,a}} (\mathbf{R}_X)_{ij} \frac{\partial g_{p,j}}{\partial \theta_{p,b}} \Big\} \tag{36}$$
 
 这是关于 $\mathbf{R}_X$ 元素的线性组合。
 
@@ -260,7 +260,7 @@ $$\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p \mathbf{R}_X) \
 
 其中 $\mathbf{F}_p$ 是与信道梯度相关的常数矩阵：
 
-$$\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\} \tag{39}$$
+$$\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\} \tag{39}$$
 
 **约束**：
 

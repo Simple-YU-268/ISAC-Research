@@ -332,7 +332,7 @@ $$\text{tr}\left(\mathbf{J}_p^{\text{data}}\right) \geq \Gamma_{\text{Track}, p}
 
 其中 $\mathbf{J}_p^{\text{data}}$ 是感知数据 Fisher 信息矩阵:
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \right\}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \Big\}$$
 
 **(C4) AP 选择约束**:
 
@@ -493,7 +493,7 @@ $$\text{SINR}_{S,p}^{\text{nom}} \geq \frac{1}{0.546} \approx 1.832 \text{ (2.63
 
 #### 6.5.1 感知数据 Fisher 信息矩阵
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k})\right\}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\Big\{\nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k})\Big\}$$
 
 其中 $\boldsymbol{\theta}_p = [x_p, y_p]^T$ 是目标位置。
 
@@ -952,13 +952,13 @@ $$\text{Success Rate} = \frac{1}{T} \sum_{t=1}^T \text{Success}_t$$
 
 > **Assumption 1 (感知参数估计模型)**：本文考虑的目标状态参数为 $\boldsymbol{\theta}_p = [\theta_p]$（单角度估计）。在此设定下，Fisher 信息矩阵的数据部分为：
 >
-> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\}$$
+> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\}$$
 >
 > 其中 $\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p$ 在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此 $\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的**仿射函数**，其迹约束可精确整理为：
 >
 > $$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}$$
 >
-> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\}$ 为已知常数半正定矩阵。
+> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\}$ 为已知常数半正定矩阵。
 >
 > **定性解释**：由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时 FIM 退化为仅依赖于角度梯度的常数矩阵 $\mathbf{F}_p$，从而保证了约束条件的凸仿射性质。
 

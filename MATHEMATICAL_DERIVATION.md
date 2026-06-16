@@ -173,7 +173,7 @@ $$(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} \cdot \frac{(1
 
 **Fisher 信息矩阵**:
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\} \tag{11}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\} \tag{11}$$
 
 其中 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \mathbf{Z}$ 是发射协方差矩阵。
 
@@ -185,7 +185,7 @@ $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\{ \mathbf{G}_p \ma
 
 展开:
 
-$$\left(\mathbf{J}_p^{\text{data}}\right)_{ab} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \sum_{i,j} (\mathbf{G}_p)_{ai} (\mathbf{R}_X)_{ij} (\mathbf{G}_p^H)_{jb} \right\}$$
+$$\left(\mathbf{J}_p^{\text{data}}\right)_{ab} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \sum_{i,j} (\mathbf{G}_p)_{ai} (\mathbf{R}_X)_{ij} (\mathbf{G}_p^H)_{jb} \Big\}$$
 
 这是关于 $\mathbf{R}_X$ 元素的线性组合。
 
@@ -195,7 +195,7 @@ $$\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p \mathbf{R}_X) \
 
 其中:
 
-$$\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\} \tag{13}$$
+$$\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\} \tag{13}$$
 
 **约束形式**:
 
@@ -529,13 +529,13 @@ $$P_{\text{sens}}^{\min} = \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} 
 
 > **Assumption 1 (感知参数估计模型)**: 本文考虑的目标状态参数为 $\boldsymbol{\theta}_p = [\theta_p]$ (单角度估计)。在此设定下，Fisher 信息矩阵的数据部分为:
 >
-> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\}$$
+> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\}$$
 >
 > 其中 $\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p$ 在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此 $\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的**仿射函数**，其迹约束可精确整理为:
 >
 > $$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}$$
 >
-> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\}$ 为已知常数半正定矩阵。
+> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\}$ 为已知常数半正定矩阵。
 >
 > **定性解释**: 由于本工作聚焦于目标的到达角 (DOA) 估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时 FIM 退化为仅依赖于角度梯度的常数矩阵 $\mathbf{F}_p$，从而保证了约束条件的凸仿射性质。
 
@@ -568,7 +568,7 @@ $$P_{\text{sens}}^{\min} = \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} 
 | (9) | 感知鲁棒性因子 | $\eta_g = ((1-\epsilon_g)/(1+\epsilon_g))^2$ |
 | (10) | 感知鲁棒门限 | $(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} / \eta_g$ |
 | (12) | FIM 迹约束 | $\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p \mathbf{R}_X)$ |
-| (13) | FIM 常数矩阵 | $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\}$ |
+| (13) | FIM 常数矩阵 | $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\}$ |
 | (18) | 通信 S-Procedure LMI | $\begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 + \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0}$ |
 | (19) | 感知 S-Procedure LMI (可选) | $\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mathbf{Z} + \nu_p \mathbf{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mathbf{Z} \hat{\mathbf{g}}_p \\ \frac{1}{\gamma_S^{\text{PoD}}} \hat{\mathbf{g}}_p^H \mathbf{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\mathbf{g}}_p^H \mathbf{Z} \hat{\mathbf{g}}_p - \sigma_s^2 + \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mathbf{0}$ |
 | (20) | ZF 矩阵 | $\mathbf{W}_{\text{ZF}} = \mathbf{H} (\mathbf{H}^H \mathbf{H})^{-1}$ |

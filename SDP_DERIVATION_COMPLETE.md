@@ -165,7 +165,7 @@ $$\mathbf{R}_X[n] = \sum_{k=1}^K \mathbf{W}_k[n] + \mathbf{Z}[n] \tag{19}$$
 
 Fisher信息矩阵（数据部分）：
 
-$$\mathbf{J}_p^{\text{data}}[n] = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H[n] \cdot \mathbf{R}_X[n] \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p[n] \right\} \tag{20}$$
+$$\mathbf{J}_p^{\text{data}}[n] = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H[n] \cdot \mathbf{R}_X[n] \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p[n] \Big\} \tag{20}$$
 
 **关键观察**：$\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的**线性函数**。
 

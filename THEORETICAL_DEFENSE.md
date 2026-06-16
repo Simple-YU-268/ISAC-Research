@@ -25,7 +25,7 @@
 
 但如果联合估计 $(\tau, f_D, \theta)$（距离、多普勒、角度），FIM 的一般形式为：
 
-$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\}$$
 
 其中：
 - $\boldsymbol{\theta}_p = [\tau_p, f_{D,p}, \theta_p]^T$ 是目标 $p$ 的状态向量
@@ -45,13 +45,13 @@ $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\bo
 
 > **Assumption 1 (感知参数估计模型)**：本工作考虑的目标状态参数为 $\boldsymbol{\theta}_p = [\theta_p]$（单角度估计）或 $\boldsymbol{\theta}_p = [\theta_p, \phi_p]$（双角度估计）。在此设定下，Fisher 信息矩阵的数据部分为：
 > 
-> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\}$$
+> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \Big\}$$
 > 
 > 其中 $\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p$ 在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此 $\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的**仿射函数**，其迹约束 $\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track},p}$ 可精确整理为标准的线性形式：
 > 
 > $$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}$$
 > 
-> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\}$ 为与优化变量无关的常数半正定矩阵。
+> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \Big\}$ 为与优化变量无关的常数半正定矩阵。
 > 
 > **定性解释**：由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时 FIM 退化为仅依赖于角度梯度的常数矩阵 $\mathbf{F}_p$，从而保证了约束条件的凸仿射性质。
 
@@ -71,7 +71,7 @@ $$\nabla_\theta \mathbf{g}_p = \alpha_p \cdot j\pi\cos\theta \cdot \text{diag}(0
 
 **FIM 元素**：
 
-$$\left(\mathbf{J}_p^{\text{data}}\right)_{11} = \frac{2}{\sigma_s^2} \text{Re}\left\{ (\nabla_\theta \mathbf{g}_p)^H \mathbf{R}_X (\nabla_\theta \mathbf{g}_p) \right\}$$
+$$\left(\mathbf{J}_p^{\text{data}}\right)_{11} = \frac{2}{\sigma_s^2} \text{Re}\Big\{ (\nabla_\theta \mathbf{g}_p)^H \mathbf{R}_X (\nabla_\theta \mathbf{g}_p) \Big\}$$
 
 $$= \frac{2\pi^2\cos^2\theta \cdot |\alpha_p|^2}{\sigma_s^2} \text{tr}\left(\mathbf{D} \mathbf{a}(\theta) \mathbf{a}(\theta)^H \mathbf{D} \mathbf{R}_X\right)$$
 
