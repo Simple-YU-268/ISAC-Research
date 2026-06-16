@@ -1,0 +1,44 @@
+\contentsline {section}{\numberline {1}Problem Formulation}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Optimization Problem (Standard Form)}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Notation Table}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}System Model and Signal Model}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Communication Signal Model}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Sensing Signal Model}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Imperfect CSI Model}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Communication Constraint Derivation}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}SINR Definition}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Worst-Case SINR Analysis}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Robustness Factor and Threshold}{5}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Sensing Constraint Derivation}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Sensing SINR}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Robust Sensing Constraint}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}PCRB Constraint and Fisher Information Matrix}{6}{subsection.4.3}%
+\contentsline {section}{\numberline {5}SDP Relaxation and Global Variable Reformulation}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}From Beams to Covariances}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}SDR Relaxation and Final Convex SDP Problem}{8}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Tightness Conditions}{8}{subsection.5.3}%
+\contentsline {section}{\numberline {6}S-Procedure Robust Constraint Transformation}{9}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Communication Robust Constraint (Exact Transformation)}{9}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Sensing Robust Constraint (Optional)}{9}{subsection.6.2}%
+\contentsline {section}{\numberline {7}Proof of Sensing Constraint Convexity}{10}{section.7}%
+\contentsline {subsection}{\numberline {7.1}PCRB Constraint Convexity}{10}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Sensing SINR Constraint Convexity}{10}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Power Constraint Convexity}{10}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Summary}{10}{subsection.7.4}%
+\contentsline {section}{\numberline {8}Rank-One Recovery and Fallback Scheme}{11}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Problem Background}{11}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Algorithm 1: Gaussian Randomization Rank-One Recovery}{11}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Power Scaling Mathematical Guarantee}{11}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Closed-Form Solution Derivation}{11}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Assumptions}{11}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}ZF Beamforming}{13}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Sensing Beams}{13}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Algorithm 2: Closed-Form Solver}{13}{subsection.9.4}%
+\contentsline {section}{\numberline {10}Complexity Analysis}{13}{section.10}%
+\contentsline {subsection}{\numberline {10.1}SDP Solving Complexity}{13}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Closed-Form Solution Complexity}{15}{subsection.10.2}%
+\contentsline {section}{\numberline {11}Feasibility Conditions}{15}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Necessary Conditions}{15}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Infeasible Scenarios}{15}{subsection.11.2}%
+\contentsline {section}{\numberline {12}Key Formulas Summary}{16}{section.12}%
+\contentsline {section}{\numberline {13}Conclusion and Future Work}{16}{section.13}%

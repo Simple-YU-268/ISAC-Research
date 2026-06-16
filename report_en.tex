@@ -349,9 +349,7 @@ Constraint & Type & Variables & Physical Meaning \\
 \end{tabular}
 \end{table}
 
-\begin{remark}[Why This Is the ``Solution to the Problem'']
-Notice that every line in the above model: the objective function is a linear trace, \eqref{eq:lmi_comm} is a standard LMI, \eqref{eq:sinr_sens_sdp}--\eqref{eq:power_sdp} are linear affine inequalities, and \eqref{eq:psd_w}--\eqref{eq:mu_nonneg} are positive semidefinite cone constraints. There are no fractions, no quadratic forms, and no discrete variables. This mathematical form is the most standard paradigm in convex optimization. One simply declares \texttt{variable W(N,N) semidefinite}, calls CVX with the MOSEK solver, and the engine returns the globally optimal covariance matrix in polynomial time. Meanwhile, \eqref{eq:lmi_comm} covers worst-case communication robustness, \eqref{eq:sinr_sens_sdp} guarantees sensing detection probability, \eqref{eq:pcrb_sdp} satisfies tracking accuracy, and \eqref{eq:power_sdp} constrains distributed AP peak power---full coverage of physical constraints.
-\end{remark}
+
 
 \subsection{Tightness Conditions}
 
