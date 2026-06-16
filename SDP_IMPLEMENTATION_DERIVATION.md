@@ -133,7 +133,7 @@ $$\text{SINR}_k = \frac{\mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k}{\sum_{j \neq k
 
 ---
 
-## 5. 第四步：通信SINR约束（含估计误差）
+## 5. 第四步：鲁棒通信SINR约束（S-Procedure）
 
 ### 5.1 估计误差模型
 
@@ -147,60 +147,76 @@ $$\|\Delta\mathbf{h}_k\|_2 \leq \epsilon_k \tag{20}$$
 
 其中 $\hat{\mathbf{h}}_k$ 是估计信道，$\Delta\mathbf{h}_k$ 是未知误差，界为 $\epsilon_k$。
 
-### 5.2 名义SINR约束（基于估计信道）
+### 5.2 最坏情况SINR约束
 
-**简化处理**：在SDP中使用估计信道 $\hat{\mathbf{h}}_k$，但约束需考虑误差影响。
+$$\min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_k} \text{SINR}_k \geq \gamma_k \tag{21}$$
 
-**方法**：将误差纳入SINR表达式，通过最坏情况或期望性能保证。
+代入SINR表达式：
 
-### 5.3 最坏情况SINR（保守近似）
+$$\min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_k} \frac{(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)}{\sum_{j \neq k} (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_j (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k) + \sigma_c^2} \geq \gamma_k \tag{22}$$
 
-**最坏情况**（误差与信号反相）：
+### 5.3 转化为二次型不等式
 
-$$|\mathbf{h}_k^H \mathbf{w}_k|^2 \geq |\hat{\mathbf{h}}_k^H \mathbf{w}_k|^2 (1 - \epsilon_k')^2 \tag{21}$$
+等价于：
 
-其中 $\epsilon_k' = \frac{\epsilon_k}{\|\hat{\mathbf{h}}_k\|}$ 是相对误差界。
+$$(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \left( \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j \right) (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k) \geq \sigma_c^2, \quad \forall \|\Delta\mathbf{h}_k\| \leq \epsilon_k \tag{23}$$
 
-**简化约束**（使用估计信道）：
+定义：
 
-$$\text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k \tag{22}$$
+$$\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j \tag{24}$$
 
-其中：
-- $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$
-- $\delta_k$ 是误差补偿项
+则约束变为：
 
-### 5.4 误差补偿项推导
+$$(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{A}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k) \geq \sigma_c^2, \quad \forall \|\Delta\mathbf{h}_k\| \leq \epsilon_k \tag{25}$$
 
-**保守近似**：
+### 5.4 展开二次型
 
-$$\delta_k = \epsilon_k^2 \left(\frac{1}{\gamma_k} \text{tr}(\mathbf{W}_k) + \sum_{j \neq k} \text{tr}(\mathbf{W}_j)\right) \tag{23}$$
+令 $\mathbf{u}_k = \Delta\mathbf{h}_k$，展开：
 
-**解释**：误差功率与发射功率成正比，通过迹项补偿。
+$$\mathbf{u}_k^H \mathbf{A}_k \mathbf{u}_k + 2\text{Re}\{\hat{\mathbf{h}}_k^H \mathbf{A}_k \mathbf{u}_k\} + \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 \geq 0 \tag{26}$$
 
-**更紧的近似**（忽略交叉项）：
+误差界：
 
-$$\delta_k = \epsilon_k^2 \cdot \frac{\sigma_c^2}{\|\hat{\mathbf{h}}_k\|^2} \tag{24}$$
+$$\|\mathbf{u}_k\|^2 \leq \epsilon_k^2 \Leftrightarrow \mathbf{u}_k^H \mathbf{I} \mathbf{u}_k - \epsilon_k^2 \leq 0 \tag{27}$$
 
-### 5.5 最终线性约束形式
+### 5.5 S-引理应用
 
-使用估计信道 $\hat{\mathbf{h}}_k$ 和补偿项：
+**S-引理（标准形式）**：
 
-$$\text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k \tag{25}$$
+设 $f(\mathbf{u}) = \mathbf{u}^H \mathbf{A} \mathbf{u} + 2\text{Re}\{\mathbf{b}^H \mathbf{u}\} + c$ 和 $g(\mathbf{u}) = \mathbf{u}^H \mathbf{D} \mathbf{u} + 2\text{Re}\{\mathbf{e}^H \mathbf{u}\} + f$。
 
-**性质**：
-- 关于 $\mathbf{W}_k$ 线性
-- 含误差补偿 $\delta_k$（可固定或迭代更新）
-- 比S-Procedure简单，但保守
+若存在 $\mathbf{u}_0$ 使得 $g(\mathbf{u}_0) < 0$，则：
 
-### 5.6 与S-Procedure的对比
+$$f(\mathbf{u}) \geq 0, \quad \forall \mathbf{u}: g(\mathbf{u}) \leq 0$$
 
-| 特性 | S-Procedure（精确） | 线性补偿（简化） |
-|------|---------------------|-----------------|
-| 变量 | $\mathbf{W}_k, \mu_k$ | 仅 $\mathbf{W}_k$ |
-| 约束 | LMI | 线性 |
-| 保守性 | 紧的 | 略保守 |
-| 复杂度 | 高 | 低 |
-| 适用 | 高误差场景 | 中低误差场景 |
+等价于：存在 $\mu \geq 0$ 使得：
+
+$$\begin{bmatrix} \mathbf{A} & \mathbf{b} \\ \mathbf{b}^H & c \end{bmatrix} - \mu \begin{bmatrix} \mathbf{D} & \mathbf{e} \\ \mathbf{e}^H & f \end{bmatrix} \succeq \mathbf{0} \tag{28}$$
+
+### 5.6 应用到鲁棒SINR
+
+对于约束(26)和(27)：
+
+- $f(\mathbf{u}_k) = \mathbf{u}_k^H \mathbf{A}_k \mathbf{u}_k + 2\text{Re}\{\hat{\mathbf{h}}_k^H \mathbf{A}_k \mathbf{u}_k\} + \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2$
+- $g(\mathbf{u}_k) = \mathbf{u}_k^H \mathbf{I} \mathbf{u}_k - \epsilon_k^2$
+
+应用S-引理，存在 $\mu_k \geq 0$ 使得：
+
+$$\begin{bmatrix} \mathbf{A}_k & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 \end{bmatrix} - \mu_k \begin{bmatrix} \mathbf{I} & \mathbf{0} \\ \mathbf{0}^H & -\epsilon_k^2 \end{bmatrix} \succeq \mathbf{0} \tag{29}$$
+
+即：
+
+$$\begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 + \mu_k \epsilon_k^2 \end{bmatrix} \succeq \mathbf{0} \tag{30}$$
+
+### 5.7 最终LMI形式
+
+将 $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j$ 代入：
+
+$$\begin{bmatrix} \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j + \mu_k \mathbf{I} & \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) & \hat{\mathbf{h}}_k^H \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) \hat{\mathbf{h}}_k - \sigma_c^2 + \mu_k \epsilon_k^2 \end{bmatrix} \succeq \mathbf{0} \tag{31}$$
+
+**变量**：$\{\mathbf{W}_k\}, \{\mu_k\}$
+
+**约束**：LMI (31) + $\mathbf{W}_k \succeq \mathbf{0}$ + $\mu_k \geq 0$
 
 ---
 
@@ -290,97 +306,99 @@ $$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \ma
 
 ---
 
-## 8. 最终凸SDP问题 (P1) — 含估计误差
+## 8. 最终凸SDP问题 (P1) — 完整鲁棒版本
 
 ### 8.1 完整形式
 
-给定AP选择 $\{b_{mp}\}$（已知参数），优化变量：$\{\mathbf{W}_k\}_{k=1}^K, \mathbf{Z}$。
+给定AP选择 $\{b_{mp}\}$（已知参数），优化变量：$\{\mathbf{W}_k\}_{k=1}^K, \mathbf{Z}, \{\mu_k\}_{k=1}^K$。
 
-$$\text{(P1)} \quad \min_{\{\mathbf{W}_k\}, \mathbf{Z}} \quad \sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{25a}$$
+$$\text{(P1)} \quad \min_{\{\mathbf{W}_k\}, \mathbf{Z}, \{\mu_k\}} \quad \sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{32a}$$
 
-$$\text{s.t.} \quad \text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k, \quad \forall k \tag{25b}$$
+$$\text{s.t.} \quad \begin{bmatrix} \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j + \mu_k \mathbf{I} & \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) & \hat{\mathbf{h}}_k^H \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right) \hat{\mathbf{h}}_k - \sigma_c^2 + \mu_k \epsilon_k^2 \end{bmatrix} \succeq \mathbf{0}, \quad \forall k \tag{32b}$$
 
-$$\text{tr}(\mathbf{F}_p (\sum_k \mathbf{W}_k + \mathbf{Z})) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{25c}$$
+$$\text{tr}(\mathbf{F}_p (\sum_k \mathbf{W}_k + \mathbf{Z})) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{32c}$$
 
-$$\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{25d}$$
+$$\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{32d}$$
 
-$$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) \leq P_{\max}, \quad \forall m \tag{25e}$$
+$$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) \leq P_{\max}, \quad \forall m \tag{32e}$$
 
-$$\mathbf{W}_k \succeq \mathbf{0}, \quad \forall k \tag{25f}$$
+$$\mathbf{W}_k \succeq \mathbf{0}, \quad \forall k \tag{32f}$$
 
-$$\mathbf{Z} \succeq \mathbf{0} \tag{25g}$$
+$$\mathbf{Z} \succeq \mathbf{0} \tag{32g}$$
 
-其中：
-- $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$（估计信道外积）
-- $\delta_k = \epsilon_k^2 \cdot \frac{\sigma_c^2}{\|\hat{\mathbf{h}}_k\|^2}$（误差补偿项）
+$$\mu_k \geq 0, \quad \forall k \tag{32h}$$
 
 ### 8.2 凸性验证
 
 | 组件 | 形式 | 凸性 |
 |------|------|------|
-| 目标函数 (25a) | 线性 | 凸 ✓ |
-| 通信约束 (25b) | 线性 | 凸 ✓ |
-| PCRB约束 (25c) | 线性 | 凸 ✓ |
-| PoD约束 (25d) | 线性 | 凸 ✓ |
-| 功率约束 (25e) | 线性 | 凸 ✓ |
-| 半正定约束 (25f)-(25g) | 凸锥 | 凸 ✓ |
+| 目标函数 (32a) | 线性 | 凸 ✓ |
+| 通信约束 (32b) | LMI | 凸 ✓ |
+| PCRB约束 (32c) | 线性 | 凸 ✓ |
+| PoD约束 (32d) | 线性 | 凸 ✓ |
+| 功率约束 (32e) | 线性 | 凸 ✓ |
+| 半正定约束 (32f)-(32g) | 凸锥 | 凸 ✓ |
+| 非负约束 (32h) | 线性 | 凸 ✓ |
 
-**结论**：(P1) 是标准的**凸SDP问题**（含估计误差补偿，但保持线性约束）。
+**结论**：(P1) 是标准的**凸SDP问题**（完整鲁棒版本，S-Procedure精确处理CSI误差）。
 
-### 8.3 误差补偿项的影响
+### 8.3 问题规模
 
-| 误差界 $\epsilon_k$ | 补偿项 $\delta_k$ | 功率增加 |
-|---------------------|-------------------|----------|
-| 0.05 (5%) | $0.0025 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~1% |
-| 0.10 (10%) | $0.01 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~5% |
-| 0.15 (15%) | $0.0225 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~10% |
-| 0.20 (20%) | $0.04 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~20% |
-
-**注**：补偿项与 $\|\hat{\mathbf{h}}_k\|^{-2}$ 成正比，信道弱的用户需要更多功率余量。
+| 特性 | 数值 |
+|------|------|
+| 变量 | $\mathbf{W}_k \in \mathbb{C}^{64 \times 64}$ (10个), $\mathbf{Z} \in \mathbb{C}^{64 \times 64}$, $\mu_k$ (10个) |
+| 总实变量 | $11 \times \frac{64 \times 65}{2} + 10 = 22890$ |
+| LMI约束 | 10个 $65 \times 65$ 矩阵 |
+| 线性约束 | $1 + 1 + 16 = 18$ 个 |
+| 求解时间 | 5-10秒（MOSEK） |
 
 ---
 
-## 9. 对偶问题与KKT条件（简化版）
+## 9. 对偶问题与KKT条件（完整版）
 
 ### 9.1 拉格朗日函数
 
 引入对偶变量：
-- $\lambda_k \geq 0$：对应通信SINR约束 (25b)
-- $\lambda_p \geq 0$：对应PCRB约束 (25c)
-- $\nu_p \geq 0$：对应PoD约束 (25d)
-- $\eta_m \geq 0$：对应功率约束 (25e)
+- $\mathbf{\Lambda}_k \succeq \mathbf{0}$：对应LMI约束 (32b)
+- $\lambda_p \geq 0$：对应PCRB约束 (32c)
+- $\nu_p \geq 0$：对应PoD约束 (32d)
+- $\eta_m \geq 0$：对应功率约束 (32e)
 
 拉格朗日函数：
 
-$$\mathcal{L} = \sum_k \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) - \sum_k \lambda_k \left(\text{tr}\left(\mathbf{H}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) - \sigma_c^2\right) - \sum_p \lambda_p (\text{tr}(\mathbf{F}_p \mathbf{R}_X) - \Gamma_{\text{Track},p}) - \sum_p \nu_p (\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) - \gamma_S^{\text{PoD}} \sigma_s^2) + \sum_m \eta_m (\sum_k \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) - P_{\max}) \tag{26}$$
+$$\mathcal{L} = \sum_k \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) - \sum_k \text{tr}(\mathbf{\Lambda}_k \mathbf{M}_k) - \sum_p \lambda_p (\text{tr}(\mathbf{F}_p \mathbf{R}_X) - \Gamma_{\text{Track},p}) - \sum_p \nu_p (\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) - \gamma_S^{\text{PoD}} \sigma_s^2) + \sum_m \eta_m (\sum_k \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) - P_{\max}) \tag{33}$$
+
+其中 $\mathbf{M}_k$ 是LMI (32b) 的左边矩阵。
 
 ### 9.2 KKT条件
 
 **平稳性**：
 
-$$\frac{\partial \mathcal{L}}{\partial \mathbf{W}_k} = \mathbf{I} - \lambda_k \frac{1}{\gamma_k} \mathbf{H}_k + \sum_{j \neq k} \lambda_j \mathbf{H}_j - \sum_p \lambda_p \mathbf{F}_p + \sum_m \eta_m \mathbf{E}_m = \mathbf{0} \tag{27}$$
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{W}_k} = \mathbf{I} - \sum_j \mathbf{\Lambda}_j \frac{\partial \mathbf{M}_j}{\partial \mathbf{W}_k} - \sum_p \lambda_p \mathbf{F}_p + \sum_m \eta_m \mathbf{E}_m = \mathbf{0} \tag{34}$$
 
-$$\frac{\partial \mathcal{L}}{\partial \mathbf{Z}} = \mathbf{I} - \sum_p \lambda_p \mathbf{F}_p - \sum_p \nu_p \mathbf{g}_p \mathbf{g}_p^H + \sum_m \eta_m \mathbf{E}_m = \mathbf{0} \tag{28}$$
+$$\frac{\partial \mathcal{L}}{\partial \mathbf{Z}} = \mathbf{I} - \sum_p \lambda_p \mathbf{F}_p - \sum_p \nu_p \mathbf{g}_p \mathbf{g}_p^H + \sum_m \eta_m \mathbf{E}_m = \mathbf{0} \tag{35}$$
+
+$$\frac{\partial \mathcal{L}}{\partial \mu_k} = \text{tr}(\mathbf{\Lambda}_k \mathbf{I}_{MN_t}) + \epsilon_k^2 (\mathbf{\Lambda}_k)_{MN_t+1,MN_t+1} = 0, \quad \forall k \tag{36}$$
 
 **互补松弛性**：
 
-$$\lambda_k \left(\text{tr}\left(\mathbf{H}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) - \sigma_c^2\right) = 0, \quad \forall k \tag{29}$$
+$$\text{tr}(\mathbf{\Lambda}_k \mathbf{M}_k) = 0, \quad \forall k \tag{37}$$
 
-$$\lambda_p (\text{tr}(\mathbf{F}_p \mathbf{R}_X) - \Gamma_{\text{Track},p}) = 0, \quad \forall p \tag{30}$$
+$$\lambda_p (\text{tr}(\mathbf{F}_p \mathbf{R}_X) - \Gamma_{\text{Track},p}) = 0, \quad \forall p \tag{38}$$
 
-$$\nu_p (\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) - \gamma_S^{\text{PoD}} \sigma_s^2) = 0, \quad \forall p \tag{31}$$
+$$\nu_p (\text{tr}(\mathbf{g}_p \mathbf{g}_p^H \mathbf{Z}) - \gamma_S^{\text{PoD}} \sigma_s^2) = 0, \quad \forall p \tag{39}$$
 
-$$\eta_m (\sum_k \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) - P_{\max}) = 0, \quad \forall m \tag{32}$$
+$$\eta_m (\sum_k \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \mathbf{Z}) - P_{\max}) = 0, \quad \forall m \tag{40}$$
 
-**原始可行性**：约束 (25b)-(25g)
+**原始可行性**：约束 (32b)-(32h)
 
-**对偶可行性**：$\lambda_k \geq 0, \lambda_p \geq 0, \nu_p \geq 0, \eta_m \geq 0$
+**对偶可行性**：$\mathbf{\Lambda}_k \succeq \mathbf{0}, \lambda_p \geq 0, \nu_p \geq 0, \eta_m \geq 0$
 
 ### 9.3 强对偶性
 
 **Slater条件**：若存在严格可行点（所有不等式约束严格满足），则强对偶成立：
 
-$$p^* = d^* \tag{33}$$
+$$p^* = d^* \tag{41}$$
 
 对于(P1)，若功率预算足够（$P_{\max}$ 较大），严格可行点存在，强对偶成立。
 
@@ -561,17 +579,17 @@ cvx_end
 
 ## 12. 与闭式解的对比总结
 
-| 特性 | SDP (P1) 简化版 | ZF闭式解 |
-|------|-----------------|----------|
+| 特性 | SDP (P1) 完整鲁棒版 | ZF闭式解 |
+|------|---------------------|----------|
 | 最优性 | 全局最优（凸问题） | 次优（固定结构） |
 | 成功率 | ~100%（可行域非空时） | ~25%（实测） |
 | 功率效率 | 高（联合优化） | 低（分离计算） |
-| 鲁棒性 | 无（名义CSI） | 近似因子（保守50%） |
-| 计算时间 | 1-3秒 | <0.1秒 |
-| 实现难度 | 需CVX/CVXPY+SDP求解器 | 纯NumPy |
+| 鲁棒性 | S-Procedure精确 | 近似因子（保守50%） |
+| 计算时间 | 5-10秒 | <0.1秒 |
+| 实现难度 | 需CVX/CVXPY+MOSEK | 纯NumPy |
 | 秩一恢复 | 需特征值分解/随机化 | 直接得波束 |
 
-**注**：简化版SDP去除鲁棒约束后，求解更快，但仅适用于CSI误差小的场景。如需鲁棒性，可后续加回S-Procedure。
+**注**：完整鲁棒版使用S-Procedure精确处理CSI误差，保证最坏情况性能。求解器需支持LMI（如MOSEK）。
 
 ---
 
