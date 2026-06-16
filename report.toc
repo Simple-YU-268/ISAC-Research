@@ -1,0 +1,36 @@
+\contentsline {section}{\numberline {1}系统模型与问题定义}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}优化问题（标准形式）}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}符号表}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}信号模型与CSI误差模型}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}通信信号模型}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}感知信号模型}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}不完美CSI模型}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}约束条件推导（通信与感知）}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}通信SINR定义与最坏情况分析}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}通信鲁棒性因子与门限}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}感知SINR与匹配滤波}{5}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}感知鲁棒性因子与门限}{6}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}感知PCRB约束与FIM凸性证明}{6}{subsection.3.5}%
+\contentsline {section}{\numberline {4}问题凸化与SDP重构}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}全局变量提升与半正定松弛（SDR）}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}基于S-Procedure的通信鲁棒性转化}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}感知鲁棒约束（可选）}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}感知约束的凸仿射证明}{8}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}最终等效可解的SDP模型}{8}{subsection.4.5}%
+\contentsline {section}{\numberline {5}面向物理可实现性的波束恢复}{9}{section.5}%
+\contentsline {subsection}{\numberline {5.1}问题背景}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Algorithm 1：高斯随机化秩一恢复}{9}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}功率缩放数学保证}{9}{subsection.5.3}%
+\contentsline {section}{\numberline {6}低复杂度闭式解基准算法}{9}{section.6}%
+\contentsline {subsection}{\numberline {6.1}假设条件}{9}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}ZF波束成形}{11}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}感知波束}{11}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Algorithm 2：闭式求解器}{11}{subsection.6.4}%
+\contentsline {section}{\numberline {7}复杂度对比分析}{11}{section.7}%
+\contentsline {subsection}{\numberline {7.1}SDP求解复杂度}{11}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}闭式解复杂度}{11}{subsection.7.2}%
+\contentsline {section}{\numberline {8}可行性条件}{13}{section.8}%
+\contentsline {subsection}{\numberline {8.1}必要条件}{13}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}不可行情形}{13}{subsection.8.2}%
+\contentsline {section}{\numberline {9}关键公式汇总}{13}{section.9}%
+\contentsline {section}{\numberline {10}结论与展望}{13}{section.10}%

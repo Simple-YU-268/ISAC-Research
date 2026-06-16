@@ -167,17 +167,17 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 其中$\hat{\vect{h}}_k$和$\hat{\vect{g}}_p$为估计信道，$\Delta\vect{h}_k$和$\Delta\vect{g}_p$为估计误差，$\epsilon_h$和$\epsilon_g$为相对误差界。
 
 %==============================================================================
-\section{约束条件推导}
+\section{约束条件推导（通信与感知）}
 %==============================================================================
 
-\subsection{SINR定义}
+\subsection{通信SINR定义与最坏情况分析}
 
 通信用户$k$的信干噪比（SINR）定义为：
 \begin{equation}
 \text{SINR}_k = \frac{|\vect{h}_k^H \vect{w}_k|^2}{\sum_{j \neq k} |\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2} \tag{1}
 \end{equation}
 
-\subsection{最坏情况SINR分析}
+
 
 在CSI存在误差的情况下，需要保证worst-case SINR满足门限要求。考虑分子和干扰的最坏情况：
 
@@ -196,7 +196,7 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 \text{SINR}_k^{\text{wc}} \approx \text{SINR}_k^{\text{nom}} \cdot \frac{(1-\epsilon_h)^2}{(1+\epsilon_h)^2} \tag{2}
 \end{equation}
 
-\subsection{鲁棒性因子与门限}
+\subsection{通信鲁棒性因子与门限}
 
 定义通信鲁棒性因子：
 \begin{equation}
@@ -213,7 +213,7 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 对于$\gamma_k = 1$（0~dB）和$\epsilon_h = 0.10$：$\gamma_k^{\text{robust}} \approx 1.493$（$1.74$~dB）。
 
 %==============================================================================
-\subsection{感知SINR}
+\subsection{感知SINR与匹配滤波}
 
 目标$p$的感知SINR为：
 \begin{equation}
@@ -235,7 +235,7 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \tag{8}
 \end{equation}
 
-\subsection{鲁棒感知约束}
+\subsection{感知鲁棒性因子与门限}
 
 类似地，定义感知鲁棒性因子：
 \begin{equation}
@@ -249,7 +249,7 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 (\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} \cdot \frac{(1+\epsilon_g)^2}{(1-\epsilon_g)^2} = \frac{\gamma_S^{\text{PoD}}}{\eta_g} \tag{10}
 \end{equation}
 
-\subsection{PCRB约束与Fisher信息矩阵}
+\subsection{感知PCRB约束与FIM凸性证明}
 
 跟踪精度约束通过Fisher信息矩阵（FIM）的迹来表征。感知数据FIM为：
 \begin{equation}
