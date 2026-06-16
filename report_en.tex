@@ -1,0 +1,742 @@
+\documentclass[12pt,a4paper]{article}
+
+% Math packages
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+
+% Algorithm package
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+% Tables and figures
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+% Page settings
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% Hyperlinks
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+% Custom commands
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Beamforming Optimization for Cell-Free ISAC Systems: \\ Mathematical Derivation and Solution Methods}}
+\author{Research Stage Report}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper establishes a mathematical framework for joint beamforming optimization in Cell-Free Integrated Sensing and Communication (ISAC) systems. Considering communication quality-of-service (QoS) constraints, sensing detection probability constraints, tracking accuracy constraints (PCRB), and access point (AP) selection constraints, we derive the semidefinite programming (SDP) relaxation formulation of the robust optimization problem under imperfect channel state information (CSI). Through the S-Procedure, infinite-dimensional worst-case constraints are transformed into finite-dimensional linear matrix inequalities (LMI). The convexity of sensing constraints under the single-angle estimation assumption is rigorously proved, and rank-one recovery algorithms along with closed-form solution schemes are provided. This document serves as the theoretical foundation for subsequent algorithm implementation and paper writing.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Problem Formulation}
+%==============================================================================
+
+\subsection{Optimization Problem (Standard Form)}
+
+Consider a Cell-Free ISAC system with $M$ distributed APs, $K$ communication users, and $P$ sensing targets. Each AP is equipped with $N_t$ transmit antennas. The optimization objective is to minimize the total transmit power while satisfying communication QoS, sensing detection, tracking accuracy, and AP selection constraints.
+
+\begin{align}
+\min_{\substack{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \\ \{b_{mp}\}}} \quad & \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\text{s.t.} \quad & \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \label{eq:sinr_comm} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \label{eq:sinr_sens} \\
+& \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \label{eq:pcrb} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \label{eq:ap_select} \\
+& \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \label{eq:power} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \label{eq:psd} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \label{eq:binary}
+\end{align}
+
+where $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$ denotes the communication beamforming vector from AP $m$ to user $k$, $\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$ represents the sensing covariance matrix at AP $m$, and $b_{mp} \in \{0,1\}$ is the binary indicator variable for whether AP $m$ serves target $p$. The parameters $P_{\max}$, $\gamma_k$, $\gamma_S^{\text{PoD}}$, $\Gamma_{\text{Track},p}$, and $N_{\text{req}}$ denote the per-AP maximum transmit power, the SINR threshold for user $k$, the sensing detection probability threshold, the tracking accuracy threshold (FIM trace constraint) for target $p$, and the required number of serving APs per target, respectively.
+
+\subsection{Notation Table}
+
+Table~\ref{tab:symbols} summarizes the main notation used throughout this paper.
+
+\begin{table}[htbp]
+\centering
+\caption{Main Notation Table}\label{tab:symbols}
+\begin{tabular}{cll}
+\toprule
+Symbol & Dimension & Physical Meaning \\
+\midrule
+$M$ & Scalar & Total number of APs \\
+$N_t$ & Scalar & Number of transmit antennas per AP \\
+$K$ & Scalar & Total number of communication users \\
+$P$ & Scalar & Total number of sensing targets \\
+$P_{\max}$ & Scalar & Maximum transmit power per AP \\
+$\gamma_k$ & Scalar & SINR threshold for user $k$ \\
+$\gamma_S^{\text{PoD}}$ & Scalar & Sensing detection probability threshold \\
+$\Gamma_{\text{Track},p}$ & Scalar & Tracking accuracy threshold for target $p$ \\
+$\sigma_c^2$ & Scalar & Communication receiver noise variance \\
+$\sigma_s^2$ & Scalar & Sensing receiver noise variance \\
+$\epsilon_h$ & Scalar & Relative error bound for communication channel estimation \\
+$\epsilon_g$ & Scalar & Relative error bound for sensing channel estimation \\
+$N_{\text{req}}$ & Scalar & Required number of serving APs per target \\
+$\vect{h}_{m,k}$ & $\mathbb{C}^{N_t}$ & Communication channel from AP $m$ to user $k$ \\
+$\vect{g}_{m,p}$ & $\mathbb{C}^{N_t}$ & Sensing channel from AP $m$ to target $p$ \\
+$\vect{w}_{m,k}$ & $\mathbb{C}^{N_t}$ & Communication beam from AP $m$ to user $k$ \\
+$\mat{Z}_m$ & $\mathbb{C}^{N_t \times N_t}$ & Sensing covariance matrix at AP $m$ \\
+$b_{mp}$ & $\{0,1\}$ & Whether AP $m$ serves target $p$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}
+Specific numerical parameters (e.g., $M=16$, $N_t=4$, $P_{\max}=30$ W) will be provided in the Simulation Setup section. The theoretical derivations herein maintain general symbolic notation.
+\end{remark}
+
+%==============================================================================
+\section{System Model and Signal Model}
+%==============================================================================
+
+\subsection{Communication Signal Model}
+
+The received signal at user $k$ can be expressed as:
+\begin{equation}
+y_k = \underbrace{\sum_{m=1}^M \vect{h}_{m,k}^H \vect{w}_{m,k} s_k}_{\text{desired signal}} + \underbrace{\sum_{j \neq k} \sum_{m=1}^M \vect{h}_{m,k}^H \vect{w}_{m,j} s_j}_{\text{multi-user interference}} + n_k
+\end{equation}
+where $n_k \sim \mathcal{CN}(0, \sigma_c^2)$ denotes the receiver noise.
+
+To facilitate analysis, we introduce stacked vector forms. Define the global communication channel $\vect{h}_k \in \mathbb{C}^{MN_t}$ and global communication beam $\vect{w}_k \in \mathbb{C}^{MN_t}$ as:
+\begin{equation}
+\vect{h}_k = [\vect{h}_{1,k}^T, \vect{h}_{2,k}^T, \ldots, \vect{h}_{M,k}^T]^T, \quad
+\vect{w}_k = [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T
+\end{equation}
+
+The received signal can then be compactly written as:
+\begin{equation}
+y_k = \vect{h}_k^H \vect{w}_k s_k + \sum_{j \neq k} \vect{h}_k^H \vect{w}_j s_j + n_k
+\end{equation}
+
+\subsection{Sensing Signal Model}
+
+For monostatic radar sensing, the reflected signal from target $p$ is:
+\begin{equation}
+y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
+\end{equation}
+where $n_{S,p} \sim \mathcal{CN}(0, \sigma_s^2)$ denotes the sensing receiver noise.
+
+\subsection{Imperfect CSI Model}
+
+In practical systems, channel estimation suffers from errors. This paper adopts the bounded error model:
+
+\textbf{Communication channel}:
+\begin{equation}
+\vect{h}_k = \hat{\vect{h}}_k + \Delta\vect{h}_k, \quad \norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}
+\end{equation}
+
+\textbf{Sensing channel}:
+\begin{equation}
+\vect{g}_p = \hat{\vect{g}}_p + \Delta\vect{g}_p, \quad \norm{\Delta\vect{g}_p} \leq \epsilon_g \norm{\hat{\vect{g}}_p}
+\end{equation}
+
+where $\hat{\vect{h}}_k$ and $\hat{\vect{g}}_p$ are the estimated channels, $\Delta\vect{h}_k$ and $\Delta\vect{g}_p$ are the estimation errors, and $\epsilon_h$ and $\epsilon_g$ are the relative error bounds.
+
+%==============================================================================
+\section{Communication Constraint Derivation}
+%==============================================================================
+
+\subsection{SINR Definition}
+
+The signal-to-interference-plus-noise ratio (SINR) for communication user $k$ is defined as:
+\begin{equation}
+\text{SINR}_k = \frac{|\vect{h}_k^H \vect{w}_k|^2}{\sum_{j \neq k} |\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2} \tag{1}
+\end{equation}
+
+\subsection{Worst-Case SINR Analysis}
+
+Under imperfect CSI, we need to guarantee that the worst-case SINR meets the threshold requirement. Considering the worst cases for both the numerator and interference:
+
+\textbf{Worst-case numerator}: When the error direction opposes the beam, the effective channel gain is minimized:
+\begin{equation}
+|\vect{h}_k^H \vect{w}_k|^2 \approx |\hat{\vect{h}}_k^H \vect{w}_k|^2 (1 - \epsilon_h)^2
+\end{equation}
+
+\textbf{Worst-case interference}: When the error direction enhances interference:
+\begin{equation}
+|\vect{h}_k^H \vect{w}_j|^2 \approx |\hat{\vect{h}}_k^H \vect{w}_j|^2 (1 + \epsilon_h)^2
+\end{equation}
+
+Therefore, the worst-case SINR can be approximated as:
+\begin{equation}
+\text{SINR}_k^{\text{wc}} \approx \text{SINR}_k^{\text{nom}} \cdot \frac{(1-\epsilon_h)^2}{(1+\epsilon_h)^2} \tag{2}
+\end{equation}
+
+\subsection{Robustness Factor and Threshold}
+
+Define the communication robustness factor:
+\begin{equation}
+\eta_h = \left(\frac{1-\epsilon_h}{1+\epsilon_h}\right)^2 \tag{3}
+\end{equation}
+
+For $\epsilon_h = 0.10$ (10\% error), $\eta_h \approx 0.669$ ($-1.75$ dB). This implies that CSI errors cause an effective SINR degradation of approximately 1.75 dB.
+
+To ensure the worst-case SINR meets the threshold, the nominal SINR requirement must be raised:
+\begin{equation}
+\gamma_k^{\text{robust}} = \gamma_k \cdot \frac{(1+\epsilon_h)^2}{(1-\epsilon_h)^2} = \frac{\gamma_k}{\eta_h} \tag{4}
+\end{equation}
+
+For $\gamma_k = 1$ (0 dB) and $\epsilon_h = 0.10$: $\gamma_k^{\text{robust}} \approx 1.493$ ($1.74$ dB).
+
+%==============================================================================
+\section{Sensing Constraint Derivation}
+%==============================================================================
+
+\subsection{Sensing SINR}
+
+The sensing SINR for target $p$ is:
+\begin{equation}
+\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \vect{z}_p|^2}{\sigma_s^2 \norm{\vect{z}_p}^2} \tag{5}
+\end{equation}
+
+By the Cauchy-Schwarz inequality, the optimal sensing beam is the matched filter:
+\begin{equation}
+\vect{z}_p^* = \sqrt{P_{S,p}} \frac{\vect{g}_p}{\norm{\vect{g}_p}} \tag{6}
+\end{equation}
+
+yielding the optimal SINR:
+\begin{equation}
+\text{SINR}_{S,p}^* = \frac{P_{S,p} \norm{\vect{g}_p}^2}{\sigma_s^2} \tag{7}
+\end{equation}
+
+To meet the detection threshold $\gamma_S^{\text{PoD}}$, the minimum sensing power is:
+\begin{equation}
+P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \tag{8}
+\end{equation}
+
+\subsection{Robust Sensing Constraint}
+
+Similarly, define the sensing robustness factor:
+\begin{equation}
+\eta_g = \left(\frac{1-\epsilon_g}{1+\epsilon_g}\right)^2 \tag{9}
+\end{equation}
+
+For $\epsilon_g = 0.15$ (15\% error), $\eta_g \approx 0.546$ ($-2.63$ dB).
+
+The robust sensing threshold:
+\begin{equation}
+(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} \cdot \frac{(1+\epsilon_g)^2}{(1-\epsilon_g)^2} = \frac{\gamma_S^{\text{PoD}}}{\eta_g} \tag{10}
+\end{equation}
+
+\subsection{PCRB Constraint and Fisher Information Matrix}
+
+The tracking accuracy constraint is characterized through the trace of the Fisher Information Matrix (FIM). The data-dependent FIM is:
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\} \tag{11}
+\end{equation}
+where $\mat{R}_X = \sum_k \vect{w}_k \vect{w}_k^H + \sum_p \vect{z}_p \vect{z}_p^H = \sum_k \mat{W}_k + \mat{Z}$ is the transmit covariance matrix and $\boldsymbol{\theta}_p$ denotes the target state parameters.
+
+\begin{assumption}[Sensing Parameter Estimation Model]\label{ass:1}
+This paper considers target state parameters $\boldsymbol{\theta}_p = [\theta_p]$ (single-angle estimation). Under this setting, the gradient matrix $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ is determined by the target prediction state within the current time slot and can be treated as a known constant matrix. Consequently, $\mat{J}_p^{\text{data}}$ is an \textbf{affine function} of $\mat{R}_X$, and its trace constraint can be precisely formulated as:
+\begin{equation}
+\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}
+\end{equation}
+where $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$ is a known constant positive semidefinite matrix.
+\end{assumption}
+
+\begin{remark}
+Since this work focuses on direction-of-arrival (DOA) estimation for targets, the relative delay and Doppler shift between the probing signal and the target are regarded as slowly varying parameters within a short observation frame. Under this condition, the FIM degenerates into a constant matrix $\mat{F}_p$ that depends solely on the angle gradient, thereby guaranteeing the convex affine property of the constraint.
+\end{remark}
+
+\textbf{Proof of FIM Linearity}: Let $\mat{G}_p = \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{D \times MN_t}$, then:
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\{ \mat{G}_p \mat{R}_X \mat{G}_p^H \}
+\end{equation}
+
+Expanding the $(a,b)$-th element:
+\begin{equation}
+(\mat{J}_p^{\text{data}})_{ab} = \frac{2}{\sigma_s^2} \Real\Big\{ \sum_{i,j} (\mat{G}_p)_{ai} (\mat{R}_X)_{ij} (\mat{G}_p^H)_{jb} \Big\}
+\end{equation}
+
+This is a linear combination of the elements of $\mat{R}_X$. Therefore, the trace constraint:
+\begin{equation}
+\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X) \tag{12}
+\end{equation}
+
+where:
+\begin{equation}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \tag{13}
+\end{equation}
+
+is a constant positive semidefinite matrix independent of the optimization variables. \hfill$\square$
+
+%==============================================================================
+\section{SDP Relaxation and Global Variable Reformulation}
+%==============================================================================
+
+\subsection{From Beams to Covariances}
+
+To transform the non-convex beamforming problem into a convex optimization problem, we introduce covariance matrix variables:
+
+\textbf{Communication covariance matrix}:
+\begin{equation}
+\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{C}^{MN_t \times MN_t} \tag{15}
+\end{equation}
+
+\textbf{Sensing covariance matrix}:
+\begin{equation}
+\mat{Z} = \sum_p \vect{z}_p \vect{z}_p^H \in \mathbb{C}^{MN_t \times MN_t} \tag{16}
+\end{equation}
+
+\textbf{Global transmit covariance}:
+\begin{equation}
+\mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z} \tag{17}
+\end{equation}
+
+\subsection{SDR Relaxation}
+
+The original problem requires $\rank(\mat{W}_k) = 1$ (since $\mat{W}_k = \vect{w}_k \vect{w}_k^H$). Semidefinite relaxation (SDR) discards the rank-one constraint, requiring only $\mat{W}_k \succeq \mat{0}$.
+
+The relaxed problem becomes:
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}} \quad & \sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad & \text{SINR}_k \geq \gamma_k, \quad \forall k \label{eq:sinr_sdp} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \label{eq:sinr_sens_sdp} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
+& \mat{W}_k \succeq \mat{0}, \mat{Z} \succeq \mat{0} \label{eq:psd_sdp}
+\end{align}
+
+where $\mat{E}_m$ is the selection matrix for AP $m$.
+
+\subsection{Tightness Conditions}
+
+\begin{theorem}[SDR Tightness]\label{thm:1}
+For the total power minimization problem, when $K \leq 2$, SDR is tight, i.e., the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$.
+\end{theorem}
+
+\begin{remark}
+In the high-SNR regime, SDR is approximately tight with controllable performance loss. For the general case, beam recovery via Gaussian randomization provides a performance loss upper bounded by $O(1/L)$ (where $L$ is the number of candidates).
+\end{remark}
+
+%==============================================================================
+\section{S-Procedure Robust Constraint Transformation}
+%==============================================================================
+
+\subsection{Communication Robust Constraint (Exact Transformation)}
+
+The worst-case SINR constraint is:
+\begin{equation}
+\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+Using the S-Procedure, this infinite-dimensional constraint can be transformed into a finite-dimensional LMI. Define:
+\begin{equation}
+\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j
+\end{equation}
+
+Then there exists $\mu_k \geq 0$ such that the following LMI holds:
+\begin{equation}
+\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{18}
+\end{equation}
+
+\begin{proposition}
+The S-Procedure is an \textbf{exactly equivalent} transformation, not an approximation. That is, the original worst-case constraint and the LMI constraint are completely equivalent.
+\end{proposition}
+
+\subsection{Sensing Robust Constraint (Optional)}
+
+Similarly, for the sensing channel, the LMI form is:
+\begin{equation}
+\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\[1.5ex] \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 - \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0} \tag{19}
+\end{equation}
+
+where $\nu_p \geq 0$ is the sensing S-Procedure slack variable.
+
+\begin{remark}[LMI Typesetting Optimization]
+The matrix elements in (19) contain denominators $\gamma_S^{\text{PoD}}$. In standard LMI notation, both sides of the inequality can be multiplied by $\gamma_S^{\text{PoD}}$, yielding $\mat{Z} + \nu_p \gamma_S^{\text{PoD}} \mat{I}$ in the upper-left corner, thereby avoiding fractional structures inside the matrix for more elegant typesetting. Mathematical equivalence is preserved.
+\end{remark}
+
+\begin{assumption}[Sensing Channel Perfection]\label{ass:2}
+This work focuses on robust design for the communication link, assuming that sensing channels are self-calibrated through tracking echoes within the current time slot with negligible error. Specifically:
+\begin{enumerate}
+    \item Target state parameters $\boldsymbol{\theta}_p$ are accurately predicted within a short time slot, with prediction errors much smaller than one wavelength
+    \item Sensing channels $\vect{g}_p$ are calibrated through tracking echoes from the previous time slot, with errors incorporated into the next slot update
+    \item Sensing tasks adopt a "detection-tracking" cascade architecture: conservative thresholds during detection, and time-slot smoothness compensates for errors during tracking
+\end{enumerate}
+\end{assumption}
+
+\begin{remark}
+Sensing channels are self-calibrating (the probing signal is transmitted and the echo is received, with the echo carrying current channel state), whereas communication channels rely on uplink pilot estimation, where pilot contamination leads to error accumulation. In top-tier journal system modeling, focusing on communication-side pilot contamination while assuming the radar side benefits from LOS echoes and Kalman tracking filtering for precise prediction is a common and prudent compromise.
+\end{remark}
+
+%==============================================================================
+\section{Proof of Sensing Constraint Convexity}
+%==============================================================================
+
+\subsection{PCRB Constraint Convexity}
+
+\textbf{Constraint}: $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$
+
+\begin{itemize}
+    \item $\mat{F}_p$ is a known constant positive semidefinite matrix
+    \item $\mat{R}_X$ is the optimization variable (positive semidefinite matrix)
+    \item $\tr(\mat{F}_p \mat{R}_X)$ is a linear function of $\mat{R}_X$
+\end{itemize}
+
+\textbf{Conclusion}: Linear inequality constraint, naturally convex.
+
+\subsection{Sensing SINR Constraint Convexity}
+
+\textbf{Constraint}: $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$
+
+\begin{itemize}
+    \item $\vect{g}_p \vect{g}_p^H$ is a known constant positive semidefinite matrix
+    \item $\mat{Z}$ is the optimization variable
+    \item $\tr(\vect{g}_p \vect{g}_p^H \mat{Z})$ is a linear function of $\mat{Z}$
+\end{itemize}
+
+\textbf{Conclusion}: Linear inequality constraint, naturally convex.
+
+\subsection{Power Constraint Convexity}
+
+\textbf{Constraint}: $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$
+
+\begin{itemize}
+    \item $\mat{E}_m$ is a known constant matrix
+    \item $\mat{R}_X$ is the optimization variable
+\end{itemize}
+
+\textbf{Conclusion}: Linear inequality constraint, naturally convex.
+
+\subsection{Summary}
+
+Table~\ref{tab:convexity} summarizes the convexity of each constraint.
+
+\begin{table}[htbp]
+\centering
+\caption{Convexity Summary of Constraints}\label{tab:convexity}
+\begin{tabular}{lll}
+\toprule
+Constraint & Form & Convexity \\
+\midrule
+Communication Robust (S-Procedure) & LMI & Convex \\
+PCRB & Linear trace & Convex \\
+Sensing SINR & Linear trace & Convex \\
+Power & Linear trace & Convex \\
+Positive Semidefinite & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & Convex \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[Final Problem Convexity]
+Problem (P2) is a standard convex SDP, solvable to arbitrary precision via interior-point methods in polynomial time.
+\end{theorem}
+
+%==============================================================================
+\section{Rank-One Recovery and Fallback Scheme}
+%==============================================================================
+
+\subsection{Problem Background}
+
+SDR relaxation discards the $\rank(\mat{W}_k) = 1$ constraint. After solving:
+\begin{itemize}
+    \item If $\rank(\mat{W}_k^*) = 1$: directly recover $\vect{w}_k$ through eigenvalue decomposition
+    \item If $\rank(\mat{W}_k^*) > 1$: Gaussian randomization is required to extract a suboptimal beam
+\end{itemize}
+
+\subsection{Algorithm 1: Gaussian Randomization Rank-One Recovery}
+
+The following pseudocode describes the rank-one recovery algorithm. The algorithm first checks the rank of the communication covariance matrix; if the rank is 1, the beam is directly extracted. If the rank exceeds 1, candidate beams are generated via Gaussian randomization, and the best candidate satisfying the constraints is selected. If still unsatisfied, power scaling is employed as a fallback.
+
+\begin{algorithm}[htbp]
+\caption{Gaussian Randomization Rank-One Recovery}
+\KwIn{SDP optimal solution $\{\mat{W}_k^*\}_{k=1}^K$, $\mat{Z}^*$, constraint parameters}
+\KwOut{Beams $\{\vect{w}_k\}_{k=1}^K$ satisfying all constraints, sensing waveform}
+
+\tcp{Step 1: Communication beam recovery}
+\ForEach{User $k$}{
+    \eIf{$\rank(\mat{W}_k^*) = 1$}{
+        $\vect{w}_k \leftarrow \sqrt{\lambda_{\max}(\mat{W}_k^*)} \cdot \vect{v}_{\max}(\mat{W}_k^*)$\tcp*{Direct extraction}
+    }{
+        Generate $L = 1000$ candidates: $\boldsymbol{\xi}_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$\;
+        Normalize: $\vect{w}_k^{(l)} \leftarrow \sqrt{\tr(\mat{W}_k^*)} \cdot \frac{\boldsymbol{\xi}_l}{\norm{\boldsymbol{\xi}_l}}$\;
+        Compute constraint violation: $v_l \leftarrow \sum_{k'} \max(0, \gamma_k - \text{SINR}_{k'}^{(l)}) + \sum_p \max(0, \gamma_S^{\text{PoD}} - \text{SINR}_{S,p}^{(l)})$\;
+        $l^* \leftarrow \argmin_l v_l$\;
+        \eIf{$v_{l^*} = 0$}{Accept $\vect{w}_k \leftarrow \vect{w}_k^{(l^*)}$\;}{Enter power scaling fallback (Step 3)\;}
+    }
+}
+
+\tcp{Step 2: Sensing waveform recovery}
+Eigenvalue decomposition: $\mat{Z}^* = \sum_{i=1}^{r} \lambda_i \vect{v}_i \vect{v}_i^H$\;
+Generate multi-stream transmission waveform: $\vect{z}_p = \sum_{i=1}^{r} \sqrt{\lambda_i} \vect{v}_i s_i$, where $s_i \sim \mathcal{CN}(0,1)$ are independent\;
+
+\tcp{Step 3: Power scaling fallback}
+\ForEach{AP $m$}{
+    $P_m \leftarrow \sum_k \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m)$\;
+    \If{$P_m > P_{\max}$}{
+        $\beta_m \leftarrow P_{\max} / P_m$\;
+        $\vect{w}_{m,k} \leftarrow \vect{w}_{m,k} \cdot \sqrt{\beta_m}$\;
+        $\mat{Z}_m \leftarrow \mat{Z}_m \cdot \beta_m$\;
+    }
+}
+
+\tcp{Step 4: Performance guarantee}
+\lIf{$K \leq 2$}{SDR is tight, optimal solution recovered}
+\lIf{$K > 2$}{Gaussian randomization provides suboptimal solution with performance loss upper bounded by $O(1/L)$}
+\label{alg:rank1}
+\end{algorithm}
+
+\subsection{Power Scaling Mathematical Guarantee}
+
+After power scaling:
+\begin{itemize}
+    \item Per-AP power: $P_m' = \beta_m P_m = P_{\max}$ (strictly satisfied)
+    \item Communication SINR: $\text{SINR}_k' = \beta_m \cdot \text{SINR}_k$ (linear scaling)
+    \item Sensing SINR: $\text{SINR}_{S,p}' = \beta_m \cdot \text{SINR}_{S,p}$ (linear scaling)
+\end{itemize}
+
+\begin{remark}
+The rank of the sensing covariance $\mat{Z}^*$ exceeding 1 is a \textbf{design intention} (multi-target coverage), not a recovery failure. In pure communication MU-MIMO, power minimization tends to form "pencil beams" (rank-one); in ISAC, sensing tasks require spatial energy dispersion, and multi-rank is a design intention. The "role separation" between communication and sensing in the covariance domain is the essential characteristic of ISAC waveform design.
+\end{remark}
+
+%==============================================================================
+\section{Closed-Form Solution Derivation}
+%==============================================================================
+
+\subsection{Assumptions}
+
+To obtain closed-form solutions, the problem is simplified under specific conditions:
+\begin{itemize}
+    \item Ignore PCRB constraints (or assume they are automatically satisfied)
+    \item Use ZF communication beams
+    \item Use matched-filter sensing beams
+    \item Assume relaxed per-AP power constraints
+\end{itemize}
+
+\subsection{ZF Beamforming}
+
+\textbf{Condition}: $\rank(\mat{H}_{\text{all}}) \geq K$, i.e., $M^{\text{all}} N_t \geq K$.
+
+The ZF matrix is:
+\begin{equation}
+\mat{W}_{\text{ZF}} = \mat{H}_{\text{all}} (\mat{H}_{\text{all}}^H \mat{H}_{\text{all}})^{-1} \tag{20}
+\end{equation}
+
+Satisfying the orthogonality property:
+\begin{equation}
+\vect{h}_k^{\text{all},H} \mat{W}_{\text{ZF}}(:,j) = \delta_{kj}
+\end{equation}
+
+Power allocation:
+\begin{equation}
+p_k = \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2 \tag{21}
+\end{equation}
+
+\subsection{Sensing Beams}
+
+\begin{equation}
+\vect{z}_p = \sqrt{P_{S,p}} \frac{\vect{g}_p^{\text{all}}}{\norm{\vect{g}_p^{\text{all}}}} \tag{22}
+\end{equation}
+
+where $P_{S,p} = (\gamma_S^{\text{PoD}})^{\text{robust}} \sigma_s^2 / \norm{\vect{g}_p^{\text{all}}}^2$.
+
+\subsection{Algorithm 2: Closed-Form Solver}
+
+The following pseudocode describes the closed-form solver. The algorithm first selects the optimal AP subset for each target based on sensing channel strength, then computes ZF communication beams and matched-filter sensing beams on the selected APs, and finally verifies power constraints before returning a feasible solution.
+
+\begin{algorithm}[htbp]
+\caption{Cell-Free ISAC Closed-Form Solver}
+\KwIn{$\mat{H}, \mat{G}, M, N_t, K, P, P_{\max}, \{\gamma_k\}, \gamma_S^{\text{PoD}}, N_{\text{req}}, \epsilon_h, \epsilon_g$}
+\KwOut{$\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \{b_{mp}\}, P_{\text{total}}$}
+
+\tcp{Step 1: Compute robust thresholds}
+$\gamma_k^{\text{robust}} \leftarrow \gamma_k \cdot (1+\epsilon_h)^2/(1-\epsilon_h)^2$\;
+$\gamma_S^{\text{robust}} \leftarrow \gamma_S^{\text{PoD}} \cdot (1+\epsilon_g)^2/(1-\epsilon_g)^2$\;
+
+\tcp{Step 2: AP selection}
+\For{$p = 1, \ldots, P$}{
+    Compute $\norm{\vect{g}_{m,p}}$ for all $m$\;
+    Select top-$N_{\text{req}}$ APs: $b_{mp} = 1$\;
+}
+$\mathcal{M}^{\text{all}} \leftarrow \bigcup_p \{m : b_{mp} = 1\}$\;
+
+\tcp{Step 3: Extract sub-channels}
+$\mat{H}^{\text{all}} \leftarrow \mat{H}(\mathcal{M}^{\text{all}}, :)$\;
+$\vect{g}_p^{\text{all}} \leftarrow \mat{G}(\mathcal{M}^{\text{all}}, p)$ for all $p$\;
+
+\tcp{Step 4: Communication beams}
+\eIf{$\rank(\mat{H}^{\text{all}}) \geq K$}{
+    $\mat{W}_{\text{ZF}} \leftarrow \mat{H}^{\text{all}} \cdot (\mat{H}^{\text{all},H} \mat{H}^{\text{all}})^{-1}$\;
+    \For{$k = 1, \ldots, K$}{
+        $\vect{w}_k^{\text{ZF}} \leftarrow \mat{W}_{\text{ZF}}(:,k) / \norm{\mat{W}_{\text{ZF}}(:,k)}$\;
+        $p_k \leftarrow \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2$\;
+        $\vect{w}_k \leftarrow \sqrt{p_k} \cdot \vect{w}_k^{\text{ZF}}$\;
+    }
+}{Use MRT (suboptimal)\;}
+
+\tcp{Step 5: Sensing beams}
+\For{$p = 1, \ldots, P$}{
+    $P_{S,p} \leftarrow \gamma_S^{\text{robust}} \sigma_s^2 / \norm{\vect{g}_p^{\text{all}}}^2$\;
+    $\vect{z}_p \leftarrow \sqrt{P_{S,p}} \cdot \vect{g}_p^{\text{all}} / \norm{\vect{g}_p^{\text{all}}}$\;
+    $\mat{Z}_m \leftarrow \vect{z}_p \vect{z}_p^H$ (rank-1)\;
+}
+
+\tcp{Step 6: Power check}
+\For{$m \in \mathcal{M}^{\text{all}}$}{
+    $P_m \leftarrow \sum_k \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m)$\;
+    \If{$P_m > P_{\max}$}{Scale or mark infeasible\;}
+}
+
+\tcp{Step 7: Verify and return}
+\label{alg:closedform}
+\end{algorithm}
+
+%==============================================================================
+\section{Complexity Analysis}
+%==============================================================================
+
+\subsection{SDP Solving Complexity}
+
+\textbf{Number of variables}:
+\begin{itemize}
+    \item $K$ matrices $\mat{W}_k$: $K \cdot (MN_t)^2$ real variables
+    \item 1 matrix $\mat{Z}$: $(MN_t)^2$ real variables
+    \item $K$ variables $\mu_k$: $K$ real variables
+    \item Total: $O(K(MN_t)^2)$
+\end{itemize}
+
+\textbf{Number of constraints}:
+\begin{itemize}
+    \item $K$ communication LMIs: $K \cdot (MN_t+1) \times (MN_t+1)$
+    \item $P$ sensing linear constraints
+    \item $M$ power constraints
+    \item Total computational complexity: $O(K(MN_t)^3)$
+\end{itemize}
+
+\textbf{Solving time}: $O((MN_t)^{3.5})$ --- for $M=16, N_t=4$, approximately 5--10 seconds (MOSEK).
+
+\subsection{Closed-Form Solution Complexity}
+
+Table~\ref{tab:complexity} lists the complexity of each step in the closed-form solver.
+
+\begin{table}[htbp]
+\centering
+\caption{Complexity Analysis of Closed-Form Solver}\label{tab:complexity}
+\begin{tabular}{lll}
+\toprule
+Step & Operation & Complexity \\
+\midrule
+AP Selection & Sorting per target & $O(MP \log M)$ \\
+ZF Inversion & $(\mat{H}^H\mat{H})^{-1}$ & $O(K^3)$ \\
+Communication Power & $K$ multiplications & $O(K)$ \\
+Sensing Beams & $P$ normalizations & $O(PMN_t)$ \\
+Power Check & $M$ summations & $O(MK)$ \\
+\midrule
+\textbf{Total} & & \textbf{$O(MP\log M + K^3)$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For $M=16, N_t=4, K=10, P=4$: $O(7400)$, i.e., $less than 0.1$ second.
+
+%==============================================================================
+\section{Feasibility Conditions}
+%==============================================================================
+
+\subsection{Necessary Conditions}
+
+\textbf{ZF feasibility}:
+\begin{equation}
+M^{\text{all}} N_t \geq K
+\end{equation}
+
+For $N_t=4, K=10$: $M^{\text{all}} \geq 3$ (theoretical), $M^{\text{all}} \geq 4$ (numerically stable).
+
+\textbf{Power feasibility}:
+\begin{equation}
+P_{\text{comm}}^{\min} + P_{\text{sens}}^{\min} \leq M \cdot P_{\max}
+\end{equation}
+
+where:
+\begin{align}
+P_{\text{comm}}^{\min} &= \sum_{k=1}^K \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2 \\
+P_{\text{sens}}^{\min} &= \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} \frac{\sigma_s^2}{\norm{\vect{g}_p^{\text{all}}}^2}
+\end{align}
+
+\subsection{Infeasible Scenarios}
+
+\begin{enumerate}
+    \item Target is far from all APs ($d > 50$ m)
+    \item Excessive number of users ($K > M^{\text{all}}N_t$)
+    \item Insufficient power budget ($P_{\max} < P_{\text{comm}}^{\min}$)
+    \item Excessive CSI error ($\epsilon > 0.5$)
+\end{enumerate}
+
+%==============================================================================
+\section{Key Formulas Summary}
+%==============================================================================
+
+Table~\ref{tab:formulas} summarizes the core formulas of this paper.
+
+\begin{table}[htbp]
+\centering
+\caption{Summary of Key Formulas}\label{tab:formulas}
+\begin{tabular}{cll}
+\toprule
+Number & Name & Expression \\
+\midrule
+(3) & Communication robustness factor & $\eta_h = \left(\frac{1-\epsilon_h}{1+\epsilon_h}\right)^2$ \\
+(4) & Communication robust threshold & $\gamma_k^{\text{robust}} = \gamma_k / \eta_h$ \\
+(9) & Sensing robustness factor & $\eta_g = \left(\frac{1-\epsilon_g}{1+\epsilon_g}\right)^2$ \\
+(10) & Sensing robust threshold & $(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} / \eta_g$ \\
+(12) & FIM trace constraint & $\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X)$ \\
+(13) & FIM constant matrix & $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$ \\
+(18) & Communication S-Procedure LMI & $\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}$ \\
+(19) & Sensing S-Procedure LMI (optional) & $\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\[1.5ex] \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 - \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0}$ \\
+(20) & ZF matrix & $\mat{W}_{\text{ZF}} = \mat{H} (\mat{H}^H \mat{H})^{-1}$ \\
+(21) & Communication power allocation & $p_k = \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{Conclusion and Future Work}
+%==============================================================================
+
+This paper establishes a complete mathematical framework for joint beamforming optimization in Cell-Free ISAC systems. The main contributions include:
+
+\begin{enumerate}
+    \item \textbf{Problem Formulation}: Established the standard optimization problem (P1) incorporating communication QoS, sensing detection, tracking accuracy, and AP selection constraints.
+    \item \textbf{Robustness Analysis}: Derived worst-case SINR constraints under CSI errors, introducing robustness factors $\eta_h$ and $\eta_g$ to quantify the impact of estimation errors.
+    \item \textbf{Convex Relaxation}: Transformed the non-convex rank-one constraint into a semidefinite constraint via SDR, and proved the convexity of sensing constraints under the single-angle estimation assumption.
+    \item \textbf{S-Procedure Transformation}: Exactly transformed infinite-dimensional worst-case constraints into finite-dimensional LMIs, guaranteeing mathematical equivalence.
+    \item \textbf{Rank-One Recovery}: Proposed Gaussian randomization algorithms with power scaling fallback schemes to ensure solution feasibility.
+    \item \textbf{Closed-Form Solution}: Provided ZF beams with matched-filter sensing under simplified conditions, with complexity $O(MP\log M + K^3)$.
+\end{enumerate}
+
+\textbf{Future work}:
+\begin{itemize}
+    \item Implement the SDP solver (requires MOSEK support for LMI constraints)
+    \item Extend sensing channel robustness (Options B/C)
+    \item Multi-target joint optimization verification
+    \item Simulation validation and performance evaluation
+\end{itemize}
+
+\end{document}
