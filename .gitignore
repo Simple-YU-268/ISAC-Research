@@ -36,3 +36,19 @@ Thumbs.db
 venv/
 .env/
 .venv/
+
+# Archives (historical versions kept in git history only)
+archive/
+src/archive/
+
+# Results / logs (generated)
+results/
+*.log
+
+# Large data files
+train_data.npz
+isac_train_data.npz
+isac_diverse_train.npz
+
+# Visualization outputs
+*.png
