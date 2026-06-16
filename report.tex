@@ -289,12 +289,13 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 \end{assumption}
 
 %==============================================================================
-\section{SDP松弛与全局变量重构}
+%==============================================================================
+\section{全局变量重构与SDR降维}
 %==============================================================================
 
 \subsection{从波束到协方差}
 
-为将非凸的波束成形问题转化为凸优化问题，引入协方差矩阵变量：
+为将非凸的波束成形问题转化为可处理形式，首先引入协方差矩阵变量，将原问题中的向量变量提升为矩阵变量：
 
 \textbf{通信协方差矩阵}：
 \begin{equation}
@@ -311,63 +312,13 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 \mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z} \tag{17}
 \end{equation}
 
-\subsection{SDR松弛与最终凸SDP问题}
-
-原问题要求$\rank(\mat{W}_k) = 1$（因为$\mat{W}_k = \vect{w}_k \vect{w}_k^H$）。半定松弛（SDR）丢弃秩一约束，仅要求$\mat{W}_k \succeq \mat{0}$。进一步地，通过S-Procedure将无限维worst-case SINR约束精确转化为有限维线性矩阵不等式（LMI），得到如下可直接输入CVX/MOSEK求解的\textbf{标准凸半定规划问题}。
-
-\textbf{核心辅助定义}：
-\begin{equation}
-\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j
-\end{equation}
-
-\textbf{最终凸SDP问题(P3)}：
-\begin{align}
-\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
-\text{s.t.} \quad & \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \label{eq:lmi_comm} \\
-& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \label{eq:sinr_sens_sdp} \\
-& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
-& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
-& \mat{W}_k \succeq \mat{0}, \quad \forall k \label{eq:psd_w} \\
-& \mat{Z} \succeq \mat{0} \label{eq:psd_z} \\
-& \mu_k \geq 0, \quad \forall k \label{eq:mu_nonneg}
-\end{align}
-
-其中$\mat{E}_m$为AP $m$的选择矩阵，$\mu_k \geq 0$为S-Procedure引入的松弛变量。
-
-\begin{table}[htbp]
-\centering
-\caption{问题(P3)约束结构与变量对照}\label{tab:p3_structure}
-\begin{tabular}{clll}
-\toprule
-约束编号 & 类型 & 涉及变量 & 物理意义 \\
-\midrule
-\eqref{eq:lmi_comm} & LMI ($MN_t+1$阶) & $\mat{W}_k, \mu_k$ & 通信最坏情况鲁棒性 \\
-\eqref{eq:sinr_sens_sdp} & 线性不等式 & $\mat{Z}$ & 感知探测概率 \\
-\eqref{eq:pcrb_sdp} & 线性不等式 & $\mat{R}_X$ & 跟踪精度(PCRB) \\
-\eqref{eq:power_sdp} & 线性不等式 & $\mat{R}_X$ & 单AP峰值功率 \\
-\eqref{eq:psd_w}--\eqref{eq:psd_z} & 半正定锥 & $\mat{W}_k, \mat{Z}$ & SDR松弛 \\
-\eqref{eq:mu_nonneg} & 非负象限 & $\mu_k$ & S-Procedure松弛 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-
-\subsection{紧致性条件}
-
-\begin{theorem}[SDR紧致性]\label{thm:1}
-对于总功率最小化问题，当$K \leq 2$时，SDR紧致，即最优解满足$\rank(\mat{W}_k^*) = 1$。
-\end{theorem}
-
-\begin{remark}
-在高SNR regime下，SDR近似紧致，性能损失可控。对于一般情况，可通过高斯随机化恢复波束，性能损失上界为$O(1/L)$（$L$为候选数）。
-\end{remark}
+原问题要求$\rank(\mat{W}_k) = 1$（因为$\mat{W}_k = \vect{w}_k \vect{w}_k^H$）。半定松弛（SDR）丢弃秩一约束，仅要求$\mat{W}_k \succeq \mat{0}$。此时，目标函数$\sum_k \|\vect{w}_k\|^2 = \sum_k \tr(\mat{W}_k)$和功率约束$\sum_k \|\vect{w}_{m,k}\|^2 + \|\vect{z}_m\|^2 \leq P_{\max}$均已转化为关于协方差矩阵的线性迹函数，天然为凸形式。然而，通信约束中仍包含无限维的worst-case误差球，感知约束的凸性亦需进一步验证，因此尚不能宣称已得到完整的凸SDP问题。
 
 %==============================================================================
-\section{S-Procedure鲁棒约束转化}
+\section{复杂约束的凸性等效与转化}
 %==============================================================================
 
-\subsection{通信鲁棒约束（精确转化）}
+\subsection{通信鲁棒约束：S-Procedure精确转化}
 
 Worst-case SINR约束为：
 \begin{equation}
@@ -403,11 +354,7 @@ S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束�
 
 本工作聚焦于通信链路的鲁棒设计，假设感知信道在当前时隙内通过跟踪回波自校准，误差可忽略。具体地，目标状态参数$\boldsymbol{\theta}_p$在短时隙内被准确预测，预测误差远小于一个波长；感知信道$\vect{g}_p$通过上一时隙跟踪回波校准，误差纳入下一时隙更新；感知任务采用"检测-跟踪"级联架构，检测阶段采用保守门限，跟踪阶段利用时隙平滑性补偿误差。值得注意的是，感知信道是自校准的（发射探测信号并接收回波，回波携带当前信道状态），而通信信道依赖上行导频估计，导频污染导致误差累积。在顶级期刊的系统建模中，聚焦通信侧导频污染、假设雷达侧得益于LOS回波和卡尔曼跟踪滤波提供精准预测，是常见的稳妥折中。
 
-%==============================================================================
-\section{感知约束凸性证明}
-%==============================================================================
-
-\subsection{PCRB约束凸性}
+\subsection{感知约束凸性证明}
 
 对于PCRB约束$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$，注意到$\mat{F}_p$为已知常数半正定矩阵，而$\tr(\mat{F}_p \mat{R}_X)$作为$\mat{R}_X$的线性函数，该约束天然为凸仿射形式。类似地，感知SINR约束$\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$中，$\vect{g}_p \vect{g}_p^H$为已知常数半正定矩阵，其迹运算关于$\mat{Z}$同样为线性映射。功率约束$\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$亦遵循相同的线性结构。因此，上述三类约束均为凸仿射不等式。
 
@@ -420,18 +367,19 @@ S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束�
 \caption{约束凸性总结}\label{tab:convexity}
 \begin{tabular}{lll}
 \toprule
-约束 & 形式 & 凸性 \\
+约束类型 & 数学形式 & 凸性 \\
 \midrule
-通信鲁棒（S-Procedure） & LMI & 凸 \\
-PCRB & 线性迹 & 凸 \\
-感知SINR & 线性迹 & 凸 \\
-功率 & 线性迹 & 凸 \\
-半正定 & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & 凸 \\
+目标函数 & $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z})$ & 线性（凸） \\
+功率约束 & $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$ & 线性仿射（凸） \\
+感知SINR & $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$ & 线性仿射（凸） \\
+PCRB & $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ & 线性仿射（凸） \\
+通信鲁棒 & LMI (18) & 半正定锥（凸） \\
+PSD约束 & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & 半正定锥（凸） \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{theorem}[最终问题凸性]
+\begin{theorem}[问题凸性]
 问题(P3)是标准凸SDP，可通过内点法在多项式时间内求解到任意精度。结合Algorithm~\ref{alg:rank1}（高斯随机化秩一恢复），该理论框架可直接转化为MATLAB/CVX代码。
 \end{theorem}
 
