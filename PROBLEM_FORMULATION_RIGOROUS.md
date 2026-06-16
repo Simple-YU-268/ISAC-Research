@@ -302,77 +302,88 @@ $$\text{SNR}_p = \frac{\sum_{m=1}^M |\mathbf{g}_{m,p}^H \mathbf{Z}_m \mathbf{g}_
 
 **目标函数**:
 
-$$\min_{\mathbf{W}, \mathbf{Z}, \mathbf{a}, \rho} \quad \|\mathbf{W}\|_F^2 + \sum_{m=1}^M \text{tr}(\mathbf{Z}_m)$$
-
-其中:
-
-$$\|\mathbf{W}\|_F^2 = \sum_{m=1}^M \sum_{k=1}^K \|\mathbf{w}_{m,k}\|_2^2 = \sum_{k=1}^K \|\mathbf{w}_k\|_2^2$$
+$$\min_{\{\mathbf{w}_{m,k}\}, \{\mathbf{Z}_m\}, \{b_{mp}\}} \quad \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \right) \tag{5a}$$
 
 **约束条件**:
 
-**(C1) 通信 SINR 约束**:
+**(C1) 通信 QoS 约束 (最坏情况 SINR)**:
 
-$$\text{SINR}_k = \frac{|\mathbf{h}_k^H \mathbf{w}_k|^2}{\sum_{j \neq k} |\mathbf{h}_k^H \mathbf{w}_j|^2 + \sigma_c^2} \geq \gamma_{\text{comm}}, \quad \forall k \in \mathcal{K}$$
+$$\text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \tag{5b}$$
 
-**(C2) 鲁棒通信 SINR 约束**:
+其中最坏情况 SINR 定义为:
 
-$$\min_{\Delta\mathbf{h}_k \in \mathcal{H}_k} \text{SINR}_k(\mathbf{W}, \hat{\mathbf{h}}_k + \Delta\mathbf{h}_k) \geq \gamma_{\text{comm}}, \quad \forall k \in \mathcal{K}$$
+$$\text{SINR}_k^{\text{wc}} = \min_{\Delta\mathbf{h}_k \in \mathcal{H}_k} \frac{|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{w}_k|^2}{\sum_{j \neq k} |(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{w}_j|^2 + \sigma_c^2}$$
 
-**(C3) 感知 SNR 约束**:
+**(C2) 感知 SINR 约束 (检测概率)**:
 
-$$\text{SNR}_p = \frac{|\mathbf{g}_p^H \mathbf{z}_p|^2}{\sigma_s^2 \|\mathbf{z}_p\|_2^2} \geq \gamma_{\text{sens}}, \quad \forall p \in \mathcal{P}$$
+$$\text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \tag{5c}$$
 
-**(C4) 鲁棒感知 SNR 约束**:
+其中感知 SINR:
 
-$$\min_{\Delta\mathbf{g}_p \in \mathcal{G}_p} \text{SNR}_p(\mathbf{Z}, \hat{\mathbf{g}}_p + \Delta\mathbf{g}_p) \geq \gamma_{\text{sens}}, \quad \forall p \in \mathcal{P}$$
+$$\text{SINR}_{S,p} = \frac{\left|\sum_{m=1}^M \mathbf{g}_{m,p}^H \mathbf{Z}_m \mathbf{g}_{m,p}\right|^2}{\sigma_s^2 \sum_{m=1}^M \text{tr}(\mathbf{Z}_m)}$$
 
-**(C5) CRB 约束**:
+或波束形式:
 
-$$\text{CRB}_p \leq \Gamma, \quad \forall p \in \mathcal{P}$$
+$$\text{SINR}_{S,p} = \frac{|\mathbf{g}_p^H \mathbf{z}_p|^2}{\sigma_s^2 \|\mathbf{z}_p\|_2^2}$$
 
-**(C6) 总功率约束**:
+**(C3) 感知 PCRB 约束 (跟踪精度)**:
 
-$$\|\mathbf{W}\|_F^2 + \sum_{m=1}^M \text{tr}(\mathbf{Z}_m) \leq P_{\max}$$
+$$\text{tr}\left(\mathbf{J}_p^{\text{data}}\right) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \tag{5d}$$
 
-**(C7) 单 AP 功率约束**:
+其中 $\mathbf{J}_p^{\text{data}}$ 是感知数据 Fisher 信息矩阵:
 
-$$\sum_{k=1}^K \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \leq P_{m,\max}, \quad \forall m \in \mathcal{M}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \right\}$$
 
-**(C8) AP 选择约束**:
+**(C4) AP 选择约束**:
 
-$$a_m \in \{0, 1\}, \quad \forall m \in \mathcal{M}$$
+$$\sum_{m=1}^M b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{5e}$$
 
-$$\sum_{m=1}^M a_m = N_{\text{active}}$$
+其中 $b_{mp} \in \{0,1\}$ 表示 AP $m$ 是否参与目标 $p$ 的感知服务。
 
-**(C9) 半正定约束**:
+**(C5) 单 AP 功率约束**:
 
-$$\mathbf{Z}_m \succeq \mathbf{0}, \quad \forall m \in \mathcal{M}$$
+$$\sum_{k=1}^K \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{5f}$$
 
-**(C10) 功率分配约束**:
+**(C6) 半正定约束**:
 
-$$0 \leq \rho \leq 1$$
+$$\mathbf{Z}_m \succeq \mathbf{0}, \quad \forall m \in \mathcal{M} \tag{5g}$$
 
-$$P_{\text{comm}} = \rho P_{\max}, \quad P_{\text{sens}} = (1-\rho) P_{\max}$$
+**(C7) 二进制约束**:
 
-### 5.2 变量定义域
+$$b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{5h}$$
 
-| 变量 | 定义域 | 维度 |
-|------|--------|------|
-| $\mathbf{w}_k$ | $\mathbb{C}^{MN_t \times 1}$ | $MN_t$ 复变量 |
-| $\mathbf{Z}_m$ | $\mathbb{C}^{N_t \times N_t}, \mathbf{Z}_m \succeq \mathbf{0}$ | $N_t^2$ 复变量 (Hermitian) |
-| $a_m$ | $\{0, 1\}$ | 二进制 |
-| $\rho$ | $[0, 1]$ | 实变量 |
+### 5.2 与标准形式的对应关系
+
+| 本文档 | 标准形式 | 说明 |
+|--------|----------|------|
+| $\gamma_k$ | $\gamma_k$ | 通信用户 $k$ 的 SINR 门限 |
+| $\gamma_S^{\text{PoD}}$ | $\gamma_S^{\text{PoD}}$ | 感知检测概率门限 |
+| $\Gamma_{\text{Track}, p}$ | $\Gamma_{\text{Track}, p}$ | 感知跟踪精度门限 |
+| $N_{\text{req}}$ | $N_{\text{req}}$ | 每目标所需协作 AP 数 |
+| $P_{\max}$ | $P_{\max}$ | 单 AP 功率上限 |
+| $\mathcal{P}^{\text{active}}$ | $\mathcal{P}_n^{\text{active}}$ | 活跃目标集合 (时隙 $n$) |
+| $b_{mp}$ | $b_{mp}[n]$ | AP-目标关联变量 |
+
+### 5.3 变量定义域
+
+| 变量 | 定义域 | 维度 | 说明 |
+|------|--------|------|------|
+| $\mathbf{w}_{m,k}$ | $\mathbb{C}^{N_t \times 1}$ | $N_t$ 复变量 | AP $m$ 到用户 $k$ 的波束 |
+| $\mathbf{Z}_m$ | $\mathbb{C}^{N_t \times N_t}, \succeq \mathbf{0}$ | $N_t^2$ 复变量 | AP $m$ 的感知协方差 |
+| $b_{mp}$ | $\{0, 1\}$ | 二进制 | AP $m$ 服务目标 $p$ |
 
 **总变量数**:
-- 连续变量: $K \cdot MN_t + M \cdot N_t^2 + 1$ 个复/实变量
-- 二进制变量: $M$ 个
-- 对于 $M=16, N_t=4, K=10$: 连续变量 $640 + 256 + 1 = 897$ 个
+- 连续变量: $MKN_t + MN_t^2$ 个复变量
+- 二进制变量: $MP$ 个
+- 对于 $M=16, N_t=4, K=10, P=4$: 
+  - 连续: $640 + 256 = 896$
+  - 二进制: $64$
 
 ---
 
 ## 6. Constraint Analysis
 
-### 6.1 通信 SINR 约束 (C1) 的等价形式
+### 6.1 通信 SINR 约束 (5b) 的等价形式
 
 **分式约束**:
 
@@ -394,7 +405,7 @@ $$\text{tr}(\mathbf{H}_k \mathbf{w}_k \mathbf{w}_k^H) - \gamma_{\text{comm}} \su
 
 **注**: 这是关于 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$ 的线性约束，但 $\mathbf{W}_k$ 需满足 $\text{rank}(\mathbf{W}_k) = 1$。
 
-### 6.2 鲁棒通信约束 (C2) 的精确形式
+### 6.2 鲁棒通信约束 (5b) 的精确形式
 
 **Worst-case SINR**:
 
@@ -426,15 +437,19 @@ $$\text{SINR}_k^{\text{nom}} \geq \frac{1}{0.669} \approx 1.496 \text{ (1.75 dB)
 
 即需要额外 **1.75 dB** 的功率余量。
 
-### 6.3 感知 SNR 约束 (C3)
+### 6.3 感知 SINR 约束 (5c) — 检测概率
 
-**波束形式**:
+**协方差形式**:
 
-$$\frac{|\mathbf{g}_p^H \mathbf{z}_p|^2}{\sigma_s^2 \|\mathbf{z}_p\|_2^2} \geq \gamma_{\text{sens}}$$
+$$\text{SINR}_{S,p} = \frac{\left|\sum_{m=1}^M \mathbf{g}_{m,p}^H \mathbf{Z}_m \mathbf{g}_{m,p}\right|^2}{\sigma_s^2 \sum_{m=1}^M \text{tr}(\mathbf{Z}_m)} \geq \gamma_S^{\text{PoD}}$$
+
+**波束形式** (rank-1 协方差 $\mathbf{Z}_m = \mathbf{z}_{m,p}\mathbf{z}_{m,p}^H$):
+
+$$\text{SINR}_{S,p} = \frac{|\mathbf{g}_p^H \mathbf{z}_p|^2}{\sigma_s^2 \|\mathbf{z}_p\|_2^2} \geq \gamma_S^{\text{PoD}}$$
 
 **等价于**:
 
-$$|\mathbf{g}_p^H \mathbf{z}_p|^2 \geq \gamma_{\text{sens}} \sigma_s^2 \|\mathbf{z}_p\|_2^2$$
+$$|\mathbf{g}_p^H \mathbf{z}_p|^2 \geq \gamma_S^{\text{PoD}} \sigma_s^2 \|\mathbf{z}_p\|_2^2$$
 
 **最优波束** (匹配滤波):
 
@@ -444,17 +459,17 @@ $$\mathbf{z}_p^* = \sqrt{P_{\text{sens},p}} \frac{\mathbf{g}_p}{\|\mathbf{g}_p\|
 
 **最优 SNR**:
 
-$$\text{SNR}_p^* = \frac{P_{\text{sens},p} \|\mathbf{g}_p\|_2^2}{\sigma_s^2}$$
+$$\text{SINR}_{S,p}^* = \frac{P_{\text{sens},p} \|\mathbf{g}_p\|_2^2}{\sigma_s^2}$$
 
 **最小功率需求**:
 
-$$P_{\text{sens},p} \geq \frac{\gamma_{\text{sens}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
+$$P_{\text{sens},p} \geq \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
 
-### 6.4 鲁棒感知约束 (C4)
+### 6.4 鲁棒感知约束 (5c) 的精确形式
 
 类似通信鲁棒约束:
 
-$$\text{SNR}_p^{\text{wc}} \approx \text{SNR}_p^{\text{nom}} \cdot \frac{(1-\epsilon_g)^2}{(1+\epsilon_g)^2}$$
+$$\text{SINR}_{S,p}^{\text{wc}} \approx \text{SINR}_{S,p}^{\text{nom}} \cdot \frac{(1-\epsilon_g)^2}{(1+\epsilon_g)^2}$$
 
 **鲁棒性因子**:
 
@@ -466,59 +481,70 @@ $$\eta_g = \frac{0.85}{1.15} \cdot \frac{0.85}{1.15} = 0.739^2 \approx 0.546$$
 
 **等价约束**:
 
-$$\text{SNR}_p^{\text{nom}} \geq \frac{\gamma_{\text{sens}}}{\eta_g} = \frac{\gamma_{\text{sens}}(1+\epsilon_g)^2}{(1-\epsilon_g)^2}$$
+$$\text{SINR}_{S,p}^{\text{nom}} \geq \frac{\gamma_S^{\text{PoD}}}{\eta_g} = \frac{\gamma_S^{\text{PoD}}(1+\epsilon_g)^2}{(1-\epsilon_g)^2}$$
 
-对于 $\gamma_{\text{sens}} = 1$:
+对于 $\gamma_S^{\text{PoD}} = 1$ (0 dB):
 
-$$\text{SNR}_p^{\text{nom}} \geq \frac{1}{0.546} \approx 1.832 \text{ (2.63 dB)}$$
+$$\text{SINR}_{S,p}^{\text{nom}} \geq \frac{1}{0.546} \approx 1.832 \text{ (2.63 dB)}$$
 
 即需要额外 **2.63 dB** 的功率余量。
 
-### 6.5 CRB 约束 (C5)
+### 6.5 PCRB 约束 (5d) — 跟踪精度
 
-#### 6.5.1 Fisher 信息矩阵
+#### 6.5.1 感知数据 Fisher 信息矩阵
 
-对于目标位置估计，Fisher 信息矩阵 (FIM) 为:
-
-$$\mathbf{J}_p = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k})\right\}$$
+$$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}) \cdot \nabla_{\boldsymbol{\theta}_p}^H (\mathbf{g}_{m,p}^H \mathbf{w}_{m,k})\right\}$$
 
 其中 $\boldsymbol{\theta}_p = [x_p, y_p]^T$ 是目标位置。
 
-#### 6.5.2 简化 CRB
+#### 6.5.2 PCRB 约束形式
 
-对于距离估计 (简化情形):
+约束要求 Fisher 信息矩阵的迹足够大:
 
-$$\text{CRB}_p = \frac{\sigma_s^2}{\sum_{m=1}^M \sum_{k=1}^K |\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}|^2}$$
+$$\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}$$
 
-**等价约束**:
+这等价于要求定位误差的下界 (PCRB) 足够小:
 
-$$\sum_{m=1}^M \sum_{k=1}^K |\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}|^2 \geq \frac{\sigma_s^2}{\Gamma}$$
+$$\text{PCRB}_p = \text{tr}\left((\mathbf{J}_p^{\text{data}})^{-1}\right) \leq \frac{2}{\Gamma_{\text{Track}, p}}$$
 
-**注**: 此简化形式假设 CRB 仅取决于总感知信号能量，忽略几何结构。
+**简化形式** (忽略交叉项):
 
-### 6.6 功率约束汇总
+$$\text{tr}(\mathbf{J}_p^{\text{data}}) \approx \frac{2}{\sigma_s^2} \sum_{m=1}^M \sum_{k=1}^K |\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}|^2 \geq \Gamma_{\text{Track}, p}$$
+
+**等价于**:
+
+$$\sum_{m=1}^M \sum_{k=1}^K |\mathbf{g}_{m,p}^H \mathbf{w}_{m,k}|^2 \geq \frac{\sigma_s^2 \Gamma_{\text{Track}, p}}{2}$$
+
+### 6.6 功率约束 (5f)
 
 | 约束 | 数学形式 | 说明 |
 |------|----------|------|
-| 总功率 | $\sum_{m,k} \|\mathbf{w}_{m,k}\|_2^2 + \sum_m \text{tr}(\mathbf{Z}_m) \leq P_{\max}$ | 系统级 |
-| 单 AP | $\sum_k \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \leq P_{m,\max}$ | 每 AP |
-| 功率分配 | $P_{\text{comm}} + P_{\text{sens}} = P_{\text{total}} \leq P_{\max}$ | 通信/感知拆分 |
+| 单 AP 功率 | $\sum_k \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \leq P_{\max}$ | 每 AP 功率上限 |
 
-### 6.7 AP 选择约束
+**注**: 标准形式中使用 $P_{\max}$ 作为单 AP 功率上限 (而非系统总功率)。系统总功率为 $\sum_m P_m$。
 
-#### 6.7.1 选择得分
+### 6.7 AP 选择约束 (5e)
 
-AP $m$ 的联合得分:
+#### 6.7.1 按目标选择
 
-$$\text{score}_m = \alpha \sum_{k=1}^K \|\mathbf{h}_{m,k}\|_2^2 + (1-\alpha) \sum_{p=1}^P \|\mathbf{g}_{m,p}\|_2^2$$
+与固定 $N_{\text{active}}$ 不同，标准形式要求每个目标 $p$ 由恰好 $N_{\text{req}}$ 个 AP 服务:
 
-#### 6.7.2 选择规则
+$$\sum_{m=1}^M b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}}$$
 
-选择得分最高的 $N_{\text{active}}$ 个 AP:
+#### 6.7.2 选择策略
 
-$$\mathcal{A} = \arg\max_{\mathcal{A} \subseteq \mathcal{M}, |\mathcal{A}| = N_{\text{active}}} \sum_{m \in \mathcal{A}} \text{score}_m$$
+对于每个目标 $p$，选择信道最强的 $N_{\text{req}}$ 个 AP:
 
-**等价于**: 排序后取前 $N_{\text{active}}$ 个。
+$$b_{mp} = \begin{cases} 1, & \text{if } m \in \text{top-}N_{\text{req}} \text{ by } \|\mathbf{g}_{m,p}\|_2 \\ 0, & \text{otherwise} \end{cases}$$
+
+**总激活 AP 数**: 最多 $MP$ (若每个目标选择不同 AP)，最少 $N_{\text{req}}$ (若全部共享)。
+
+#### 6.7.3 与固定 AP 选择的区别
+
+| 方式 | 变量 | 约束 | 说明 |
+|------|------|------|------|
+| 固定 AP | $a_m$ | $\sum_m a_m = N_{\text{active}}$ | 所有目标共享同一 AP 集合 |
+| 按目标选择 | $b_{mp}$ | $\sum_m b_{mp} = N_{\text{req}}$ | 每个目标可有自己的 AP 集合 |
 
 ---
 
@@ -526,55 +552,53 @@ $$\mathcal{A} = \arg\max_{\mathcal{A} \subseteq \mathcal{M}, |\mathcal{A}| = N_{
 
 ### 7.1 SDR 松弛形式 (P2)
 
-将 rank-1 约束松弛，定义 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$:
+将 rank-1 约束松弛，定义 $\mathbf{W}_{m,k} = \mathbf{w}_{m,k} \mathbf{w}_{m,k}^H$:
 
-$$\min_{\{\mathbf{W}_k\}, \{\mathbf{Z}_m\}, \mathbf{a}, \rho} \quad \sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \sum_{m=1}^M \text{tr}(\mathbf{Z}_m)$$
+$$\min_{\{\mathbf{W}_{m,k}\}, \{\mathbf{Z}_m\}, \{b_{mp}\}} \quad \sum_{m=1}^M \sum_{k=1}^K \text{tr}(\mathbf{W}_{m,k}) + \sum_{m=1}^M \text{tr}(\mathbf{Z}_m)$$
 
 **s.t.**
 
-$$\text{tr}(\mathbf{H}_k \mathbf{W}_k) - \gamma_{\text{comm}} \sum_{j \neq k} \text{tr}(\mathbf{H}_k \mathbf{W}_j) \geq \gamma_{\text{comm}} \sigma_c^2, \quad \forall k$$
+$$\text{tr}(\mathbf{H}_k \mathbf{W}_k) - \gamma_k \sum_{j \neq k} \text{tr}(\mathbf{H}_k \mathbf{W}_j) \geq \gamma_k \sigma_c^2, \quad \forall k$$
 
-$$\text{tr}(\mathbf{G}_p \mathbf{Z}_p) \geq \gamma_{\text{sens}} \sigma_s^2, \quad \forall p$$
+$$\text{tr}(\mathbf{G}_p \mathbf{Z}_p) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p$$
 
-$$\sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \sum_{m=1}^M \text{tr}(\mathbf{Z}_m) \leq P_{\max}$$
+$$\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p$$
 
-$$\mathbf{W}_k \succeq \mathbf{0}, \quad \mathbf{Z}_m \succeq \mathbf{0}$$
+$$\sum_{k=1}^K \text{tr}(\mathbf{W}_{m,k}) + \text{tr}(\mathbf{Z}_m) \leq P_{\max}, \quad \forall m$$
 
-**注**: 松弛后若最优解满足 $\text{rank}(\mathbf{W}_k) = 1$，则 SDR 精确。
+$$\sum_{m=1}^M b_{mp} = N_{\text{req}}, \quad \forall p$$
+
+$$\mathbf{W}_{m,k} \succeq \mathbf{0}, \quad \mathbf{Z}_m \succeq \mathbf{0}, \quad b_{mp} \in \{0,1\}$$
+
+**注**: 松弛后若最优解满足 $\text{rank}(\mathbf{W}_{m,k}) = 1$，则 SDR 精确。
 
 ### 7.2 固定 AP 选择子问题 (P3)
 
-给定激活 AP 集合 $\mathcal{A}$，提取子信道:
+给定 AP-目标关联 $\{b_{mp}\}$，定义激活 AP 集合:
 
-$$\mathbf{H}_{\mathcal{A}} = \mathbf{H}(\mathcal{A}, :) \in \mathbb{C}^{|\mathcal{A}|N_t \times K}$$
+$$\mathcal{M}_p = \{m : b_{mp} = 1\}, \quad |\mathcal{M}_p| = N_{\text{req}}$$
 
-$$\mathbf{g}_{\mathcal{A},p} = \mathbf{g}_p(\mathcal{A}) \in \mathbb{C}^{|\mathcal{A}|N_t \times 1}$$
+$$\mathcal{M}^{\text{all}} = \bigcup_p \mathcal{M}_p$$
 
-**子问题**:
-
-$$\min_{\mathbf{W}, \mathbf{Z}} \quad \|\mathbf{W}\|_F^2 + \sum_{m \in \mathcal{A}} \text{tr}(\mathbf{Z}_m)$$
-
-**s.t.** 所有约束在子空间上成立。
+提取子信道并求解简化问题。
 
 ### 7.3 最小违反度形式 (P4)
 
-当固定 $P_{\max}$ 时，最小化约束违反:
-
-$$\min_{\mathbf{W}, \mathbf{Z}, \mathbf{a}, \rho} \quad \text{violation}(\mathbf{W}, \mathbf{Z}, \mathbf{a}, \rho)$$
+$$\min_{\{\mathbf{w}_{m,k}\}, \{\mathbf{Z}_m\}, \{b_{mp}\}} \quad \text{violation}$$
 
 其中:
 
-$$\text{violation} = \sum_{k=1}^K \max(0, \gamma_{\text{comm}} - \text{SINR}_k) + \sum_{p=1}^P \max(0, \gamma_{\text{sens}} - \text{SNR}_p) + \max(0, P_{\text{total}} - P_{\max})$$
+$$\text{violation} = \sum_{k=1}^K \max(0, \gamma_k - \text{SINR}_k^{\text{wc}}) + \sum_{p=1}^P \max(0, \gamma_S^{\text{PoD}} - \text{SINR}_{S,p}) + \sum_{p=1}^P \max(0, \Gamma_{\text{Track}, p} - \text{tr}(\mathbf{J}_p^{\text{data}})) + \sum_{m=1}^M \max(0, P_m - P_{\max})$$
 
 ### 7.4 拉格朗日对偶 (概述)
 
 **拉格朗日函数**:
 
-$$\mathcal{L}(\mathbf{W}, \mathbf{Z}, \boldsymbol{\lambda}, \boldsymbol{\mu}) = \|\mathbf{W}\|_F^2 + \sum_m \text{tr}(\mathbf{Z}_m) + \sum_k \lambda_k (\gamma_{\text{comm}} - \text{SINR}_k) + \sum_p \mu_p (\gamma_{\text{sens}} - \text{SNR}_p) + \nu (P_{\text{total}} - P_{\max})$$
+$$\mathcal{L} = \sum_{m,k} \|\mathbf{w}_{m,k}\|_2^2 + \sum_m \text{tr}(\mathbf{Z}_m) + \sum_k \lambda_k (\gamma_k - \text{SINR}_k^{\text{wc}}) + \sum_p \mu_p (\gamma_S^{\text{PoD}} - \text{SINR}_{S,p}) + \sum_p \nu_p (\Gamma_{\text{Track}, p} - \text{tr}(\mathbf{J}_p^{\text{data}})) + \sum_m \omega_m (P_m - P_{\max})$$
 
 **对偶问题**:
 
-$$\max_{\boldsymbol{\lambda}, \boldsymbol{\mu}, \nu \geq 0} \quad g(\boldsymbol{\lambda}, \boldsymbol{\mu}, \nu) = \inf_{\mathbf{W}, \mathbf{Z}} \mathcal{L}(\mathbf{W}, \mathbf{Z}, \boldsymbol{\lambda}, \boldsymbol{\mu}, \nu)$$
+$$\max_{\boldsymbol{\lambda}, \boldsymbol{\mu}, \boldsymbol{\nu}, \boldsymbol{\omega} \geq \mathbf{0}} \quad g(\boldsymbol{\lambda}, \boldsymbol{\mu}, \boldsymbol{\nu}, \boldsymbol{\omega})$$
 
 **注**: 由于 SINR 约束的非凸性，强对偶性一般不成立，对偶间隙 > 0。
 
@@ -590,15 +614,15 @@ $$\max_{\boldsymbol{\lambda}, \boldsymbol{\mu}, \nu \geq 0} \quad g(\boldsymbol{
 
 若采用 ZF 波束成形，需要:
 
-$$\text{rank}(\mathbf{H}_{\mathcal{A}}) \geq K$$
+$$\text{rank}(\mathbf{H}_{\mathcal{M}^{\text{all}}}) \geq K$$
 
-即 $|\mathcal{A}| \cdot N_t \geq K$。
+即 $|\mathcal{M}^{\text{all}}| \cdot N_t \geq K$。
 
 对于 $N_t = 4, K = 10$:
 
-$$|\mathcal{A}| \geq \lceil 10/4 \rceil = 3$$
+$$|\mathcal{M}^{\text{all}}| \geq \lceil 10/4 \rceil = 3$$
 
-实际中需要 $|\mathcal{A}| \geq 4$ 以保证数值稳定性。
+实际中需要 $|\mathcal{M}^{\text{all}}| \geq 4$ 以保证数值稳定性。
 
 **功率可行性**:
 
@@ -608,13 +632,15 @@ $$P_{\text{total}}^{\min} = P_{\text{comm}}^{\min} + P_{\text{sens}}^{\min}$$
 
 其中:
 
-$$P_{\text{comm}}^{\min} = \sum_{k=1}^K \frac{\gamma_{\text{comm}}^{\text{robust}} \sigma_c^2}{|\mathbf{h}_k^H \mathbf{w}_k^{\text{ZF}}|^2}$$
+$$P_{\text{comm}}^{\min} = \sum_{k=1}^K \frac{\gamma_k^{\text{robust}} \sigma_c^2}{|\mathbf{h}_k^H \mathbf{w}_k^{\text{ZF}}|^2}$$
 
-$$P_{\text{sens}}^{\min} = \sum_{p=1}^P \frac{\gamma_{\text{sens}}^{\text{robust}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
+$$P_{\text{sens}}^{\min} = \sum_{p=1}^P \frac{(\gamma_S^{\text{PoD}})^{\text{robust}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
 
 **可行条件**:
 
-$$P_{\text{total}}^{\min} \leq P_{\max}$$
+$$P_{\text{total}}^{\min} \leq M \cdot P_{\max}$$
+
+(注意: 标准形式中 $P_{\max}$ 是单 AP 上限，系统总功率上限为 $M \cdot P_{\max}$)
 
 #### 8.1.2 充分条件 (宽松)
 
@@ -624,20 +650,21 @@ $$P_{\text{total}}^{\min} \leq P_{\max}$$
 
 根据实验结果，约束瓶颈优先级:
 
-1. **感知 SNR** (最严格): 目标远离 AP 时路径损耗大
+1. **感知 SINR** (最严格): 目标远离 AP 时路径损耗大
 2. **通信 SINR** (中等): 多用户干扰和 CSI 误差
-3. **总功率** (宽松): 30W 预算通常足够
-4. **单 AP 功率** (通常不活跃): 当 $P_{m,\max} = P_{\max}$ 时
-5. **CRB** (未充分验证): 简化模型可能不准确
+3. **单 AP 功率** (中等): 每 AP 功率上限 $P_{\max}$
+4. **PCRB** (未充分验证): Fisher 信息矩阵迹约束
+5. **AP 选择** (低): 通常可满足
 
 ### 8.3 成功率影响因素
 
 | 参数 | 影响 | 敏感度 |
 |------|------|--------|
-| $\gamma_{\text{sens}}$ | 高 | 3dB → 0dB: 70% → 95% |
+| $\gamma_S^{\text{PoD}}$ | 高 | 3dB → 0dB: 70% → 95% |
 | $P_{\max}$ | 中 | 30W → 40W: 95% → 100% |
 | $M$ | 中 | M=16 → M=20: 95% → 100% |
 | $K$ | 高 | K=10 → K=20: 95% → 50% |
+| $N_{\text{req}}$ | 中 | 增加协作 AP 数提升分集 |
 | 目标范围 | 中 | ±50m → ±20m: 95% → 100% |
 | $\epsilon$ | 低 | 0.15 → 0.30: 95% → 75% |
 
@@ -663,13 +690,21 @@ Layer 4: Verification (约束检查)
 
 #### 9.2.1 AP 选择 (Layer 1)
 
-**贪心算法**:
+**按目标选择**:
 
-1. 计算每个 AP 的得分: $\text{score}_m = \alpha \sum_k \|\mathbf{h}_{m,k}\|^2 + (1-\alpha) \sum_p \|\mathbf{g}_{m,p}\|^2$
-2. 排序并选择前 $N_{\text{active}}$ 个
-3. 若不可行，尝试 $N_{\text{active}} - 2$ (回退)
+对于每个目标 $p \in \mathcal{P}^{\text{active}}$:
 
-**复杂度**: $O(M \log M)$
+1. 计算 AP $m$ 到目标 $p$ 的信道强度: $\|\mathbf{g}_{m,p}\|_2^2$
+2. 选择最强的 $N_{\text{req}}$ 个 AP: $b_{mp} = 1$
+3. 其余 AP: $b_{mp} = 0$
+
+**复杂度**: $O(MP \log M)$ (对每个目标排序)
+
+**简化策略** (所有目标共享 AP 集合):
+
+1. 计算联合得分: $\text{score}_m = \sum_p \|\mathbf{g}_{m,p}\|_2^2$
+2. 选择前 $N_{\text{active}}$ 个 AP
+3. 所有目标共享该集合
 
 #### 9.2.2 通信波束 (Layer 3)
 
@@ -681,7 +716,11 @@ $$\mathbf{w}_k = \frac{\mathbf{W}_{\text{ZF}}(:,k)}{\|\mathbf{W}_{\text{ZF}}(:,k
 
 **功率分配**:
 
-$$p_k = \frac{\gamma_{\text{comm}}^{\text{robust}} \sigma_c^2}{|\mathbf{h}_k^H \mathbf{w}_k^{\text{ZF}}|^2}$$
+$$p_k = \frac{\gamma_k^{\text{robust}} \sigma_c^2}{|\mathbf{h}_k^H \mathbf{w}_k^{\text{ZF}}|^2}$$
+
+其中鲁棒门限:
+
+$$\gamma_k^{\text{robust}} = \frac{\gamma_k (1+\epsilon_h)^2}{(1-\epsilon_h)^2}$$
 
 **复杂度**: $O(K^3)$ (矩阵求逆)
 
@@ -695,7 +734,11 @@ $$\mathbf{z}_p = \sqrt{P_{\text{sens},p}} \frac{\mathbf{g}_p}{\|\mathbf{g}_p\|_2
 
 **功率分配**:
 
-$$P_{\text{sens},p} = \frac{\gamma_{\text{sens}}^{\text{robust}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
+$$P_{\text{sens},p} = \frac{(\gamma_S^{\text{PoD}})^{\text{robust}} \sigma_s^2}{\|\mathbf{g}_p\|_2^2}$$
+
+其中鲁棒门限:
+
+$$(\gamma_S^{\text{PoD}})^{\text{robust}} = \frac{\gamma_S^{\text{PoD}} (1+\epsilon_g)^2}{(1-\epsilon_g)^2}$$
 
 **复杂度**: $O(MN_t)$
 
@@ -705,14 +748,20 @@ $$P_{\text{sens},p} = \frac{\gamma_{\text{sens}}^{\text{robust}} \sigma_s^2}{\|\
 
 **总功率**:
 
-$$P_{\text{total}} = P_{\text{comm}} + P_{\text{sens}}$$
+$$P_{\text{total}} = P_{\text{comm}} + P_{\text{sens}} = \sum_{k=1}^K p_k + \sum_{p=1}^P P_{\text{sens},p}$$
 
-若 $P_{\text{total}} > P_{\max}$，问题不可行。
+**单 AP 功率检查**:
+
+对于每个 AP $m$:
+
+$$P_m = \sum_{k=1}^K \|\mathbf{w}_{m,k}\|_2^2 + \text{tr}(\mathbf{Z}_m) \leq P_{\max}$$
+
+若 $P_m > P_{\max}$，需要缩放或重新分配功率。
 
 **优化策略**:
 
 1. 计算 $P_{\text{comm}}^{\min}$ 和 $P_{\text{sens}}^{\min}$
-2. 若和 $\leq P_{\max}$，成功
+2. 若所有 AP 满足 $P_m \leq P_{\max}$，成功
 3. 否则尝试减少 AP 数量或放宽门限
 
 ### 9.3 完整算法流程
