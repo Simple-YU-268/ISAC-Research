@@ -78,17 +78,7 @@
 & b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \label{eq:binary}
 \end{align}
 
-其中：
-\begin{itemize}
-    \item $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$：AP $m$到用户$k$的通信波束成形向量
-    \item $\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$：AP $m$的感知协方差矩阵
-    \item $b_{mp} \in \{0,1\}$：AP $m$是否服务目标$p$的二进制指示变量
-    \item $P_{\max}$：单AP最大发射功率
-    \item $\gamma_k$：通信用户$k$的SINR门限
-    \item $\gamma_S^{\text{PoD}}$：感知检测概率门限
-    \item $\Gamma_{\text{Track},p}$：目标$p$的跟踪精度门限（FIM迹约束）
-    \item $N_{\text{req}}$：每个目标所需服务AP数
-\end{itemize}
+其中，$\vect{w}_{m,k} \in \mathbb{C}^{N_t}$表示AP $m$到用户$k$的通信波束成形向量，$\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$为AP $m$的感知协方差矩阵，$b_{mp} \in \{0,1\}$为AP $m$是否服务目标$p$的二进制指示变量。参数$P_{\max}$为单AP最大发射功率，$\gamma_k$和$\gamma_S^{\text{PoD}}$分别为通信用户$k$的SINR门限与感知检测概率门限，$\Gamma_{\text{Track},p}$为目标$p$的跟踪精度门限（FIM迹约束），$N_{\text{req}}$为每个目标所需服务AP数。
 
 \subsection{符号表}
 
@@ -272,16 +262,7 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 其中$\mat{R}_X = \sum_k \vect{w}_k \vect{w}_k^H + \sum_p \vect{z}_p \vect{z}_p^H = \sum_k \mat{W}_k + \mat{Z}$为发射协方差矩阵，$\boldsymbol{\theta}_p$为目标状态参数。
 
 \begin{assumption}[感知参数估计模型]\label{ass:1}
-本文考虑的目标状态参数为$\boldsymbol{\theta}_p = [\theta_p]$（单角度估计）。在此设定下，$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此$\mat{J}_p^{\text{data}}$是$\mat{R}_X$的\textbf{仿射函数}，其迹约束可精确整理为：
-\begin{equation}
-\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}
-\end{equation}
-其中$\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$为已知常数半正定矩阵。
-\end{assumption}
-
-\begin{remark}
-由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时FIM退化为仅依赖于角度梯度的常数矩阵$\mat{F}_p$，从而保证了约束条件的凸仿射性质。
-\end{remark}
+注意到梯度矩阵$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$在当前时隙内由目标预测状态确定，可视为已知常数矩阵。因此$\mat{J}_p^{\text{data}}$是$\mat{R}_X$的仿射函数，其迹约束可精确整理为$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$，其中$\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$为已知常数半正定矩阵。由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数，此时FIM退化为仅依赖于角度梯度的常数矩阵$\mat{F}_p$，从而保证了约束条件的凸仿射性质。
 
 \textbf{证明FIM的线性性}：设$\mat{G}_p = \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{D \times MN_t}$，则：
 \begin{equation}
@@ -304,6 +285,8 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 \end{equation}
 
 为与优化变量无关的常数半正定矩阵。\hfill$\square$
+
+\end{assumption}
 
 %==============================================================================
 \section{SDP松弛与全局变量重构}
@@ -330,7 +313,7 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 
 \subsection{SDR松弛}
 
-原问题要求$\text{rank}(\mat{W}_k) = 1$（因为$\mat{W}_k = \vect{w}_k \vect{w}_k^H$）。半定松弛（SDR）丢弃秩一约束，仅要求$\mat{W}_k \succeq \mat{0}$。
+原问题要求$\rank(\mat{W}_k) = 1$（因为$\mat{W}_k = \vect{w}_k \vect{w}_k^H$）。半定松弛（SDR）丢弃秩一约束，仅要求$\mat{W}_k \succeq \mat{0}$。
 
 松弛后的问题为：
 \begin{align}
@@ -392,18 +375,7 @@ S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束�
 式(19)中矩阵元素含分母$\gamma_S^{\text{PoD}}$。在标准LMI书写中，可将不等式两边同乘$\gamma_S^{\text{PoD}}$，使左上角变为$\mat{Z} + \nu_p \gamma_S^{\text{PoD}} \mat{I}$，避免矩阵内部出现分数结构，排版更美观。数学等价性不变。
 \end{remark}
 
-\begin{assumption}[感知信道完美性]\label{ass:2}
-本工作聚焦于通信链路的鲁棒设计，假设感知信道在当前时隙内通过跟踪回波自校准，误差可忽略。具体地：
-\begin{enumerate}
-    \item 目标状态参数$\boldsymbol{\theta}_p$在短时隙内被准确预测，预测误差远小于一个波长
-    \item 感知信道$\vect{g}_p$通过上一时隙跟踪回波校准，误差纳入下一时隙更新
-    \item 感知任务采用"检测-跟踪"级联架构：检测阶段保守门限，跟踪阶段利用时隙平滑性补偿误差
-\end{enumerate}
-\end{assumption}
-
-\begin{remark}
-感知信道是自校准的（发射探测信号并接收回波，回波携带当前信道状态），而通信信道依赖上行导频估计，导频污染导致误差累积。在顶级期刊的系统建模中，聚焦通信侧导频污染、假设雷达侧得益于LOS回波和卡尔曼跟踪滤波提供精准预测，是常见的稳妥折中。
-\end{remark}
+本工作聚焦于通信链路的鲁棒设计，假设感知信道在当前时隙内通过跟踪回波自校准，误差可忽略。具体地，目标状态参数$\boldsymbol{\theta}_p$在短时隙内被准确预测，预测误差远小于一个波长；感知信道$\vect{g}_p$通过上一时隙跟踪回波校准，误差纳入下一时隙更新；感知任务采用"检测-跟踪"级联架构，检测阶段采用保守门限，跟踪阶段利用时隙平滑性补偿误差。值得注意的是，感知信道是自校准的（发射探测信号并接收回波，回波携带当前信道状态），而通信信道依赖上行导频估计，导频污染导致误差累积。在顶级期刊的系统建模中，聚焦通信侧导频污染、假设雷达侧得益于LOS回波和卡尔曼跟踪滤波提供精准预测，是常见的稳妥折中。
 
 %==============================================================================
 \section{感知约束凸性证明}
@@ -411,38 +383,7 @@ S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束�
 
 \subsection{PCRB约束凸性}
 
-\textbf{约束}：$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$
-
-\begin{itemize}
-    \item $\mat{F}_p$是已知常数半正定矩阵
-    \item $\mat{R}_X$是优化变量（半正定矩阵）
-    \item $\tr(\mat{F}_p \mat{R}_X)$是$\mat{R}_X$的线性函数
-\end{itemize}
-
-\textbf{结论}：线性不等式约束，天然凸。
-
-\subsection{感知SINR约束凸性}
-
-\textbf{约束}：$\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$
-
-\begin{itemize}
-    \item $\vect{g}_p \vect{g}_p^H$是已知常数半正定矩阵
-    \item $\mat{Z}$是优化变量
-    \item $\tr(\vect{g}_p \vect{g}_p^H \mat{Z})$是$\mat{Z}$的线性函数
-\end{itemize}
-
-\textbf{结论}：线性不等式约束，天然凸。
-
-\subsection{功率约束凸性}
-
-\textbf{约束}：$\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$
-
-\begin{itemize}
-    \item $\mat{E}_m$是已知常数矩阵
-    \item $\mat{R}_X$是优化变量
-\end{itemize}
-
-\textbf{结论}：线性不等式约束，天然凸。
+对于PCRB约束$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$，注意到$\mat{F}_p$为已知常数半正定矩阵，而$\tr(\mat{F}_p \mat{R}_X)$作为$\mat{R}_X$的线性函数，该约束天然为凸仿射形式。类似地，感知SINR约束$\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$中，$\vect{g}_p \vect{g}_p^H$为已知常数半正定矩阵，其迹运算关于$\mat{Z}$同样为线性映射。功率约束$\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$亦遵循相同的线性结构。因此，上述三类约束均为凸仿射不等式。
 
 \subsection{总结}
 
@@ -524,16 +465,7 @@ SDR松弛丢弃了$\text{rank}(\mat{W}_k) = 1$约束。求解后：
 
 \subsection{功率缩放数学保证}
 
-功率缩放后：
-\begin{itemize}
-    \item 单AP功率：$P_m' = \beta_m P_m = P_{\max}$（严格满足）
-    \item 通信SINR：$\text{SINR}_k' = \beta_m \cdot \text{SINR}_k$（线性缩放）
-    \item 感知SINR：$\text{SINR}_{S,p}' = \beta_m \cdot \text{SINR}_{S,p}$（线性缩放）
-\end{itemize}
-
-\begin{remark}
-感知协方差$\mat{Z}^*$的秩$>1$是\textbf{设计意图}（多目标覆盖），非恢复失败。纯通信MU-MIMO中功率最小化倾向于"笔形波束"（秩一）；ISAC中感知任务要求能量空间发散，多秩是设计意图。通信与感知在协方差域的"角色分离"是ISAC波形设计的本质特征。
-\end{remark}
+功率缩放后，单AP功率严格满足$P_m' = \beta_m P_m = P_{\max}$，通信与感知SINR均按同一因子线性缩放，即$\text{SINR}_k' = \beta_m \cdot \text{SINR}_k$及$\text{SINR}_{S,p}' = \beta_m \cdot \text{SINR}_{S,p}$。值得注意的是，与纯通信系统倾向于形成笔形波束（Pencil beam）不同，ISAC系统的感知任务要求发射能量在空间上具备一定的覆盖度。因此，SDR求解出的感知协方差矩阵呈现多秩状态属于物理上的设计意图，而非算法失效。通信与感知在协方差域的"角色分离"是ISAC波形设计的本质特征。
 
 %==============================================================================
 \section{闭式解推导}
@@ -541,13 +473,7 @@ SDR松弛丢弃了$\text{rank}(\mat{W}_k) = 1$约束。求解后：
 
 \subsection{假设条件}
 
-为获得闭式解，在特定条件下简化问题：
-\begin{itemize}
-    \item 忽略PCRB约束（或假设自动满足）
-    \item 使用ZF通信波束
-    \item 使用匹配滤波感知波束
-    \item 单AP功率约束宽松
-\end{itemize}
+为获得闭式解，在特定条件下简化问题：忽略PCRB约束（或假设其自动满足），采用ZF通信波束与匹配滤波感知波束，并假设单AP功率约束相对宽松。
 
 \subsection{ZF波束成形}
 
