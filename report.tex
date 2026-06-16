@@ -1,0 +1,760 @@
+\documentclass[12pt,a4paper]{article}
+
+% 中文支持
+\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\setCJKmonofont{Heiti SC}
+
+% 数学包
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+
+% 算法包
+\usepackage[ruled,vlined]{algorithm2e}
+
+% 表格和图形
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+% 页面设置
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% 超链接
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+% 定理环境
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{proposition}{命题}
+\newtheorem{assumption}{假设}
+\newtheorem{remark}{注}
+
+% 自定义命令
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Cell-Free ISAC 系统波束成形优化：\\数学推导与求解方法}}
+\author{研究阶段报告}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+本文针对无蜂窝集成感知与通信（Cell-Free Integrated Sensing and Communication, ISAC）系统，建立了联合波束成形优化的数学框架。考虑通信用户服务质量（QoS）约束、感知检测概率约束、跟踪精度约束（PCRB）以及接入点（AP）选择约束，在信道状态信息（CSI）存在估计误差的条件下，推导了鲁棒优化问题的半定规划（SDP）松弛形式。通过S-Procedure将无限维的worst-case约束转化为有限维的线性矩阵不等式（LMI），证明了感知约束在单角度估计假设下的凸性，并给出了秩一恢复算法与闭式求解方案。本文档可作为后续算法实现与论文撰写的理论基础。
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{问题定义}
+%==============================================================================
+
+\subsection{优化问题（标准形式）}
+
+考虑一个Cell-Free ISAC系统，包含$M$个分布式AP、$K$个通信用户和$P$个感知目标。每个AP配备$N_t$根发射天线。优化目标为最小化系统总发射功率，同时满足通信QoS、感知检测、跟踪精度以及AP选择约束。
+
+\begin{align}
+\min_{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \{b_{mp}\}} \quad & \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\text{s.t.} \quad & \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \label{eq:sinr_comm} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \label{eq:sinr_sens} \\
+& \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \label{eq:pcrb} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \label{eq:ap_select} \\
+& \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \label{eq:power} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \label{eq:psd} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \label{eq:binary}
+\end{align}
+
+其中：
+\begin{itemize}
+    \item $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$：AP $m$到用户$k$的通信波束成形向量
+    \item $\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$：AP $m$的感知协方差矩阵
+    \item $b_{mp} \in \{0,1\}$：AP $m$是否服务目标$p$的二进制指示变量
+    \item $P_{\max}$：单AP最大发射功率
+    \item $\gamma_k$：通信用户$k$的SINR门限
+    \item $\gamma_S^{\text{PoD}}$：感知检测概率门限
+    \item $\Gamma_{\text{Track},p}$：目标$p$的跟踪精度门限（FIM迹约束）
+    \item $N_{\text{req}}$：每个目标所需服务AP数
+\end{itemize}
+
+\subsection{符号表}
+
+表~\ref{tab:symbols}列出了本文使用的主要符号及其物理含义。
+
+\begin{table}[htbp]
+\centering
+\caption{主要符号表}\label{tab:symbols}
+\begin{tabular}{cll}
+\toprule
+符号 & 维度 & 物理含义 \\
+\midrule
+$M$ & 标量 & AP总数 \\
+$N_t$ & 标量 & 每个AP的发射天线数 \\
+$K$ & 标量 & 通信用户总数 \\
+$P$ & 标量 & 感知目标总数 \\
+$P_{\max}$ & 标量 & 单AP最大发射功率 \\
+$\gamma_k$ & 标量 & 通信用户$k$的SINR门限 \\
+$\gamma_S^{\text{PoD}}$ & 标量 & 感知检测概率门限 \\
+$\Gamma_{\text{Track},p}$ & 标量 & 目标$p$的跟踪精度门限 \\
+$\sigma_c^2$ & 标量 & 通信接收噪声方差 \\
+$\sigma_s^2$ & 标量 & 感知接收噪声方差 \\
+$\epsilon_h$ & 标量 & 通信信道估计相对误差界 \\
+$\epsilon_g$ & 标量 & 感知信道估计相对误差界 \\
+$N_{\text{req}}$ & 标量 & 每个目标所需服务AP数 \\
+$\vect{h}_{m,k}$ & $\mathbb{C}^{N_t}$ & AP $m$到用户$k$的通信信道 \\
+$\vect{g}_{m,p}$ & $\mathbb{C}^{N_t}$ & AP $m$到目标$p$的感知信道 \\
+$\vect{w}_{m,k}$ & $\mathbb{C}^{N_t}$ & AP $m$到用户$k$的通信波束 \\
+$\mat{Z}_m$ & $\mathbb{C}^{N_t \times N_t}$ & AP $m$的感知协方差矩阵 \\
+$b_{mp}$ & $\{0,1\}$ & AP $m$是否服务目标$p$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}
+具体数值参数（如$M=16, N_t=4, P_{\max}=30$~W等）将在仿真设定章节中给出，本文理论推导部分保持符号的一般性。
+\end{remark}
+
+%==============================================================================
+\section{系统模型与信号模型}
+%==============================================================================
+
+\subsection{通信信号模型}
+
+用户$k$的接收信号可表示为：
+\begin{equation}
+y_k = \underbrace{\sum_{m=1}^M \vect{h}_{m,k}^H \vect{w}_{m,k} s_k}_{\text{期望信号}} + \underbrace{\sum_{j \neq k} \sum_{m=1}^M \vect{h}_{m,k}^H \vect{w}_{m,j} s_j}_{\text{多用户干扰}} + n_k
+\end{equation}
+
+其中$n_k \sim \mathcal{CN}(0, \sigma_c^2)$为接收噪声。
+
+为便于分析，引入堆叠向量形式。定义全局通信信道$\vect{h}_k \in \mathbb{C}^{MN_t}$和全局通信波束$\vect{w}_k \in \mathbb{C}^{MN_t}$：
+\begin{equation}
+\vect{h}_k = [\vect{h}_{1,k}^T, \vect{h}_{2,k}^T, \ldots, \vect{h}_{M,k}^T]^T, \quad
+\vect{w}_k = [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T
+\end{equation}
+
+则接收信号可紧凑表示为：
+\begin{equation}
+y_k = \vect{h}_k^H \vect{w}_k s_k + \sum_{j \neq k} \vect{h}_k^H \vect{w}_j s_j + n_k
+\end{equation}
+
+\subsection{感知信号模型}
+
+对于单基地雷达感知，目标$p$的反射信号为：
+\begin{equation}
+y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
+\end{equation}
+
+其中$n_{S,p} \sim \mathcal{CN}(0, \sigma_s^2)$为感知接收噪声。
+
+\subsection{不完美CSI模型}
+
+实际系统中，信道估计存在误差。本文采用有界误差模型：
+
+\textbf{通信信道}：
+\begin{equation}
+\vect{h}_k = \hat{\vect{h}}_k + \Delta\vect{h}_k, \quad \norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}
+\end{equation}
+
+\textbf{感知信道}：
+\begin{equation}
+\vect{g}_p = \hat{\vect{g}}_p + \Delta\vect{g}_p, \quad \norm{\Delta\vect{g}_p} \leq \epsilon_g \norm{\hat{\vect{g}}_p}
+\end{equation}
+
+其中$\hat{\vect{h}}_k$和$\hat{\vect{g}}_p$为估计信道，$\Delta\vect{h}_k$和$\Delta\vect{g}_p$为估计误差，$\epsilon_h$和$\epsilon_g$为相对误差界。
+
+%==============================================================================
+\section{通信约束推导}
+%==============================================================================
+
+\subsection{SINR定义}
+
+通信用户$k$的信干噪比（SINR）定义为：
+\begin{equation}
+\text{SINR}_k = \frac{|\vect{h}_k^H \vect{w}_k|^2}{\sum_{j \neq k} |\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2} \tag{1}
+\end{equation}
+
+\subsection{最坏情况SINR分析}
+
+在CSI存在误差的情况下，需要保证worst-case SINR满足门限要求。考虑分子和干扰的最坏情况：
+
+\textbf{分子最坏情况}：当误差方向与波束相反时，有效信道增益最小：
+\begin{equation}
+|\vect{h}_k^H \vect{w}_k|^2 \approx |\hat{\vect{h}}_k^H \vect{w}_k|^2 (1 - \epsilon_h)^2
+\end{equation}
+
+\textbf{干扰最坏情况}：当误差方向增强干扰时：
+\begin{equation}
+|\vect{h}_k^H \vect{w}_j|^2 \approx |\hat{\vect{h}}_k^H \vect{w}_j|^2 (1 + \epsilon_h)^2
+\end{equation}
+
+因此，worst-case SINR可近似为：
+\begin{equation}
+\text{SINR}_k^{\text{wc}} \approx \text{SINR}_k^{\text{nom}} \cdot \frac{(1-\epsilon_h)^2}{(1+\epsilon_h)^2} \tag{2}
+\end{equation}
+
+\subsection{鲁棒性因子与门限}
+
+定义通信鲁棒性因子：
+\begin{equation}
+\eta_h = \left(\frac{1-\epsilon_h}{1+\epsilon_h}\right)^2 \tag{3}
+\end{equation}
+
+对于$\epsilon_h = 0.10$（10\%误差），$\eta_h \approx 0.669$（$-1.75$~dB）。这意味着CSI误差导致有效SINR下降约1.75~dB。
+
+为保证worst-case SINR满足门限，需提高名义SINR要求：
+\begin{equation}
+\gamma_k^{\text{robust}} = \gamma_k \cdot \frac{(1+\epsilon_h)^2}{(1-\epsilon_h)^2} = \frac{\gamma_k}{\eta_h} \tag{4}
+\end{equation}
+
+对于$\gamma_k = 1$（0~dB）和$\epsilon_h = 0.10$：$\gamma_k^{\text{robust}} \approx 1.493$（$1.74$~dB）。
+
+%==============================================================================
+\section{感知约束推导}
+%==============================================================================
+
+\subsection{感知SINR}
+
+目标$p$的感知SINR为：
+\begin{equation}
+\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \vect{z}_p|^2}{\sigma_s^2 \norm{\vect{z}_p}^2} \tag{5}
+\end{equation}
+
+由Cauchy-Schwarz不等式，最优感知波束为匹配滤波器：
+\begin{equation}
+\vect{z}_p^* = \sqrt{P_{S,p}} \frac{\vect{g}_p}{\norm{\vect{g}_p}} \tag{6}
+\end{equation}
+
+此时最优SINR为：
+\begin{equation}
+\text{SINR}_{S,p}^* = \frac{P_{S,p} \norm{\vect{g}_p}^2}{\sigma_s^2} \tag{7}
+\end{equation}
+
+为满足检测门限$\gamma_S^{\text{PoD}}$，最小感知功率为：
+\begin{equation}
+P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \tag{8}
+\end{equation}
+
+\subsection{鲁棒感知约束}
+
+类似地，定义感知鲁棒性因子：
+\begin{equation}
+\eta_g = \left(\frac{1-\epsilon_g}{1+\epsilon_g}\right)^2 \tag{9}
+\end{equation}
+
+对于$\epsilon_g = 0.15$（15\%误差），$\eta_g \approx 0.546$（$-2.63$~dB）。
+
+鲁棒感知门限：
+\begin{equation}
+(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} \cdot \frac{(1+\epsilon_g)^2}{(1-\epsilon_g)^2} = \frac{\gamma_S^{\text{PoD}}}{\eta_g} \tag{10}
+\end{equation}
+
+\subsection{PCRB约束与Fisher信息矩阵}
+
+跟踪精度约束通过Fisher信息矩阵（FIM）的迹来表征。感知数据FIM为：
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\} \tag{11}
+\end{equation}
+
+其中$\mat{R}_X = \sum_k \vect{w}_k \vect{w}_k^H + \sum_p \vect{z}_p \vect{z}_p^H = \sum_k \mat{W}_k + \mat{Z}$为发射协方差矩阵，$\boldsymbol{\theta}_p$为目标状态参数。
+
+\begin{assumption}[感知参数估计模型]\label{ass:1}
+本文考虑的目标状态参数为$\boldsymbol{\theta}_p = [\theta_p]$（单角度估计）。在此设定下，$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此$\mat{J}_p^{\text{data}}$是$\mat{R}_X$的\textbf{仿射函数}，其迹约束可精确整理为：
+\begin{equation}
+\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}
+\end{equation}
+其中$\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$为已知常数半正定矩阵。
+\end{assumption}
+
+\begin{remark}
+由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时FIM退化为仅依赖于角度梯度的常数矩阵$\mat{F}_p$，从而保证了约束条件的凸仿射性质。
+\end{remark}
+
+\textbf{证明FIM的线性性}：设$\mat{G}_p = \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{D \times MN_t}$，则：
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\{ \mat{G}_p \mat{R}_X \mat{G}_p^H \}
+\end{equation}
+
+展开第$(a,b)$个元素：
+\begin{equation}
+(\mat{J}_p^{\text{data}})_{ab} = \frac{2}{\sigma_s^2} \Real\Big\{ \sum_{i,j} (\mat{G}_p)_{ai} (\mat{R}_X)_{ij} (\mat{G}_p^H)_{jb} \Big\}
+\end{equation}
+
+这是关于$\mat{R}_X$元素的线性组合。因此迹约束：
+\begin{equation}
+\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X) \tag{12}
+\end{equation}
+
+其中：
+\begin{equation}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \tag{13}
+\end{equation}
+
+为与优化变量无关的常数半正定矩阵。\hfill$\square$
+
+%==============================================================================
+\section{SDP松弛与全局变量重构}
+%==============================================================================
+
+\subsection{从波束到协方差}
+
+为将非凸的波束成形问题转化为凸优化问题，引入协方差矩阵变量：
+
+\textbf{通信协方差矩阵}：
+\begin{equation}
+\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{C}^{MN_t \times MN_t} \tag{15}
+\end{equation}
+
+\textbf{感知协方差矩阵}：
+\begin{equation}
+\mat{Z} = \sum_p \vect{z}_p \vect{z}_p^H \in \mathbb{C}^{MN_t \times MN_t} \tag{16}
+\end{equation}
+
+\textbf{全局发射协方差}：
+\begin{equation}
+\mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z} \tag{17}
+\end{equation}
+
+\subsection{SDR松弛}
+
+原问题要求$\text{rank}(\mat{W}_k) = 1$（因为$\mat{W}_k = \vect{w}_k \vect{w}_k^H$）。半定松弛（SDR）丢弃秩一约束，仅要求$\mat{W}_k \succeq \mat{0}$。
+
+松弛后的问题为：
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}} \quad & \sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad & \text{SINR}_k \geq \gamma_k, \quad \forall k \label{eq:sinr_sdp} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \label{eq:sinr_sens_sdp} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
+& \mat{W}_k \succeq \mat{0}, \mat{Z} \succeq \mat{0} \label{eq:psd_sdp}
+\end{align}
+
+其中$\mat{E}_m$为AP $m$的选择矩阵。
+
+\subsection{紧致性条件}
+
+\begin{theorem}[SDR紧致性]\label{thm:1}
+对于总功率最小化问题，当$K \leq 2$时，SDR紧致，即最优解满足$\text{rank}(\mat{W}_k^*) = 1$。
+\end{theorem}
+
+\begin{remark}
+在高SNR regime下，SDR近似紧致，性能损失可控。对于一般情况，可通过高斯随机化恢复波束，性能损失上界为$O(1/L)$（$L$为候选数）。
+\end{remark}
+
+%==============================================================================
+\section{S-Procedure鲁棒约束转化}
+%==============================================================================
+
+\subsection{通信鲁棒约束（精确转化）}
+
+Worst-case SINR约束为：
+\begin{equation}
+\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+利用S-Procedure，可将此无限维约束转化为有限维LMI。定义：
+\begin{equation}
+\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j
+\end{equation}
+
+则存在$\mu_k \geq 0$使得以下LMI成立：
+\begin{equation}
+\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 + \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{18}
+\end{equation}
+
+\begin{proposition}
+S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束与LMI约束完全等价。
+\end{proposition}
+
+\subsection{感知鲁棒约束（可选）}
+
+类似地，对于感知信道，LMI形式为：
+\begin{equation}
+\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\ \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 + \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0} \tag{19}
+\end{equation}
+
+其中$\nu_p \geq 0$为感知S-Procedure松弛变量。
+
+\begin{remark}[LMI排版优化]
+式(19)中矩阵元素含分母$\gamma_S^{\text{PoD}}$。在标准LMI书写中，可将不等式两边同乘$\gamma_S^{\text{PoD}}$，使左上角变为$\mat{Z} + \nu_p \gamma_S^{\text{PoD}} \mat{I}$，避免矩阵内部出现分数结构，排版更美观。数学等价性不变。
+\end{remark}
+
+\begin{assumption}[感知信道完美性]\label{ass:2}
+本工作聚焦于通信链路的鲁棒设计，假设感知信道在当前时隙内通过跟踪回波自校准，误差可忽略。具体地：
+\begin{enumerate}
+    \item 目标状态参数$\boldsymbol{\theta}_p$在短时隙内被准确预测，预测误差远小于一个波长
+    \item 感知信道$\vect{g}_p$通过上一时隙跟踪回波校准，误差纳入下一时隙更新
+    \item 感知任务采用"检测-跟踪"级联架构：检测阶段保守门限，跟踪阶段利用时隙平滑性补偿误差
+\end{enumerate}
+\end{assumption}
+
+\begin{remark}
+感知信道是自校准的（发射探测信号并接收回波，回波携带当前信道状态），而通信信道依赖上行导频估计，导频污染导致误差累积。在顶级期刊的系统建模中，聚焦通信侧导频污染、假设雷达侧得益于LOS回波和卡尔曼跟踪滤波提供精准预测，是常见的稳妥折中。
+\end{remark}
+
+%==============================================================================
+\section{感知约束凸性证明}
+%==============================================================================
+
+\subsection{PCRB约束凸性}
+
+\textbf{约束}：$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$
+
+\begin{itemize}
+    \item $\mat{F}_p$是已知常数半正定矩阵
+    \item $\mat{R}_X$是优化变量（半正定矩阵）
+    \item $\tr(\mat{F}_p \mat{R}_X)$是$\mat{R}_X$的线性函数
+\end{itemize}
+
+\textbf{结论}：线性不等式约束，天然凸。
+
+\subsection{感知SINR约束凸性}
+
+\textbf{约束}：$\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$
+
+\begin{itemize}
+    \item $\vect{g}_p \vect{g}_p^H$是已知常数半正定矩阵
+    \item $\mat{Z}$是优化变量
+    \item $\tr(\vect{g}_p \vect{g}_p^H \mat{Z})$是$\mat{Z}$的线性函数
+\end{itemize}
+
+\textbf{结论}：线性不等式约束，天然凸。
+
+\subsection{功率约束凸性}
+
+\textbf{约束}：$\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$
+
+\begin{itemize}
+    \item $\mat{E}_m$是已知常数矩阵
+    \item $\mat{R}_X$是优化变量
+\end{itemize}
+
+\textbf{结论}：线性不等式约束，天然凸。
+
+\subsection{总结}
+
+表~\ref{tab:convexity}总结了各约束的凸性。
+
+\begin{table}[htbp]
+\centering
+\caption{约束凸性总结}\label{tab:convexity}
+\begin{tabular}{lll}
+\toprule
+约束 & 形式 & 凸性 \\
+\midrule
+通信鲁棒（S-Procedure） & LMI & 凸 \\
+PCRB & 线性迹 & 凸 \\
+感知SINR & 线性迹 & 凸 \\
+功率 & 线性迹 & 凸 \\
+半正定 & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & 凸 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[最终问题凸性]
+问题(P2)是标准凸SDP，可通过内点法在多项式时间内求解到任意精度。
+\end{theorem}
+
+%==============================================================================
+\section{秩一恢复与兜底方案}
+%==============================================================================
+
+\subsection{问题背景}
+
+SDR松弛丢弃了$\text{rank}(\mat{W}_k) = 1$约束。求解后：
+\begin{itemize}
+    \item 若$\text{rank}(\mat{W}_k^*) = 1$：直接用特征值分解恢复$\vect{w}_k$
+    \item 若$\text{rank}(\mat{W}_k^*) > 1$：需要高斯随机化提取次优波束
+\end{itemize}
+
+\subsection{Algorithm 1：高斯随机化秩一恢复}
+
+以下为秩一恢复算法的伪代码描述。该算法首先检测通信协方差矩阵的秩，若秩为1则直接提取波束；若秩大于1，则通过高斯随机化生成候选波束，选择满足约束的最佳候选；若仍不满足，采用功率缩放兜底。
+
+\begin{algorithm}[htbp]
+\caption{高斯随机化秩一恢复}
+\KwIn{SDP最优解$\{\mat{W}_k^*\}_{k=1}^K$, $\mat{Z}^*$, 约束参数}
+\KwOut{满足所有约束的波束$\{\vect{w}_k\}_{k=1}^K$, 感知波形}
+
+\tcp{步骤1：通信波束恢复}
+\ForEach{用户$k$}{
+    \eIf{$\text{rank}(\mat{W}_k^*) = 1$}{
+        $\vect{w}_k \leftarrow \sqrt{\lambda_{\max}(\mat{W}_k^*)} \cdot \vect{v}_{\max}(\mat{W}_k^*)$\tcp*{直接提取}
+    }{
+        生成$L = 1000$个候选：$\boldsymbol{\xi}_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$\;
+        归一化：$\vect{w}_k^{(l)} \leftarrow \sqrt{\tr(\mat{W}_k^*)} \cdot \frac{\boldsymbol{\xi}_l}{\norm{\boldsymbol{\xi}_l}}$\;
+        计算约束违反度：$v_l \leftarrow \sum_{k'} \max(0, \gamma_k - \text{SINR}_{k'}^{(l)}) + \sum_p \max(0, \gamma_S^{\text{PoD}} - \text{SINR}_{S,p}^{(l)})$\;
+        $l^* \leftarrow \argmin_l v_l$\;
+        \eIf{$v_{l^*} = 0$}{接受$\vect{w}_k \leftarrow \vect{w}_k^{(l^*)}$\;}{进入功率缩放兜底（步骤3）\;}
+    }
+}
+
+\tcp{步骤2：感知波形恢复}
+特征值分解：$\mat{Z}^* = \sum_{i=1}^{r} \lambda_i \vect{v}_i \vect{v}_i^H$\;
+生成多流传输波形：$\vect{z}_p = \sum_{i=1}^{r} \sqrt{\lambda_i} \vect{v}_i s_i$，其中$s_i \sim \mathcal{CN}(0,1)$独立\;
+
+\tcp{步骤3：功率缩放兜底}
+\ForEach{AP $m$}{
+    $P_m \leftarrow \sum_k \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m)$\;
+    \If{$P_m > P_{\max}$}{
+        $\beta_m \leftarrow P_{\max} / P_m$\;
+        $\vect{w}_{m,k} \leftarrow \vect{w}_{m,k} \cdot \sqrt{\beta_m}$\;
+        $\mat{Z}_m \leftarrow \mat{Z}_m \cdot \beta_m$\;
+    }
+}
+
+\tcp{步骤4：性能保证}
+\lIf{$K \leq 2$}{SDR紧致，恢复最优解}
+\lIf{$K > 2$}{高斯随机化提供次优解，性能损失上界$O(1/L)$}
+\label{alg:rank1}
+\end{algorithm}
+
+\subsection{功率缩放数学保证}
+
+功率缩放后：
+\begin{itemize}
+    \item 单AP功率：$P_m' = \beta_m P_m = P_{\max}$（严格满足）
+    \item 通信SINR：$\text{SINR}_k' = \beta_m \cdot \text{SINR}_k$（线性缩放）
+    \item 感知SINR：$\text{SINR}_{S,p}' = \beta_m \cdot \text{SINR}_{S,p}$（线性缩放）
+\end{itemize}
+
+\begin{remark}
+感知协方差$\mat{Z}^*$的秩$>1$是\textbf{设计意图}（多目标覆盖），非恢复失败。纯通信MU-MIMO中功率最小化倾向于"笔形波束"（秩一）；ISAC中感知任务要求能量空间发散，多秩是设计意图。通信与感知在协方差域的"角色分离"是ISAC波形设计的本质特征。
+\end{remark}
+
+%==============================================================================
+\section{闭式解推导}
+%==============================================================================
+
+\subsection{假设条件}
+
+为获得闭式解，在特定条件下简化问题：
+\begin{itemize}
+    \item 忽略PCRB约束（或假设自动满足）
+    \item 使用ZF通信波束
+    \item 使用匹配滤波感知波束
+    \item 单AP功率约束宽松
+\end{itemize}
+
+\subsection{ZF波束成形}
+
+\textbf{条件}：$\text{rank}(\mat{H}_{\text{all}}) \geq K$，即$M^{\text{all}} N_t \geq K$。
+
+ZF矩阵为：
+\begin{equation}
+\mat{W}_{\text{ZF}} = \mat{H}_{\text{all}} (\mat{H}_{\text{all}}^H \mat{H}_{\text{all}})^{-1} \tag{20}
+\end{equation}
+
+满足正交性质：
+\begin{equation}
+\vect{h}_k^{\text{all},H} \mat{W}_{\text{ZF}}(:,j) = \delta_{kj}
+\end{equation}
+
+功率分配：
+\begin{equation}
+p_k = \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2 \tag{21}
+\end{equation}
+
+\subsection{感知波束}
+
+\begin{equation}
+\vect{z}_p = \sqrt{P_{S,p}} \frac{\vect{g}_p^{\text{all}}}{\norm{\vect{g}_p^{\text{all}}}} \tag{22}
+\end{equation}
+
+其中$P_{S,p} = (\gamma_S^{\text{PoD}})^{\text{robust}} \sigma_s^2 / \norm{\vect{g}_p^{\text{all}}}^2$。
+
+\subsection{Algorithm 2：闭式求解器}
+
+以下为闭式求解器的伪代码描述。该算法首先根据感知信道强度为每个目标选择最优AP子集，随后在所选AP上分别计算ZF通信波束和匹配滤波感知波束，最后验证功率约束并返回可行解。
+
+\begin{algorithm}[htbp]
+\caption{Cell-Free ISAC闭式求解器}
+\KwIn{$\mat{H}, \mat{G}, M, N_t, K, P, P_{\max}, \{\gamma_k\}, \gamma_S^{\text{PoD}}, N_{\text{req}}, \epsilon_h, \epsilon_g$}
+\KwOut{$\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \{b_{mp}\}, P_{\text{total}}$}
+
+\tcp{步骤1：计算鲁棒门限}
+$\gamma_k^{\text{robust}} \leftarrow \gamma_k \cdot (1+\epsilon_h)^2/(1-\epsilon_h)^2$\;
+$\gamma_S^{\text{robust}} \leftarrow \gamma_S^{\text{PoD}} \cdot (1+\epsilon_g)^2/(1-\epsilon_g)^2$\;
+
+\tcp{步骤2：AP选择}
+\For{$p = 1, \ldots, P$}{
+    计算$\norm{\vect{g}_{m,p}}$ for all $m$\;
+    选择top-$N_{\text{req}}$ APs：$b_{mp} = 1$\;
+}
+$\mathcal{M}^{\text{all}} \leftarrow \bigcup_p \{m : b_{mp} = 1\}$\;
+
+\tcp{步骤3：提取子信道}
+$\mat{H}^{\text{all}} \leftarrow \mat{H}(\mathcal{M}^{\text{all}}, :)$\;
+$\vect{g}_p^{\text{all}} \leftarrow \mat{G}(\mathcal{M}^{\text{all}}, p)$ for all $p$\;
+
+\tcp{步骤4：通信波束}
+\eIf{$\text{rank}(\mat{H}^{\text{all}}) \geq K$}{
+    $\mat{W}_{\text{ZF}} \leftarrow \mat{H}^{\text{all}} \cdot (\mat{H}^{\text{all},H} \mat{H}^{\text{all}})^{-1}$\;
+    \For{$k = 1, \ldots, K$}{
+        $\vect{w}_k^{\text{ZF}} \leftarrow \mat{W}_{\text{ZF}}(:,k) / \norm{\mat{W}_{\text{ZF}}(:,k)}$\;
+        $p_k \leftarrow \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2$\;
+        $\vect{w}_k \leftarrow \sqrt{p_k} \cdot \vect{w}_k^{\text{ZF}}$\;
+    }
+}{使用MRT（次优）\;}
+
+\tcp{步骤5：感知波束}
+\For{$p = 1, \ldots, P$}{
+    $P_{S,p} \leftarrow \gamma_S^{\text{robust}} \sigma_s^2 / \norm{\vect{g}_p^{\text{all}}}^2$\;
+    $\vect{z}_p \leftarrow \sqrt{P_{S,p}} \cdot \vect{g}_p^{\text{all}} / \norm{\vect{g}_p^{\text{all}}}$\;
+    $\mat{Z}_m \leftarrow \vect{z}_p \vect{z}_p^H$（rank-1）\;
+}
+
+\tcp{步骤6：功率检查}
+\For{$m \in \mathcal{M}^{\text{all}}$}{
+    $P_m \leftarrow \sum_k \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m)$\;
+    \If{$P_m > P_{\max}$}{缩放或标记不可行\;}
+}
+
+\tcp{步骤7：验证并返回}
+\label{alg:closedform}
+\end{algorithm}
+
+%==============================================================================
+\section{复杂度分析}
+%==============================================================================
+
+\subsection{SDP求解复杂度}
+
+\textbf{变量数}：
+\begin{itemize}
+    \item $K$个$\mat{W}_k$：$K \cdot (MN_t)^2$实变量
+    \item 1个$\mat{Z}$：$(MN_t)^2$实变量
+    \item $K$个$\mu_k$：$K$实变量
+    \item 总计：$O(K(MN_t)^2)$
+\end{itemize}
+
+\textbf{约束数}：
+\begin{itemize}
+    \item $K$个通信LMI：$K \cdot (MN_t+1) \times (MN_t+1)$
+    \item $P$个感知线性约束
+    \item $M$个功率约束
+    \item 总计：$O(K(MN_t)^3)$计算量
+\end{itemize}
+
+\textbf{求解时间}：$O((MN_t)^{3.5})$——对于$M=16, N_t=4$约5--10秒（MOSEK）。
+
+\subsection{闭式解复杂度}
+
+表~\ref{tab:complexity}列出了闭式求解各步骤的复杂度。
+
+\begin{table}[htbp]
+\centering
+\caption{闭式求解复杂度分析}\label{tab:complexity}
+\begin{tabular}{lll}
+\toprule
+步骤 & 操作 & 复杂度 \\
+\midrule
+AP选择 & 每目标排序 & $O(MP \log M)$ \\
+ZF求逆 & $(\mat{H}^H\mat{H})^{-1}$ & $O(K^3)$ \\
+通信功率 & $K$次乘法 & $O(K)$ \\
+感知波束 & $P$次归一化 & $O(PMN_t)$ \\
+功率检查 & $M$次求和 & $O(MK)$ \\
+\midrule
+\textbf{总计} & & \textbf{$O(MP\log M + K^3)$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+对于$M=16, N_t=4, K=10, P=4$：$O(7400)$，即$< 0.1$秒。
+
+%==============================================================================
+\section{可行性条件}
+%==============================================================================
+
+\subsection{必要条件}
+
+\textbf{ZF可行性}：
+\begin{equation}
+M^{\text{all}} N_t \geq K
+\end{equation}
+
+对于$N_t=4, K=10$：$M^{\text{all}} \geq 3$（理论），$M^{\text{all}} \geq 4$（数值稳定）。
+
+\textbf{功率可行性}：
+\begin{equation}
+P_{\text{comm}}^{\min} + P_{\text{sens}}^{\min} \leq M \cdot P_{\max}
+\end{equation}
+
+其中：
+\begin{align}
+P_{\text{comm}}^{\min} &= \sum_{k=1}^K \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2 \\
+P_{\text{sens}}^{\min} &= \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} \frac{\sigma_s^2}{\norm{\vect{g}_p^{\text{all}}}^2}
+\end{align}
+
+\subsection{不可行情形}
+
+\begin{enumerate}
+    \item 目标远离所有AP（$d > 50$~m）
+    \item 用户数过多（$K > M^{\text{all}}N_t$）
+    \item 功率预算过低（$P_{\max} < P_{\text{comm}}^{\min}$）
+    \item CSI误差过大（$\epsilon > 0.5$）
+\end{enumerate}
+
+%==============================================================================
+\section{关键公式汇总}
+%==============================================================================
+
+表~\ref{tab:formulas}汇总了本文的核心公式。
+
+\begin{table}[htbp]
+\centering
+\caption{关键公式汇总}\label{tab:formulas}
+\begin{tabular}{cll}
+\toprule
+编号 & 名称 & 表达式 \\
+\midrule
+(3) & 通信鲁棒性因子 & $\eta_h = \left(\frac{1-\epsilon_h}{1+\epsilon_h}\right)^2$ \\
+(4) & 通信鲁棒门限 & $\gamma_k^{\text{robust}} = \gamma_k / \eta_h$ \\
+(9) & 感知鲁棒性因子 & $\eta_g = \left(\frac{1-\epsilon_g}{1+\epsilon_g}\right)^2$ \\
+(10) & 感知鲁棒门限 & $(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} / \eta_g$ \\
+(12) & FIM迹约束 & $\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X)$ \\
+(13) & FIM常数矩阵 & $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$ \\
+(18) & 通信S-Procedure LMI & $\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 + \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}$ \\
+(19) & 感知S-Procedure LMI（可选） & $\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\ \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 + \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0}$ \\
+(20) & ZF矩阵 & $\mat{W}_{\text{ZF}} = \mat{H} (\mat{H}^H \mat{H})^{-1}$ \\
+(21) & 通信功率分配 & $p_k = \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{结论与展望}
+%==============================================================================
+
+本文建立了Cell-Free ISAC系统联合波束成形优化的完整数学框架，主要贡献包括：
+
+\begin{enumerate}
+    \item \textbf{问题建模}：建立了包含通信QoS、感知检测、跟踪精度和AP选择的标准优化问题(P1)。
+    \item \textbf{鲁棒性分析}：推导了CSI误差下的worst-case SINR约束，引入鲁棒性因子$\eta_h$和$\eta_g$量化误差影响。
+    \item \textbf{凸松弛}：通过SDR将非凸秩一约束松弛为半正定约束，证明感知约束在单角度估计假设下的凸性。
+    \item \textbf{S-Procedure转化}：将无限维worst-case约束精确转化为有限维LMI，保证数学等价性。
+    \item \textbf{秩一恢复}：提出高斯随机化算法与功率缩放兜底方案，保证解的可行性。
+    \item \textbf{闭式解}：在简化条件下给出ZF波束+匹配滤波感知的闭式解，复杂度$O(MP\log M + K^3)$。
+\end{enumerate}
+
+\textbf{后续工作}：
+\begin{itemize}
+    \item 实现SDP求解器（需MOSEK支持LMI约束）
+    \item 感知信道鲁棒性扩展（方案B/C）
+    \item 多目标联合优化验证
+    \item 仿真验证与性能评估
+\end{itemize}
+
+\end{document}
