@@ -12,7 +12,7 @@
 \usepackage{mathtools}
 
 % 算法包
-\usepackage[ruled,vlined]{algorithm2e}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
 
 % 表格和图形
 \usepackage{booktabs}
@@ -40,6 +40,7 @@
 \newcommand{\norm}[1]{\|#1\|_2}
 \newcommand{\tr}{\text{tr}}
 \newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 
@@ -67,7 +68,7 @@
 考虑一个Cell-Free ISAC系统，包含$M$个分布式AP、$K$个通信用户和$P$个感知目标。每个AP配备$N_t$根发射天线。优化目标为最小化系统总发射功率，同时满足通信QoS、感知检测、跟踪精度以及AP选择约束。
 
 \begin{align}
-\min_{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \{b_{mp}\}} \quad & \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\min_{\substack{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \\ \{b_{mp}\}}} \quad & \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
 \text{s.t.} \quad & \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \label{eq:sinr_comm} \\
 & \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \label{eq:sinr_sens} \\
 & \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \label{eq:pcrb} \\
@@ -346,7 +347,7 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 \subsection{紧致性条件}
 
 \begin{theorem}[SDR紧致性]\label{thm:1}
-对于总功率最小化问题，当$K \leq 2$时，SDR紧致，即最优解满足$\text{rank}(\mat{W}_k^*) = 1$。
+对于总功率最小化问题，当$K \leq 2$时，SDR紧致，即最优解满足$\rank(\mat{W}_k^*) = 1$。
 \end{theorem}
 
 \begin{remark}
@@ -371,7 +372,7 @@ Worst-case SINR约束为：
 
 则存在$\mu_k \geq 0$使得以下LMI成立：
 \begin{equation}
-\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 + \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{18}
+\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{18}
 \end{equation}
 
 \begin{proposition}
@@ -382,7 +383,7 @@ S-Procedure是\textbf{精确等价}转化，非近似。即原worst-case约束�
 
 类似地，对于感知信道，LMI形式为：
 \begin{equation}
-\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\ \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 + \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0} \tag{19}
+\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\[1.5ex] \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 - \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0} \tag{19}
 \end{equation}
 
 其中$\nu_p \geq 0$为感知S-Procedure松弛变量。
@@ -475,8 +476,8 @@ PCRB & 线性迹 & 凸 \\
 
 SDR松弛丢弃了$\text{rank}(\mat{W}_k) = 1$约束。求解后：
 \begin{itemize}
-    \item 若$\text{rank}(\mat{W}_k^*) = 1$：直接用特征值分解恢复$\vect{w}_k$
-    \item 若$\text{rank}(\mat{W}_k^*) > 1$：需要高斯随机化提取次优波束
+    \item 若$\rank(\mat{W}_k^*) = 1$：直接用特征值分解恢复$\vect{w}_k$
+    \item 若$\rank(\mat{W}_k^*) > 1$：需要高斯随机化提取次优波束
 \end{itemize}
 
 \subsection{Algorithm 1：高斯随机化秩一恢复}
@@ -490,7 +491,7 @@ SDR松弛丢弃了$\text{rank}(\mat{W}_k) = 1$约束。求解后：
 
 \tcp{步骤1：通信波束恢复}
 \ForEach{用户$k$}{
-    \eIf{$\text{rank}(\mat{W}_k^*) = 1$}{
+    \eIf{$\rank(\mat{W}_k^*) = 1$}{
         $\vect{w}_k \leftarrow \sqrt{\lambda_{\max}(\mat{W}_k^*)} \cdot \vect{v}_{\max}(\mat{W}_k^*)$\tcp*{直接提取}
     }{
         生成$L = 1000$个候选：$\boldsymbol{\xi}_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$\;
@@ -726,8 +727,8 @@ P_{\text{sens}}^{\min} &= \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} \
 (10) & 感知鲁棒门限 & $(\gamma_S^{\text{PoD}})^{\text{robust}} = \gamma_S^{\text{PoD}} / \eta_g$ \\
 (12) & FIM迹约束 & $\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X)$ \\
 (13) & FIM常数矩阵 & $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$ \\
-(18) & 通信S-Procedure LMI & $\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 + \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}$ \\
-(19) & 感知S-Procedure LMI（可选） & $\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\ \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 + \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0}$ \\
+(18) & 通信S-Procedure LMI & $\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}$ \\
+(19) & 感知S-Procedure LMI（可选） & $\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} + \nu_p \mat{I} & \frac{1}{\gamma_S^{\text{PoD}}} \mat{Z} \hat{\vect{g}}_p \\[1.5ex] \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} & \frac{1}{\gamma_S^{\text{PoD}}} \hat{\vect{g}}_p^H \mat{Z} \hat{\vect{g}}_p - \sigma_s^2 - \nu_p \epsilon_g^2 \end{bmatrix} \succeq \mat{0}$ \\
 (20) & ZF矩阵 & $\mat{W}_{\text{ZF}} = \mat{H} (\mat{H}^H \mat{H})^{-1}$ \\
 (21) & 通信功率分配 & $p_k = \gamma_k^{\text{robust}} \sigma_c^2 \norm{\mat{W}_{\text{ZF}}(:,k)}^2$ \\
 \bottomrule
