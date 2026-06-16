@@ -334,6 +334,23 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 
 其中$\mat{E}_m$为AP $m$的选择矩阵，$\mu_k \geq 0$为S-Procedure引入的松弛变量。
 
+\begin{table}[htbp]
+\centering
+\caption{问题(P3)约束结构与变量对照}\label{tab:p3_structure}
+\begin{tabular}{clll}
+\toprule
+约束编号 & 类型 & 涉及变量 & 物理意义 \\
+\midrule
+\eqref{eq:lmi_comm} & LMI ($MN_t+1$阶) & $\mat{W}_k, \mu_k$ & 通信最坏情况鲁棒性 \\
+\eqref{eq:sinr_sens_sdp} & 线性不等式 & $\mat{Z}$ & 感知探测概率 \\
+\eqref{eq:pcrb_sdp} & 线性不等式 & $\mat{R}_X$ & 跟踪精度(PCRB) \\
+\eqref{eq:power_sdp} & 线性不等式 & $\mat{R}_X$ & 单AP峰值功率 \\
+\eqref{eq:psd_w}--\eqref{eq:psd_z} & 半正定锥 & $\mat{W}_k, \mat{Z}$ & SDR松弛 \\
+\eqref{eq:mu_nonneg} & 非负象限 & $\mu_k$ & S-Procedure松弛 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \begin{remark}[为什么这就是"问题的解"？]
 注意到上述模型中的每一行：目标函数为线性迹，\eqref{eq:lmi_comm}为标准LMI，\eqref{eq:sinr_sens_sdp}--\eqref{eq:power_sdp}为线性仿射不等式，\eqref{eq:psd_w}--\eqref{eq:mu_nonneg}为半正定锥约束。没有任何分式、没有任何二次型、没有任何离散变量。该数学形态是凸优化领域最标准的范式，直接声明\texttt{variable W(N,N) semidefinite}，调用CVX配合MOSEK求解器，即可在多项式时间内获得全局最优协方差矩阵。同时，\eqref{eq:lmi_comm}兼顾最坏情况通信鲁棒性，\eqref{eq:sinr_sens_sdp}保证感知探测概率，\eqref{eq:pcrb_sdp}满足跟踪精度，\eqref{eq:power_sdp}约束分布式AP峰值功率——物理约束全覆盖。
 \end{remark}

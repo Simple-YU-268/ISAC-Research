@@ -332,6 +332,23 @@ The original problem requires $\rank(\mat{W}_k) = 1$ (since $\mat{W}_k = \vect{w
 
 where $\mat{E}_m$ is the selection matrix for AP $m$, and $\mu_k \geq 0$ is the S-Procedure slack variable.
 
+\begin{table}[htbp]
+\centering
+\caption{Problem (P3) Constraint Structure and Variable Mapping}\label{tab:p3_structure}
+\begin{tabular}{clll}
+\toprule
+Constraint & Type & Variables & Physical Meaning \\
+\midrule
+\eqref{eq:lmi_comm} & LMI ($MN_t+1$ dim.) & $\mat{W}_k, \mu_k$ & Communication worst-case robustness \\
+\eqref{eq:sinr_sens_sdp} & Linear inequality & $\mat{Z}$ & Sensing detection probability \\
+\eqref{eq:pcrb_sdp} & Linear inequality & $\mat{R}_X$ & Tracking accuracy (PCRB) \\
+\eqref{eq:power_sdp} & Linear inequality & $\mat{R}_X$ & Per-AP peak power \\
+\eqref{eq:psd_w}--\eqref{eq:psd_z} & PSD cone & $\mat{W}_k, \mat{Z}$ & SDR relaxation \\
+\eqref{eq:mu_nonneg} & Non-negative orthant & $\mu_k$ & S-Procedure slack \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \begin{remark}[Why This Is the ``Solution to the Problem'']
 Notice that every line in the above model: the objective function is a linear trace, \eqref{eq:lmi_comm} is a standard LMI, \eqref{eq:sinr_sens_sdp}--\eqref{eq:power_sdp} are linear affine inequalities, and \eqref{eq:psd_w}--\eqref{eq:mu_nonneg} are positive semidefinite cone constraints. There are no fractions, no quadratic forms, and no discrete variables. This mathematical form is the most standard paradigm in convex optimization. One simply declares \texttt{variable W(N,N) semidefinite}, calls CVX with the MOSEK solver, and the engine returns the globally optimal covariance matrix in polynomial time. Meanwhile, \eqref{eq:lmi_comm} covers worst-case communication robustness, \eqref{eq:sinr_sens_sdp} guarantees sensing detection probability, \eqref{eq:pcrb_sdp} satisfies tracking accuracy, and \eqref{eq:power_sdp} constrains distributed AP peak power---full coverage of physical constraints.
 \end{remark}
