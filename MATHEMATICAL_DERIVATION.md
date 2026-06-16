@@ -46,30 +46,32 @@ $$b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P
 
 ### 1.2 符号表
 
-| 符号 | 维度 | 说明 |
-|------|------|------|
-| $\mathbf{h}_{m,k}$ | $\mathbb{C}^{N_t \times 1}$ | AP $m$ 到用户 $k$ 的信道 |
-| $\mathbf{g}_{m,p}$ | $\mathbb{C}^{N_t \times 1}$ | AP $m$ 到目标 $p$ 的信道 |
-| $\mathbf{h}_k$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠通信信道 |
-| $\mathbf{g}_p$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠感知信道 |
-| $\mathbf{w}_{m,k}$ | $\mathbb{C}^{N_t \times 1}$ | 通信波束 |
-| $\mathbf{w}_k$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠通信波束 |
-| $\mathbf{z}_p$ | $\mathbb{C}^{MN_t \times 1}$ | 感知波束 |
-| $\mathbf{Z}_m$ | $\mathbb{C}^{N_t \times N_t}$ | 感知协方差 |
-| $b_{mp}$ | $\{0,1\}$ | AP $m$ 是否服务目标 $p$ |
-| $M$ | — | AP 数量 (16) |
-| $N_t$ | — | 每 AP 天线数 (4) |
-| $K$ | — | 通信用户数 (10) |
-| $P$ | — | 感知目标数 (4) |
-| $P_{\max}$ | W | 单 AP 功率上限 (30) |
-| $\gamma_k$ | — | 通信 SINR 门限 (0 dB) |
-| $\gamma_S^{\text{PoD}}$ | — | 感知 SINR 门限 (0 dB) |
-| $\Gamma_{\text{Track},p}$ | — | 跟踪精度门限 |
-| $\sigma_c^2$ | W | 通信噪声功率 ($10^{-9}$) |
-| $\sigma_s^2$ | W | 感知噪声功率 ($10^{-9}$) |
-| $\epsilon_h$ | — | 通信 CSI 误差界 (0.10) |
-| $\epsilon_g$ | — | 感知 CSI 误差界 (0.15) |
-| $N_{\text{req}}$ | — | 每目标所需 AP 数 (4) |
+| 符号 | 维度 | 物理含义 |
+|------|------|----------|
+| $\mathbf{h}_{m,k}$ | $\mathbb{C}^{N_t \times 1}$ | AP $m$ 到用户 $k$ 的通信信道 |
+| $\mathbf{g}_{m,p}$ | $\mathbb{C}^{N_t \times 1}$ | AP $m$ 到目标 $p$ 的感知信道 |
+| $\mathbf{h}_k$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠通信信道（所有 AP） |
+| $\mathbf{g}_p$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠感知信道（所有 AP） |
+| $\mathbf{w}_{m,k}$ | $\mathbb{C}^{N_t \times 1}$ | AP $m$ 到用户 $k$ 的通信波束成形向量 |
+| $\mathbf{w}_k$ | $\mathbb{C}^{MN_t \times 1}$ | 堆叠通信波束（所有 AP） |
+| $\mathbf{z}_p$ | $\mathbb{C}^{MN_t \times 1}$ | 感知波束（所有 AP） |
+| $\mathbf{Z}_m$ | $\mathbb{C}^{N_t \times N_t}$ | AP $m$ 的感知协方差矩阵 |
+| $b_{mp}$ | $\{0,1\}$ | AP $m$ 是否服务目标 $p$ 的二进制指示变量 |
+| $M$ | 标量 | AP 总数 |
+| $N_t$ | 标量 | 每个 AP 的发射天线数 |
+| $K$ | 标量 | 通信用户总数 |
+| $P$ | 标量 | 感知目标总数 |
+| $P_{\max}$ | 标量 | 单 AP 最大发射功率 |
+| $\gamma_k$ | 标量 | 通信用户 $k$ 的 SINR 门限 |
+| $\gamma_S^{\text{PoD}}$ | 标量 | 感知检测概率门限 |
+| $\Gamma_{\text{Track},p}$ | 标量 | 目标 $p$ 的跟踪精度门限（FIM 迹约束） |
+| $\sigma_c^2$ | 标量 | 通信接收噪声方差 |
+| $\sigma_s^2$ | 标量 | 感知接收噪声方差 |
+| $\epsilon_h$ | 标量 | 通信信道估计相对误差界 |
+| $\epsilon_g$ | 标量 | 感知信道估计相对误差界 |
+| $N_{\text{req}}$ | 标量 | 每个目标所需服务 AP 数 |
+
+> **注**：具体数值参数（如 $M=16, N_t=4, P_{\max}=30$ W 等）见仿真设定章节表 X。
 
 ---
 
@@ -281,6 +283,8 @@ $$\begin{bmatrix} \frac{1}{\gamma_S^{\text{PoD}}} \mathbf{Z} + \nu_p \mathbf{I} 
 
 **本文采用**: 方案 A — 在假设中声明感知信道完美，仅对通信做鲁棒处理。
 
+> **LaTeX 排版建议**：式 (19) 中矩阵元素含分母 $\gamma_S^{\text{PoD}}$，标准 LMI 书写中可将不等式两边同乘 $\gamma_S^{\text{PoD}}$，使左上角变为 $\mathbf{Z} + \nu_p \gamma_S^{\text{PoD}} \mathbf{I}$，避免矩阵内部出现分数结构，排版更美观。数学等价性不变。
+
 ---
 
 ## 7. 感知约束凸性证明
@@ -377,7 +381,7 @@ SDR 松弛丢弃了 $\text{rank}(\mathbf{W}_k) = 1$ 约束。求解后:
 - $K > 2$ 时，高斯随机化提供**次优解**，性能损失上界为 $O(1/L)$
 - 感知协方差 $\mathbf{Z}^*$ 的秩 $> 1$ 是**设计意图** (多目标覆盖)，非恢复失败
 
-**Remark**: 纯通信 MU-MIMO 中功率最小化倾向于"笔形波束" (秩一)；ISAC 中感知任务要求能量空间发散，多秩是设计意图。通信与感知在协方差域的"角色分离"是 ISAC 波形设计的本质特征。
+> **LaTeX 排版建议**：使用 `algorithm2e` 或 `algorithmic` 宏包将上述步骤包裹为规范浮动算法块（如 Algorithm 1），提升版面学术质感。关键步骤添加行内注释，例如 `\tcp{秩一检测}`。
 
 ---
 
@@ -413,6 +417,8 @@ $$\mathbf{z}_p = \sqrt{P_{S,p}} \frac{\mathbf{g}_p^{\text{all}}}{\|\mathbf{g}_p^
 其中 $P_{S,p} = (\gamma_S^{\text{PoD}})^{\text{robust}} \sigma_s^2 / \|\mathbf{g}_p^{\text{all}}\|_2^2$。
 
 ### 9.4 完整求解算法
+
+以下为闭式求解器的伪代码描述。该算法首先根据感知信道强度为每个目标选择最优 AP 子集，随后在所选 AP 上分别计算 ZF 通信波束和匹配滤波感知波束，最后验证功率约束并返回可行解。
 
 ```
 算法: Cell-Free ISAC 闭式求解器
@@ -458,6 +464,8 @@ $$\mathbf{z}_p = \sqrt{P_{S,p}} \frac{\mathbf{g}_p^{\text{all}}}{\|\mathbf{g}_p^
 
 7. 验证并返回
 ```
+
+> **LaTeX 排版建议**：使用 `algorithm2e` 宏包将上述伪代码包裹为规范浮动算法块（如 Algorithm 2），提升版面学术质感。关键步骤（如 AP 选择、功率检查）可添加行内注释，例如 `\tcp{基于大尺度衰落选择}`。
 
 ---
 
