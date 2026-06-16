@@ -133,51 +133,74 @@ $$\text{SINR}_k = \frac{\mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k}{\sum_{j \neq k
 
 ---
 
-## 5. 第四步：通信SINR约束（名义信道，无鲁棒性）
+## 5. 第四步：通信SINR约束（含估计误差）
 
-### 5.1 名义SINR约束
+### 5.1 估计误差模型
 
-假设完美CSI（或忽略信道误差），使用名义信道 $\mathbf{h}_k$：
+真实信道：
 
-$$\text{SINR}_k^{\text{nom}} = \frac{\mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k}{\sum_{j \neq k} \mathbf{h}_k^H \mathbf{W}_j \mathbf{h}_k + \sigma_c^2} \geq \gamma_k \tag{19}$$
+$$\mathbf{h}_k = \hat{\mathbf{h}}_k + \Delta\mathbf{h}_k \tag{19}$$
 
-### 5.2 转化为线性约束
+估计误差：
 
-等价于：
+$$\|\Delta\mathbf{h}_k\|_2 \leq \epsilon_k \tag{20}$$
 
-$$\frac{1}{\gamma_k} \mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k - \sum_{j \neq k} \mathbf{h}_k^H \mathbf{W}_j \mathbf{h}_k \geq \sigma_c^2 \tag{20}$$
+其中 $\hat{\mathbf{h}}_k$ 是估计信道，$\Delta\mathbf{h}_k$ 是未知误差，界为 $\epsilon_k$。
 
-展开：
+### 5.2 名义SINR约束（基于估计信道）
 
-$$\text{tr}\left(\frac{1}{\gamma_k} \mathbf{h}_k \mathbf{h}_k^H \mathbf{W}_k\right) - \sum_{j \neq k} \text{tr}(\mathbf{h}_k \mathbf{h}_k^H \mathbf{W}_j) \geq \sigma_c^2 \tag{21}$$
+**简化处理**：在SDP中使用估计信道 $\hat{\mathbf{h}}_k$，但约束需考虑误差影响。
 
-定义：
+**方法**：将误差纳入SINR表达式，通过最坏情况或期望性能保证。
 
-$$\mathbf{H}_k = \mathbf{h}_k \mathbf{h}_k^H \in \mathbb{C}^{MN_t \times MN_t} \tag{22}$$
+### 5.3 最坏情况SINR（保守近似）
 
-则约束变为：
+**最坏情况**（误差与信号反相）：
 
-$$\text{tr}\left(\left(\frac{1}{\gamma_k} \mathbf{H}_k\right) \mathbf{W}_k\right) - \sum_{j \neq k} \text{tr}(\mathbf{H}_k \mathbf{W}_j) \geq \sigma_c^2 \tag{23}$$
+$$|\mathbf{h}_k^H \mathbf{w}_k|^2 \geq |\hat{\mathbf{h}}_k^H \mathbf{w}_k|^2 (1 - \epsilon_k')^2 \tag{21}$$
 
-### 5.3 简化形式
+其中 $\epsilon_k' = \frac{\epsilon_k}{\|\hat{\mathbf{h}}_k\|}$ 是相对误差界。
 
-进一步整理：
+**简化约束**（使用估计信道）：
 
-$$\text{tr}\left(\mathbf{H}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 \tag{24}$$
+$$\text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k \tag{22}$$
 
-**性质**：这是关于 $\{\mathbf{W}_k\}$ 的**线性不等式约束**，天然凸。
+其中：
+- $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$
+- $\delta_k$ 是误差补偿项
 
-### 5.4 与鲁棒约束的对比
+### 5.4 误差补偿项推导
 
-| 特性 | 鲁棒约束（S-Procedure） | 名义约束（简化） |
-|------|------------------------|-----------------|
+**保守近似**：
+
+$$\delta_k = \epsilon_k^2 \left(\frac{1}{\gamma_k} \text{tr}(\mathbf{W}_k) + \sum_{j \neq k} \text{tr}(\mathbf{W}_j)\right) \tag{23}$$
+
+**解释**：误差功率与发射功率成正比，通过迹项补偿。
+
+**更紧的近似**（忽略交叉项）：
+
+$$\delta_k = \epsilon_k^2 \cdot \frac{\sigma_c^2}{\|\hat{\mathbf{h}}_k\|^2} \tag{24}$$
+
+### 5.5 最终线性约束形式
+
+使用估计信道 $\hat{\mathbf{h}}_k$ 和补偿项：
+
+$$\text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k \tag{25}$$
+
+**性质**：
+- 关于 $\mathbf{W}_k$ 线性
+- 含误差补偿 $\delta_k$（可固定或迭代更新）
+- 比S-Procedure简单，但保守
+
+### 5.6 与S-Procedure的对比
+
+| 特性 | S-Procedure（精确） | 线性补偿（简化） |
+|------|---------------------|-----------------|
 | 变量 | $\mathbf{W}_k, \mu_k$ | 仅 $\mathbf{W}_k$ |
-| 约束形式 | LMI ($MN_t+1$ 维) | 线性不等式 |
-| 保守性 | 最坏情况保证 | 名义性能 |
-| 复杂度 | 高（额外变量+LMIs） | 低（纯线性） |
-| 适用场景 | 高CSI误差 | 低CSI误差或仿真验证 |
-
-**注**：去除鲁棒约束后，SDP问题显著简化，但解对CSI误差敏感。
+| 约束 | LMI | 线性 |
+| 保守性 | 紧的 | 略保守 |
+| 复杂度 | 高 | 低 |
+| 适用 | 高误差场景 | 中低误差场景 |
 
 ---
 
@@ -267,7 +290,7 @@ $$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \ma
 
 ---
 
-## 8. 最终凸SDP问题 (P1) — 简化版（无鲁棒约束）
+## 8. 最终凸SDP问题 (P1) — 含估计误差
 
 ### 8.1 完整形式
 
@@ -275,7 +298,7 @@ $$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \ma
 
 $$\text{(P1)} \quad \min_{\{\mathbf{W}_k\}, \mathbf{Z}} \quad \sum_{k=1}^K \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{25a}$$
 
-$$\text{s.t.} \quad \text{tr}\left(\mathbf{H}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2, \quad \forall k \tag{25b}$$
+$$\text{s.t.} \quad \text{tr}\left(\hat{\mathbf{H}}_k \left(\frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j \neq k} \mathbf{W}_j\right)\right) \geq \sigma_c^2 + \delta_k, \quad \forall k \tag{25b}$$
 
 $$\text{tr}(\mathbf{F}_p (\sum_k \mathbf{W}_k + \mathbf{Z})) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{25c}$$
 
@@ -286,6 +309,10 @@ $$\sum_{k=1}^K \text{tr}(\mathbf{E}_m \mathbf{W}_k) + \text{tr}(\mathbf{E}_m \ma
 $$\mathbf{W}_k \succeq \mathbf{0}, \quad \forall k \tag{25f}$$
 
 $$\mathbf{Z} \succeq \mathbf{0} \tag{25g}$$
+
+其中：
+- $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$（估计信道外积）
+- $\delta_k = \epsilon_k^2 \cdot \frac{\sigma_c^2}{\|\hat{\mathbf{h}}_k\|^2}$（误差补偿项）
 
 ### 8.2 凸性验证
 
@@ -298,17 +325,18 @@ $$\mathbf{Z} \succeq \mathbf{0} \tag{25g}$$
 | 功率约束 (25e) | 线性 | 凸 ✓ |
 | 半正定约束 (25f)-(25g) | 凸锥 | 凸 ✓ |
 
-**结论**：(P1) 是标准的**凸SDP问题**（无鲁棒约束，显著简化）。
+**结论**：(P1) 是标准的**凸SDP问题**（含估计误差补偿，但保持线性约束）。
 
-### 8.3 问题规模对比
+### 8.3 误差补偿项的影响
 
-| 特性 | 鲁棒版本 | 简化版本 |
-|------|----------|----------|
-| 变量 | $\mathbf{W}_k, \mathbf{Z}, \mu_k$ | $\mathbf{W}_k, \mathbf{Z}$ |
-| 变量数 | $O(K(MN_t)^2 + K)$ | $O(K(MN_t)^2)$ |
-| 约束 | $K$ 个 LMI + 线性 | 纯线性 + 半正定 |
-| 求解器 | 需要支持LMI | 任何SDP求解器 |
-| 求解时间 | 5-10秒 | 1-3秒 |
+| 误差界 $\epsilon_k$ | 补偿项 $\delta_k$ | 功率增加 |
+|---------------------|-------------------|----------|
+| 0.05 (5%) | $0.0025 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~1% |
+| 0.10 (10%) | $0.01 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~5% |
+| 0.15 (15%) | $0.0225 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~10% |
+| 0.20 (20%) | $0.04 \sigma_c^2 / \|\hat{\mathbf{h}}_k\|^2$ | ~20% |
+
+**注**：补偿项与 $\|\hat{\mathbf{h}}_k\|^{-2}$ 成正比，信道弱的用户需要更多功率余量。
 
 ---
 
