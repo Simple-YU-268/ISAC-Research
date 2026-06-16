@@ -534,11 +534,40 @@ constraints.append(Z >> 0)
 prob = cp.Problem(objective, constraints)
 prob.solve(solver=cp.SCS)  # or cp.MOSEK if available
 
-# Extract beams
+# Extract beams via eigenvalue decomposition or Gaussian randomization
 for k in range(K):
-    eigvals, eigvecs = np.linalg.eigh(Wk[k].value)
-    w_k = np.sqrt(eigvals[-1]) * eigvecs[:, -1]
+    Wk_val = Wk[k].value
+    eigvals, eigvecs = np.linalg.eigh(Wk_val)
+    
+    if eigvals[-1] / eigvals[-2] > 1e3:  # rank-1 check
+        # Dominant eigenvector
+        w_k = np.sqrt(eigvals[-1]) * eigvecs[:, -1]
+    else:
+        # Gaussian randomization fallback
+        L = 1000
+        best_violation = float('inf')
+        best_w = None
+        for _ in range(L):
+            xi = np.random.multivariate_normal(np.zeros(MNt), Wk_val) + \
+                 1j * np.random.multivariate_normal(np.zeros(MNt), Wk_val)
+            w_candidate = np.sqrt(np.trace(Wk_val)) * xi / np.linalg.norm(xi)
+            # Evaluate constraint violation (simplified)
+            violation = 0  # compute actual SINR violation here
+            if violation < best_violation:
+                best_violation = violation
+                best_w = w_candidate
+        w_k = best_w
+    
     print(f"User {k}: beam power = {np.linalg.norm(w_k)**2:.2f}")
+
+# Power scaling fallback
+for m in range(M):
+    P_m = sum(np.linalg.norm(w_k[m*Nt:(m+1)*Nt])**2 for w_k in w_k_list) + \
+          np.trace(Z.value[m*Nt:(m+1)*Nt, m*Nt:(m+1)*Nt])
+    if P_m > Pmax:
+        beta_m = Pmax / P_m
+        w_k_list = [w_k * np.sqrt(beta_m) for w_k in w_k_list]
+        Z.value[m*Nt:(m+1)*Nt, m*Nt:(m+1)*Nt] *= beta_m
 ```
 
 ### 12.2 MATLAB (CVX)

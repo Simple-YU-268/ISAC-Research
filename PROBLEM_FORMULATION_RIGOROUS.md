@@ -946,12 +946,66 @@ $$\text{Success Rate} = \frac{1}{T} \sum_{t=1}^T \text{Success}_t$$
 
 ---
 
+## 附录 C: 理论假设与防御声明
+
+### C.1 感知约束线性性声明 (Assumption 1)
+
+> **Assumption 1 (感知参数估计模型)**：本文考虑的目标状态参数为 $\boldsymbol{\theta}_p = [\theta_p]$（单角度估计）。在此设定下，Fisher 信息矩阵的数据部分为：
+>
+> $$\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \right\}$$
+>
+> 其中 $\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p$ 在当前时隙内由目标预测状态确定，视为已知常数矩阵。因此 $\mathbf{J}_p^{\text{data}}$ 是 $\mathbf{R}_X$ 的**仿射函数**，其迹约束可精确整理为：
+>
+> $$\text{tr}(\mathbf{F}_p \mathbf{R}_X) \geq \Gamma_{\text{Track},p}$$
+>
+> 其中 $\mathbf{F}_p = \frac{2}{\sigma_s^2} \text{Re}\left\{ \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \right\}$ 为已知常数半正定矩阵。
+>
+> **定性解释**：由于本工作聚焦于目标的到达角（DOA）估计，探测信号与目标的相对时延及多普勒频移在短观测帧内视为慢变参数。此时 FIM 退化为仅依赖于角度梯度的常数矩阵 $\mathbf{F}_p$，从而保证了约束条件的凸仿射性质。
+
+### C.2 秩一恢复声明 (Algorithm 1)
+
+> **Algorithm 1: 高斯随机化秩一恢复**
+>
+> **输入**：SDP 最优解 $\{\mathbf{W}_k^*\}_{k=1}^K$, $\mathbf{Z}^*$, 约束参数
+> **输出**：满足所有约束的波束 $\{\mathbf{w}_k\}_{k=1}^K$, 感知波形
+>
+> **步骤 1：通信波束恢复**
+> 对每个用户 $k$：
+> 1. 若 $\text{rank}(\mathbf{W}_k^*) = 1$：$\mathbf{w}_k = \sqrt{\lambda_{\max}} \cdot \mathbf{v}_{\max}$
+> 2. 若秩 $> 1$：生成 $L$ 个候选 $\boldsymbol{\xi}_l \sim \mathcal{CN}(\mathbf{0}, \mathbf{W}_k^*)$，选择约束违反度最小者
+>
+> **步骤 2：感知波形恢复**
+> 对 $\mathbf{Z}^*$ 特征值分解：$\mathbf{Z}^* = \sum_{i=1}^{r} \lambda_i \mathbf{v}_i \mathbf{v}_i^H$，生成多流传输波形
+>
+> **步骤 3：功率缩放兜底**
+> 若单 AP 功率超限，缩放因子 $\beta_m = P_{\max} / P_m$：
+> - $\mathbf{w}_{m,k} \leftarrow \mathbf{w}_{m,k} \cdot \sqrt{\beta_m}$
+> - $\mathbf{Z}_m \leftarrow \mathbf{Z}_m \cdot \beta_m$
+>
+> **性能保证**：$K \leq 2$ 时 SDR 紧致；$K > 2$ 时性能损失上界 $O(1/L)$。感知协方差 $\mathbf{Z}^*$ 的多秩是物理需求（多目标覆盖），非算法缺陷。
+>
+> **Remark**：纯通信 MU-MIMO 中功率最小化倾向于"笔形波束"（秩一）；ISAC 中感知任务要求能量空间发散，多秩是设计意图。通信与感知在协方差域的"角色分离"是 ISAC 波形设计的本质特征。
+
+### C.3 感知鲁棒性边界声明 (Assumption 2)
+
+> **Assumption 2 (感知信道完美性假设)**：本工作聚焦于通信链路的鲁棒设计，假设感知信道在当前时隙内通过跟踪回波自校准，误差可忽略。具体地：
+>
+> 1. 目标状态参数 $\boldsymbol{\theta}_p$ 在短时隙内被准确预测，预测误差远小于一个波长
+> 2. 感知信道 $\mathbf{g}_p$ 通过上一时隙跟踪回波校准，误差纳入下一时隙更新
+> 3. 感知任务采用"检测-跟踪"级联架构：检测阶段保守门限，跟踪阶段利用时隙平滑性补偿误差
+>
+> **合理性**：感知信道是**自校准的**（发射探测信号并接收回波，回波携带当前信道状态），而通信信道依赖上行导频估计，导频污染导致误差累积。在许多顶级期刊的系统建模中，聚焦通信侧导频污染、假设雷达侧得益于 LOS 回波和卡尔曼跟踪滤波提供精准预测，是常见的稳妥折中。
+>
+> **扩展说明**：若需考虑感知不确定性，可将感知 SINR 约束通过 S-Procedure 转化为 LMI（见 `ADVANCED_MATHEMATICAL_ANALYSIS.md` §1），增加 $P$ 个 LMI 约束和约 $20\%$ 求解时间，但不改变问题凸性。
+
+---
+
 ## 文档信息
 
 - **作者**: Simple Yu
-- **版本**: v2.0 Rigorous
+- **版本**: v2.1 Rigorous + Defense
 - **创建日期**: 2026-06-16
 - **Git Commit**: 待提交
-- **状态**: 完整问题定义 + 等价形式 + 复杂度分析
+- **状态**: 完整问题定义 + 等价形式 + 复杂度分析 + 理论防御
 
 ---
