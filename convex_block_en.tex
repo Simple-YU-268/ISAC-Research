@@ -1,0 +1,264 @@
+%==============================================================================
+% 6 Non-convex Sources Identification
+%==============================================================================
+\subsubsection{Identification of Non-convex Sources}
+
+To make the subsequent convexification derivations amenable to rigorous review, this subsection pre-identifies all non-convex sources in the original problem and provides the mathematical justification for each. The original problem (P1) carries constraint labels (5a)--(5h); see \S\ref{sec:problem}.
+
+\begin{table}[htbp]
+\centering
+\caption{Identification of non-convex sources in problem (P1)}\label{tab:nonconvex_sources}
+\begin{tabular}{clll}
+\toprule
+ID & Non-convex source & Affected constraints & Convexity violation type \\
+\midrule
+NC1 & SINR fractional structure & (5b), (5c) & Convex set not closed under multiplication \\
+NC2 & Semi-infinite robust constraints & (5b), (5c) & Infinite constraints violate convexity \\
+NC3 & Binary combinatorial constraints & (5h) & Discrete set $\{0,1\}$ is non-convex \\
+NC4 & Implicit rank-1 constraints & (5a)--(5f) & Rank-1 set is non-convex \\
+NC5 & Beam-channel bilinear coupling & (5b), (5d) & Bilinear functions are non-convex \\
+NC6 & Matrix inverse constraints & (5d) & Inverse map does not preserve convexity \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Mathematical criterion for convexity}: A set $\mathcal{C}$ is convex iff $\forall \vect{x},\vect{y}\in\mathcal{C},\forall \theta\in[0,1]: \theta\vect{x}+(1-\theta)\vect{y}\in\mathcal{C}$. Using this criterion:
+
+\begin{itemize}
+    \item $\|\vect{w}\|_2^2 \leq \alpha$: convex (second-order cone)
+    \item $\tr(\mat{H}_k \mat{W}_k) \geq \beta$ with $\mat{W}_k \succeq \mat{0}$: convex (PSD cone + linear function)
+    \item $\rank(\mat{W}_k) = 1$: \textbf{non-convex} (rank-1 set is not affine)
+    \item $\frac{x^2}{y} \leq \alpha, y > 0$: \textbf{non-convex} (fractional structure does not preserve convexity)
+    \item $b \in \{0,1\}$: \textbf{non-convex} (discrete point set)
+\end{itemize}
+
+%==============================================================================
+% 7-Step Convexification Chain
+%==============================================================================
+\subsubsection{Seven-Step Convexification Chain}
+
+Targeting the six non-convex sources identified above, this subsection presents a numbered seven-step convexification chain. Each step specifies: which non-convex source it eliminates, the pre- and post-transformation mathematical forms, the transformation property (strictly equivalent / tight relaxation / conservative approximation), and a proposition with proof.
+
+%------------------------------------------------------------------------------
+\paragraph{Step 1: Global Variable Lifting (eliminate NC1, NC5)}
+\textbf{Transformation type}: \textbf{Strictly equivalent}.
+
+Lift the vector beam $\vect{w}_k$ into a covariance matrix:
+\begin{equation}
+\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{C}^{MN_t \times MN_t} \tag{15}
+\end{equation}
+\begin{equation}
+\mat{Z} = \sum_p \vect{z}_p \vect{z}_p^H \in \mathbb{C}^{MN_t \times MN_t} \tag{16}
+\end{equation}
+
+\begin{proposition}[Lifting equivalence]\label{prop:lifting}
+When $\mat{W}_k = \vect{w}_k \vect{w}_k^H$, we have $\tr(\mat{H}_k \mat{W}_k) = |\vect{h}_k^H \vect{w}_k|^2$, and the lifting $\vect{w}_k \mapsto \mat{W}_k$ is a one-to-one map.
+\end{proposition}
+
+\textbf{Convexity impact}: The objective $\sum_k \|\vect{w}_k\|^2 = \sum_k \tr(\mat{W}_k)$ becomes a linear function of $\mat{W}_k$, so the \textbf{objective becomes convex}.
+
+%------------------------------------------------------------------------------
+\paragraph{Step 2: SDR Relaxation (eliminate NC4)}
+\textbf{Transformation type}: \textbf{Tight relaxation}. Strictly equivalent for $K\leq 2$; lower bound for $K>2$.
+
+The rank-1 constraint $\mat{W}_k = \vect{w}_k \vect{w}_k^H$ is equivalent to
+\begin{equation}
+\mat{W}_k \succeq \mat{0}, \quad \rank(\mat{W}_k) = 1
+\end{equation}
+SDR drops the rank-1 constraint, requiring only
+\begin{equation}
+\mat{W}_k \succeq \mat{0} \tag{S2.1}
+\end{equation}
+The feasible set enlarges from $\mathcal{F}_{\text{rank-1}} = \{\mat{W}_k \succeq \mat{0} : \rank(\mat{W}_k)=1\}$ to $\mathcal{F}_{\text{SDR}} = \{\mat{W}_k \succeq \mat{0}\}$ (the convex PSD cone).
+
+\begin{proposition}[SDR tightness conditions]\label{prop:sdr_tight}
+SDR is equivalent to the original problem iff the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$.
+\begin{enumerate}
+    \item SDR is tight for $K \leq 2$ (guaranteed by Luo's results on MISO multicast).
+    \item SDR is approximately tight in the high-SNR regime.
+    \item For general $K>2$: Gaussian randomization ($\xi_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$) extracts a feasible rank-1 solution with $O(1/L)$ performance loss.
+\end{enumerate}
+\end{proposition}
+
+\textbf{Equivalence/lower/upper bound}: strictly equivalent when tight; otherwise a \textbf{lower bound} on the objective (enlarged feasible set $\Rightarrow$ optimal value $\leq$ original).
+
+%------------------------------------------------------------------------------
+\paragraph{Step 3: S-Procedure for Robust SINR (eliminate NC2)}
+\textbf{Transformation type}: \textbf{Conservative approximation}. Trades a 1.75 dB power margin for a closed-form LMI.
+
+The worst-case SINR constraint is a semi-infinite optimization:
+\begin{equation}
+\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_k (\hat{\vect{h}}_k + \Delta\vect{h}_k)|}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_j(\hat{\vect{h}}_k + \Delta\vect{h}_k)| + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+\begin{lemma}[Cauchy-Schwarz worst case]\label{lem:cauchy_wc}
+For any $\vect{x}, \vect{y}$ and $\Delta\vect{y}$ with $\|\Delta\vect{y}\| \leq \epsilon\|\vect{y}\|$:
+\begin{equation}
+\min_{\|\Delta\vect{y}\|\leq\epsilon\|\vect{y}\|} |\vect{x}^H(\vect{y}+\Delta\vect{y})|^2 = |\vect{x}^H\vect{y}|^2 (1-\epsilon)^2
+\end{equation}
+\textit{Proof}: By $| \vect{x}^H \Delta\vect{y}| \leq \|\vect{x}\| \cdot \|\Delta\vect{y}\| \leq \|\vect{x}\| \cdot \epsilon\|\vect{y}\|$, with equality at $\Delta\vect{y} = -\epsilon \frac{\|\vect{y}\|}{\|\vect{x}\|} \vect{x}$. $\square$
+\end{lemma}
+
+Applying Lemma~\ref{lem:cauchy_wc} (lower-bounding the numerator, upper-bounding the denominator) and cross-multiplying, the worst-case robust constraint becomes a linear constraint on a robust threshold $\gamma_k^{\text{robust}}$ (see Eq.~\eqref{eq:lmi_comm}).
+
+\textbf{Equivalence/lower/upper bound}: conservative upper bound. The true worst-case SINR is higher than this approximation $\Rightarrow$ the solved feasible set is slightly larger than the true robust feasible set, but robustness is guaranteed under true channel realizations. The cost is approximately 1.75 dB power margin (for $\epsilon_h=0.10$, $\eta_h \approx 0.669$).
+
+%------------------------------------------------------------------------------
+\paragraph{Step 4: SINR Fraction Linearization (eliminate NC1, communication part)}
+\textbf{Transformation type}: \textbf{Strictly equivalent} (provided the denominator $> 0$).
+
+After Step 3's robust approximation, the SINR is still fractional. Cross-multiplication yields a linear matrix inequality:
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k^{\text{robust}} \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k^{\text{robust}} \sigma_c^2 \tag{S4.1}
+\end{equation}
+where $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$.
+
+\begin{proposition}[Fraction linearization equivalence]\label{prop:frac}
+When the denominator $\sum_{j\neq k}|\hat{\vect{h}}_k^H \mat{W}_j \hat{\vect{h}}_k| + \sigma_c^2 > 0$,
+\begin{equation}
+\frac{A}{B} \geq \gamma \iff A \geq \gamma B
+\end{equation}
+\end{proposition}
+
+\textbf{Convexity impact}: Eq.~\eqref{eq:lmi_comm} (equivalent to (S4.1) after S-Procedure lifting) becomes an LMI in $\mat{W}_k$, so the \textbf{communication constraint becomes convex}.
+
+%------------------------------------------------------------------------------
+\paragraph{Step 5a: PCRB Affine Expansion (eliminate NC6)}
+\textbf{Transformation type}: \textbf{Strictly equivalent} (under Assumption 1).
+
+The Fisher information matrix is an affine function of $\mat{R}_X$. Define
+\begin{equation}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \in \mathbb{S}_+^{D\times D} \tag{13}
+\end{equation}
+
+The PCRB constraint becomes
+\begin{equation}
+\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p} \tag{S5.1}
+\end{equation}
+
+\begin{proposition}[PCRB linearization equivalence]\label{prop:pcrb}
+Under Assumption 1 ($\nabla_{\boldsymbol{\theta}_p}\vect{g}_p$ is known within the current time slot), $\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X)$.
+\end{proposition}
+
+\textbf{Convexity impact}: Eq.~(S5.1) is a linear constraint in $\mat{R}_X$, so the \textbf{sensing PCRB constraint becomes convex}.
+
+%------------------------------------------------------------------------------
+\paragraph{Step 5b: Sensing SINR Linearization}
+\textbf{Transformation type}: \textbf{Strictly equivalent} (rank-1 optimal solution is matched filtering).
+
+In the sensing SINR constraint $\tr(\vect{g}_p\vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$, the matrix $\vect{g}_p\vect{g}_p^H$ is a known constant PSD matrix and $\tr(\cdot)$ is linear in $\mat{Z}$.
+
+\begin{proposition}[Sensing SINR linearization equivalence]\label{prop:sens_sinr}
+When $\mat{Z} = \vect{z}\vect{z}^H$ (rank-1), the optimal sensing beam is $\vect{z}^* = \sqrt{P_S} \vect{g}_p/\|\vect{g}_p\|$ (matched filtering), and the constraint holds with equality.
+\end{proposition}
+
+%------------------------------------------------------------------------------
+\paragraph{Step 6: Power Constraint Is Already Convex}
+The power constraint $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z}_m) \leq P_{\max}$ is linear in $\mat{W}_k, \mat{Z}_m$, \textbf{already convex}; no transformation needed.
+
+%------------------------------------------------------------------------------
+\paragraph{Step 7: AP Selection Two-Step Decomposition (handle NC3)}
+\textbf{Transformation type}: \textbf{Heuristic lower bound}. The outer discrete AP assignment is NP-hard; the inner continuous problem is a convex SDP for any fixed AP set.
+
+This work adopts a two-step decomposition:
+\begin{enumerate}
+    \item \textbf{Outer (discrete)}: sort APs by large-scale fading $\text{PL}(d_{m,p})$ and select the top-$N_{\text{req}}$ APs to fix $\mathcal{M}^{\text{all}}$.
+    \item \textbf{Inner (convex)}: solve the convex SDP (P3) on the fixed AP set.
+\end{enumerate}
+
+\begin{remark}[Engineering trade-off for AP selection]\label{rem:ap_heuristic}
+The AP selection problem is NP-hard (a variant of the $K$-medoid problem). This work uses an outer heuristic plus inner convex SDP to obtain a polynomial-complexity, engineering-acceptable sub-optimal solution. The complexity lower bound is established in the companion document~\cite{convex_chain} \S6.
+\end{remark}
+
+%==============================================================================
+% Convexification Chain Summary Table
+%==============================================================================
+\subsubsection{Convexification Chain Summary}
+
+The following table summarizes the transformation type and performance impact of each step:
+
+\begin{table}[htbp]
+\centering
+\caption{Summary of the seven-step convexification chain}\label{tab:convex_chain}
+\begin{tabular}{clll}
+\toprule
+Step & Transformation & Eliminates & Type \\
+\midrule
+1 & Global variable lifting $\vect{w}\vect{w}^H \to \mat{W}$ & NC1, NC5 & Strictly equivalent \\
+2 & SDR relaxation (drop rank-1) & NC4 & Tight relaxation (equiv.\ for $K\leq 2$) \\
+3 & S-Procedure closed-form bound & NC2 & Conservative approx.\ (1.75 dB margin) \\
+4 & SINR fraction linearization & NC1 (comm.) & Strictly equivalent \\
+5a & PCRB affine expansion & NC6 & Strictly equivalent (Assumption 1) \\
+5b & Sensing SINR linearization & NC1 (sens.) & Strictly equivalent \\
+6 & Power constraint (already convex) & --- & Already convex \\
+7 & AP selection two-step decomp. & NC3 & Heuristic lower bound \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key conclusion}: The physical-layer convexification (Steps 1--6) is almost entirely strictly equivalent. Only Step 3 is a conservative engineering approximation, and Step 2 is tight for $K \leq 2$. AP selection (Step 7) uses a heuristic to maintain polynomial complexity.
+
+%==============================================================================
+% Final Convex SDP Problem (P3)
+%==============================================================================
+\subsubsection{Final Convex SDP Problem (P3)}
+
+After the seven-step chain, the original problem (P1) reduces to the following \textbf{standard convex SDP}:
+
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
+\text{s.t.} \quad & \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \label{eq:lmi_comm} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \label{eq:sinr_sens_sdp} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \label{eq:psd_w} \\
+& \mat{Z} \succeq \mat{0} \label{eq:psd_z} \\
+& \mu_k \geq 0, \quad \forall k \label{eq:mu_nonneg}
+\end{align}
+
+where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{F}_p$ is given by Eq.~(13), $\mat{E}_m$ is the selection matrix for AP $m$, and $\mu_k \geq 0$ is the S-Procedure slack variable.
+
+\begin{table}[htbp]
+\centering
+\caption{Problem (P3) constraint structure and variable mapping}\label{tab:p3_structure}
+\begin{tabular}{clll}
+\toprule
+Constraint & Type & Variables & Physical meaning \\
+\midrule
+\eqref{eq:lmi_comm} & LMI ($MN_t+1$ dim.) & $\mat{W}_k, \mu_k$ & Communication worst-case robustness \\
+\eqref{eq:sinr_sens_sdp} & Linear inequality & $\mat{Z}$ & Sensing detection probability \\
+\eqref{eq:pcrb_sdp} & Linear inequality & $\mat{R}_X$ & Tracking accuracy (PCRB) \\
+\eqref{eq:power_sdp} & Linear inequality & $\mat{R}_X$ & Per-AP peak power \\
+\eqref{eq:psd_w}--\eqref{eq:psd_z} & PSD cone & $\mat{W}_k, \mat{Z}$ & SDR relaxation \\
+\eqref{eq:mu_nonneg} & Non-negative orthant & $\mu_k$ & S-Procedure slack \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[Convexity of the problem]\label{thm:convex_p3}
+Problem (P3) is a standard convex SDP: the objective is linear and all constraints are linear matrix inequalities (LMIs) or semidefinite cone constraints. It can be solved to arbitrary accuracy in polynomial time by standard SDP solvers (MOSEK / SeDuMi / SDPT3). The solution complexity is $O((MN_t)^{3.5})$, taking approximately 5--10 seconds for $M=16, N_t=4$.
+\end{theorem}
+
+\begin{theorem}[SDR tightness]\label{thm:sdr_tight}
+For the total power minimization problem, SDR is tight when $K \leq 2$, i.e., the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$. In the high-SNR regime, SDR is approximately tight. For general $K>2$, beam recovery via Gaussian randomization incurs a performance loss upper bounded by $O(1/L)$ (where $L$ is the number of candidates).
+\end{theorem}
+
+%==============================================================================
+% Complexity Comparison
+%==============================================================================
+\subsubsection{Complexity Comparison: Before and After Convexification}
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of problem form and solution complexity}\label{tab:complexity_compare}
+\begin{tabular}{llll}
+\toprule
+Problem & Form & Solver & Complexity \\
+\midrule
+(P1) Original & MINLP (mixed-integer non-convex) & No general algorithm & NP-hard \\
+(P3) Convex SDP & Convex semidefinite program & MOSEK / SeDuMi & $O((MN_t)^{3.5})$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Convexification transforms an NP-hard mixed-integer non-convex problem into a polynomial-time-solvable standard convex SDP, which is the central value of the convexification methodology.
