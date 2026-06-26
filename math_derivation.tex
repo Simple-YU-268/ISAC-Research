@@ -1,0 +1,392 @@
+\documentclass[12pt,a4paper]{article}
+
+% 中文支持
+\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\setCJKmonofont{Heiti SC}
+
+% 数学包
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+
+% 页面设置
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% 定理环境
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{proposition}{命题}
+\newtheorem{assumption}{假设}
+\newtheorem{remark}{注}
+
+% 自定义命令
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Cell-Free ISAC 系统鲁棒波束成形优化\\数学推导}}
+\author{研究阶段报告}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%==============================================================================
+\section{原始问题 (P1)}
+%==============================================================================
+
+\begin{align}
+\min_{\substack{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \\ \{b_{mp}\}}} \quad 
+& \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\text{s.t.} \quad 
+& \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \tag{P1-C1} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \tag{P1-C2} \\
+& \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \tag{P1-C3} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P1-C4} \\
+& \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P1-C5} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \tag{P1-C6} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P1-C7} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \in \mathcal{K} \tag{P1-C8}
+\end{align}
+
+其中 $\mat{W}_k = \vect{w}_k \vect{w}_k^H$ 为通信协方差矩阵（隐式秩一），最坏情况 SINR 定义为：
+\begin{equation}
+\text{SINR}_k^{\text{wc}} = \min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2}
+\end{equation}
+
+%==============================================================================
+\section{非凸性分析}
+%==============================================================================
+
+\subsection{目标函数}
+
+目标函数 $\sum_{m,k} \|\vect{w}_{m,k}\|^2 + \sum_m \tr(\mat{Z}_m)$ 是平方范数与迹之和。每个项 $\|\vect{w}_{m,k}\|^2 = \vect{w}_{m,k}^H \vect{w}_{m,k}$ 是凸二次函数（正定 Hessian）。但与秩一约束 (P1-C8) 结合后，可行集变为非凸。
+
+\textbf{凸性状态}：目标本身凸，但整体问题因约束而非凸。
+
+\subsection{通信 SINR 约束 (P1-C1)}
+
+\begin{equation}
+\frac{|\vect{h}_k^H \vect{w}_k|^2}{\sum_{j\neq k}|\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+这是广义分式规划约束。函数 $f(\vect{w}) = \frac{|\vect{h}^H \vect{w}|^2}{\sum |\vect{h}^H \vect{w}_j|^2 + \sigma^2}$：
+\begin{itemize}
+    \item 单独对每个 $\vect{w}_k$ 拟凸（固定其他变量）
+    \item 对 $\{\vect{w}_k\}_{k=1}^K$ 联合 \textbf{非凸}（分子分母变量间双线性耦合）
+\end{itemize}
+
+\textbf{非凸原因}：超水平集 $\{ \vect{w} : f(\vect{w}) \geq \gamma \}$ 非凸。对满足约束的 $\vect{w}^{(1)}, \vect{w}^{(2)}$，其凸组合 $\theta \vect{w}^{(1)} + (1-\theta) \vect{w}^{(2)}$ 通常违反 SINR 约束（分母交叉项）。
+
+\textbf{非凸源}：NC1（SINR 分式结构）+ NC2（最坏情况 CSI 不确定性导致半无限约束）。
+
+\subsection{感知 SINR 约束 (P1-C2)}
+
+\begin{equation}
+\frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|^2}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}
+\end{equation}
+
+对 $\mat{Z}$ 看似线性，但 $\mat{Z}$ 通过功率约束 (P1-C5) 与 $\{\vect{w}_k\}$ 耦合，使联合可行集非凸。
+
+\subsection{PCRB 约束 (P1-C3)}
+
+FIM 迹涉及依赖于 $\mat{R}_X$ 的矩阵逆：
+\begin{equation}
+\tr\left( \left[ \mat{J}_p^{\text{prior}} + \mat{J}_p^{\text{data}}(\mat{R}_X) \right]^{-1} \right) \leq \Gamma_{\text{Track},p}
+\end{equation}
+
+\textbf{非凸原因}：矩阵逆 $\mat{X}^{-1}$ 在 $\mat{X} \succ \mat{0}$ 上凸（矩阵凸），但迹的逆是凸函数。此处是凸函数的 \textbf{下界} 约束，对应凸函数的上界——这是 \textbf{非凸} 约束。
+
+等价地，$\tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track},p}$ 对 $\mat{J}_p^{\text{data}}$ 线性，但 $\mat{J}_p^{\text{data}}$ 是 $\mat{R}_X$ 的非线性函数（信道梯度二次型）。
+
+\textbf{非凸源}：NC6（矩阵逆 / FIM 非线性依赖）。
+
+\subsection{AP 选择约束 (P1-C4)}
+
+\begin{equation}
+\sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad b_{mp} \in \{0, 1\}
+\end{equation}
+
+\textbf{非凸原因}：集合 $\{0, 1\}$ 是离散两点集。凸包为 $[0, 1]$，但约束要求整数值。
+
+\textbf{非凸源}：NC3（二进制组合）。
+
+\subsection{功率约束 (P1-C5)}
+
+\begin{equation}
+\sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}
+\end{equation}
+
+\textbf{凸性状态}：凸约束（对 $\vect{w}_{m,k}$ 二阶锥约束，对 $\mat{Z}_m$ 线性）。但耦合通信与感知变量，与其他约束结合后贡献整体非凸性。
+
+\textbf{状态}：已凸，无需变换。
+
+\subsection{PSD 约束 (P1-C6)}
+
+$\mat{Z}_m \succeq \mat{0}$ 定义凸锥（半正定锥）。
+
+\textbf{状态}：已凸，无需变换。
+
+\subsection{二进制约束 (P1-C7)}
+
+$b_{mp} \in \{0, 1\}$ 与 (P1-C4) 同非凸性。
+
+\subsection{秩一约束 (P1-C8)}
+
+$\rank(\mat{W}_k) = 1$，其中 $\mat{W}_k = \vect{w}_k \vect{w}_k^H$。
+
+\textbf{非凸原因}：秩一 PSD 矩阵集合为：
+\begin{equation}
+\mathcal{F}_{\text{rank-1}} = \{ \mat{W} \succeq \mat{0} : \rank(\mat{W}) = 1 \}
+\end{equation}
+
+这是非凸流形。例如 $\mat{W}^{(1)} = \vect{v}_1 \vect{v}_1^H$ 和 $\mat{W}^{(2)} = \vect{v}_2 \vect{v}_2^H$（$\vect{v}_1 \perp \vect{v}_2$），其平均 $\frac{1}{2}(\mat{W}^{(1)} + \mat{W}^{(2)})$ 秩为 2，违反约束。
+
+\textbf{非凸源}：NC4（秩一要求）。
+
+\begin{table}[htbp]
+\centering
+\caption{问题 (P1) 非凸性源识别}
+\begin{tabular}{clll}
+\toprule
+ID & 源 & 影响约束 & 凸性违反 \\
+\midrule
+NC1 & SINR 分式结构 & (P1-C1), (P1-C2) & 二次型之比 \\
+NC2 & 最坏情况 CSI 不确定性 & (P1-C1) & 半无限约束 \\
+NC3 & 二进制 AP 选择 & (P1-C4), (P1-C7) & 离散集 $\{0,1\}$ \\
+NC4 & 秩一要求 & (P1-C8) & 非凸流形 \\
+NC5 & 变量耦合 & (P1-C1)--(P1-C5) & 双线性项 \\
+NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{逐步凸化}
+%==============================================================================
+
+\subsection{Step 1: 协方差矩阵提升（消除 NC1, NC5）}
+
+\textbf{变换}：将向量变量提升到矩阵空间。
+
+原始变量：$\vect{w}_k \in \mathbb{C}^{MN_t}$，$\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$。
+
+新变量：
+\begin{align}
+\mat{W}_k &= \vect{w}_k \vect{w}_k^H \in \mathbb{H}^{MN_t}, \quad \forall k \tag{S1.1} \\
+\mat{Z} &= \sum_{m=1}^M \mat{Z}_m \in \mathbb{H}^{MN_t} \tag{S1.2}
+\end{align}
+
+\textbf{作用}：
+\begin{itemize}
+    \item 目标：$\|\vect{w}_k\|^2 = \tr(\mat{W}_k)$ 对 $\mat{W}_k$ 线性化。
+    \item 功率：$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$ 变为 $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$（对 $\mat{W}_k, \mat{Z}$ 线性）。
+    \item SINR：$|\vect{h}_k^H \vect{w}_k|^2 = \tr(\vect{h}_k \vect{h}_k^H \mat{W}_k)$ 对 $\mat{W}_k$ 线性化。
+\end{itemize}
+
+\textbf{等价性}：严格等价（$\vect{w}_k$ 与秩一 $\mat{W}_k$ 一一映射）。
+
+\textbf{剩余非凸性}：秩一约束 $\rank(\mat{W}_k) = 1$ 仍存在（NC4）。
+
+\subsection{Step 2: 半定松弛（消除 NC4）}
+
+\textbf{变换}：将秩一约束松弛为 PSD 锥。
+
+原始：$\mat{W}_k \succeq \mat{0}$，$\rank(\mat{W}_k) = 1$。
+
+松弛后：仅 $\mat{W}_k \succeq \mat{0}$。
+
+\textbf{可行集变化}：
+\begin{equation}
+\mathcal{F}_{\text{rank-1}} = \{\mat{W} \succeq \mat{0} : \rank(\mat{W}) = 1\} \subset \mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}
+\end{equation}
+
+\textbf{等价性类型}：紧致松弛。
+
+\begin{proposition}[SDR 紧致性条件]
+\begin{enumerate}
+    \item 若 $K \leq 2$，SDR 紧致：最优 $\mat{W}_k^*$ 满足 $\rank(\mat{W}_k^*) = 1$。
+    \item 若 $K > 2$，SDR 提供下界：$P_{\text{SDR}}^* \leq P_{\text{original}}^*$。
+    \item 高斯随机化以 $O(1/L)$ 性能损失恢复可行秩一解。
+\end{enumerate}
+\end{proposition}
+
+\textbf{影响}：目标值可能降低（松弛扩大可行集）。$K > 2$ 时获得原问题下界。
+
+\subsection{Step 3: S-Procedure 处理鲁棒 SINR（消除 NC2）}
+
+\textbf{变换}：将半无限最坏情况约束转化为有限 LMI。
+
+原始（半无限）：
+\begin{equation}
+\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_k (\hat{\vect{h}}_k + \Delta\vect{h}_k)|}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_j(\hat{\vect{h}}_k + \Delta\vect{h}_k)| + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+定义 $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j\neq k} \mat{W}_j$。由 S-Procedure，等价于：
+
+\begin{equation}
+\exists \mu_k \geq 0 : \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{S3.1}
+\end{equation}
+
+\textbf{等价性类型}：精确等价（S-Procedure 对范数球上单个二次约束充要）。
+
+\textbf{新变量}：$\mu_k \geq 0$（S-Procedure 松弛变量）。
+
+\textbf{结果凸约束}：关于 $\mat{W}_k$ 和 $\mu_k$ 的线性矩阵不等式（LMI）。
+
+\subsection{Step 4: SINR 分式线性化（消除 NC1）}
+
+\textbf{变换}：交叉相乘消去分式。
+
+原始分式形式（S-Procedure 后）：
+\begin{equation}
+\frac{\tr(\hat{\mat{H}}_k \mat{W}_k)}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \sigma_c^2} \geq \gamma_k^{\text{robust}}
+\end{equation}
+
+其中 $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$，$\gamma_k^{\text{robust}}$ 包含鲁棒裕量。
+
+假设分母为正（因 $\sigma_c^2 > 0$ 恒满足）：
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k^{\text{robust}} \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k^{\text{robust}} \sigma_c^2 \tag{S4.1}
+\end{equation}
+
+\textbf{等价性类型}：严格等价（分母为正时）。
+
+\textbf{结果凸约束}：关于 $\mat{W}_k$ 的线性不等式。
+
+\subsection{Step 5a: PCRB 仿射展开（消除 NC6）}
+
+\textbf{变换}：在单角度假设下线性化 FIM 迹。
+
+在假设 1（$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ 已知且恒定）下：
+
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\}
+\end{equation}
+
+定义：
+\begin{equation}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \succeq \mat{0}
+\end{equation}
+
+则：
+\begin{equation}
+\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X) \tag{S5.1}
+\end{equation}
+
+\textbf{等价性类型}：严格等价（在假设 1 下）。
+
+\textbf{结果凸约束}：$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ 对 $\mat{R}_X$ 线性。
+
+\subsection{Step 5b: 感知 SINR 线性化}
+
+\textbf{变换}：在提升域表达。
+
+原始：$\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|^2}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$。
+
+提升域：
+\begin{equation}
+\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \tag{S5.2}
+\end{equation}
+
+\textbf{等价性类型}：严格等价（秩一 $\mat{Z}$ 时，最优为匹配滤波）。
+
+\textbf{结果凸约束}：关于 $\mat{Z}$ 的线性不等式。
+
+\subsection{Step 6: 功率约束（已凸）}
+
+原始：$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$。
+
+提升域：
+\begin{equation}
+\tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \tag{S6.1}
+\end{equation}
+
+其中 $\mat{E}_m$ 选择 AP $m$ 的天线。
+
+\textbf{状态}：已凸（线性约束），无需变换。
+
+\subsection{Step 7: AP 选择两步分解（消除 NC3）}
+
+\textbf{变换}：分解为外层离散 + 内层连续。
+
+原始：$\sum_m b_{mp} = N_{\text{req}}$，$b_{mp} \in \{0,1\}$。
+
+\textbf{Step 7a（外层）}：基于大尺度衰落启发式选择 AP：
+\begin{equation}
+\mathcal{M}_p = \arg\max_{\mathcal{M} \subseteq \mathcal{M}, |\mathcal{M}| = N_{\text{req}}} \sum_{m \in \mathcal{M}} \text{PL}^{-1}(d_{m,p})
+\end{equation}
+
+\textbf{Step 7b（内层）}：固定 AP 集 $\mathcal{M}_p$ 求解凸 SDP。
+
+\textbf{等价性类型}：启发式下界（NP-hard 问题用贪心选择近似）。
+
+\textbf{结果}：多项式时间复杂度，次优但工程可接受。
+
+%==============================================================================
+\section{最终凸 SDP 问题 (P3)}
+%==============================================================================
+
+综合所有步骤，原始非凸问题 (P1) 转化为如下标准凸 SDP：
+
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad 
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
+\text{s.t.} \quad 
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C6} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C7}
+\end{align}
+
+其中 $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$，$\mat{F}_p$ 在 Step 5a 中定义，$\mat{E}_m$ 为 AP 选择矩阵。
+
+\begin{table}[htbp]
+\centering
+\caption{(P1) 与 (P3) 约束对应关系}
+\begin{tabular}{clll}
+\toprule
+(P1) 约束 & (P3) 约束 & 变换 & 凸性 \\
+\midrule
+(P1-C1) SINR & (P3-C1) LMI & Steps 1,2,3,4 & LMI（凸） \\
+(P1-C2) 感知 SINR & (P3-C2) 线性 & Steps 1,2,5b & 线性（凸） \\
+(P1-C3) PCRB & (P3-C3) 线性 & Steps 1,2,5a & 线性（凸） \\
+(P1-C4) AP 选择 & (P3-C4) 固定集 & Step 7 & 线性（凸） \\
+(P1-C5) 功率 & (P3-C4) 线性 & Steps 1,6 & 线性（凸） \\
+(P1-C6) PSD & (P3-C6) PSD & 不变 & PSD 锥（凸） \\
+(P1-C7) 二进制 & 消除 & Step 7 & 启发式 \\
+(P1-C8) 秩一 & (P3-C5) PSD & Step 2 & PSD 锥（凸） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[问题凸性与等价性]
+\begin{enumerate}
+    \item \textbf{凸性}：问题 (P3) 是标准凸 SDP。所有约束为 LMI 或线性不等式，目标线性。
+    \item \textbf{等价性}：$K \leq 2$ 时 (P3) 与 (P1) 等价（SDR 紧致）。$K > 2$ 时 (P3) 提供 (P1) 下界。
+    \item \textbf{复杂度}：(P3) 可通过内点法在多项式时间 $O((MN_t)^{3.5})$ 求解。
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(1) (P3) 中各约束为 LMI (P3-C1)、线性不等式 (P3-C2, P3-C3, P3-C4) 或 PSD 锥约束 (P3-C5, P3-C6)。目标线性。故 (P3) 为凸 SDP。
+
+(2) Steps 1, 3, 4, 5a, 5b, 6 为严格等价。Step 2 在 $K \leq 2$ 时为紧致松弛（命题 SDR 紧致性）。Step 7 为启发式近似。故 $K \leq 2$ 时 (P3) $\equiv$ (P1)；$K > 2$ 时 $P_{\text{P3}}^* \leq P_{\text{P1}}^*$。
+
+(3) 标准 SDP 复杂度结果。
+\end{proof}
+
+\end{document}
