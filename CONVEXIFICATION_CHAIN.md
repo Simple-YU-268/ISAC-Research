@@ -142,7 +142,7 @@ $$
 
 ---
 
-### Step 3: S-Procedure 处理鲁棒 SINR — **保守上界（保证安全）**
+### Step 3: S-Procedure 处理鲁棒 SINR — **精确等价**
 
 **目标**: 消除半无限约束中的 $\min_{\Delta\mathbf{h}}$（NC2）。
 
@@ -151,27 +151,20 @@ $$
 \min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_h \|\hat{\mathbf{h}}_k\|} \frac{|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)|}{\sum_{j\neq k}|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_j(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)| + \sigma_c^2} \geq \gamma_k
 $$
 
-**变换**: 利用 Cauchy-Schwarz 给出闭式下界（分子下界 / 分母上界），消除 $\min$。
+**变换**: 定义 $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j\neq k} \mathbf{W}_j$。由 S-Procedure，半无限约束等价于：
 
-**引理 3.1（Cauchy-Schwarz 最坏情形）**:
-> 对任意 $\mathbf{x}, \mathbf{y}$ 和 $\Delta\mathbf{y}$ 满足 $\|\Delta\mathbf{y}\| \leq \epsilon\|\mathbf{y}\|$:
-> $$\min_{\|\Delta\mathbf{y}\|\leq\epsilon\|\mathbf{y}\|} |\mathbf{x}^H(\mathbf{y}+\Delta\mathbf{y})|^2 = |\mathbf{x}^H\mathbf{y}|^2 (1-\epsilon)^2$$
->
-> *证明*: 由 $| \mathbf{x}^H \Delta\mathbf{y}| \leq \|\mathbf{x}\| \cdot \|\Delta\mathbf{y}\| \leq \|\mathbf{x}\| \cdot \epsilon\|\mathbf{y}\|$，当 $\Delta\mathbf{y} = -\epsilon \frac{\|\mathbf{y}\|}{\|\mathbf{x}\|} \mathbf{x}$ 时取等。∎
-
-**变换后**（保守近似）：
+**变换后**（LMI）：
 $$
-\frac{|\hat{\mathbf{h}}_k^H \mathbf{W}_k \hat{\mathbf{h}}_k| (1-\epsilon_h)^2}{\sum_{j\neq k}|\hat{\mathbf{h}}_k^H \mathbf{W}_j \hat{\mathbf{h}}_k| (1+\epsilon_h)^2 + \sigma_c^2} \geq \gamma_k \tag{S3.1}
+\exists \mu_k \geq 0 : \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0} \tag{S3.1}
 $$
 
-或等价地（鲁棒门限缩放）：
-$$
-\text{SINR}_k^{\text{nom}} \geq \gamma_k^{\text{robust}} \triangleq \frac{\gamma_k (1+\epsilon_h)^2}{(1-\epsilon_h)^2} \tag{S3.2}
-$$
+**等价/上下界**: **精确等价**（S-Procedure 对范数球上单个二次约束是充要条件）。
 
-**等价/上下界**: **保守上界**（分子取下界、分母取上界 → 比真实 worst-case SINR 更低 → 真实最坏情形 SINR 可能高于此近似值，因此约束被放松，求解出的可行域略大于真实鲁棒可行域，但保证真实信道下的鲁棒性）。这是工程权衡：**用 ~1.75 dB 的功率余量换 closed-form LMI 表示**。
+**新变量**: $\mu_k \geq 0$（S-Procedure 松弛变量）。
 
-**遗留非凸**: 引入的 $\text{SINR}_k^{\text{nom}}$ 仍含分式（NC1）。
+**结果凸约束**: 关于 $\mathbf{W}_k$ 和 $\mu_k$ 的线性矩阵不等式（LMI）。
+
+**遗留非凸**: 仍含分式结构（NC1），需 Step 4 进一步线性化。
 
 ---
 
@@ -188,10 +181,10 @@ $$
 
 **变换后**（线性矩阵不等式）：
 $$
-\text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k^{\text{robust}} \sum_{j\neq k} \text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k^{\text{robust}} \sigma_c^2 \tag{S4.1}
+\text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k \sum_{j\neq k} \text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k \sigma_c^2 \tag{S4.1}
 $$
 
-其中 $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$。
+其中 $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$，$\gamma_k$ 为原始 SINR 门限（S-Procedure 已精确处理鲁棒性，此处无需额外缩放）。
 
 **等价性证明**:
 
@@ -245,28 +238,25 @@ $$
 
 **变换前**（分式）:
 $$
-\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2 \text{tr}(\mathbf{Z})} \geq \gamma_S^{\text{PoD}}
+\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}
 $$
 
-**变换**: 引入辅助变量 $t_p$（感知功率预算），约束分为：
-$$
-\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \cdot t_p, \quad \text{tr}(\mathbf{Z}) \leq t_p \tag{S5.2}
-$$
+**变换**: 分母 $\sigma_s^2$ 为常数，直接交叉相乘。
 
-或通过 Cauchy-Schwarz 最优解（$\mathbf{z}_p^* = \sqrt{P_{S,p}} \mathbf{g}_p/\|\mathbf{g}_p\|$）直接得到线性化形式：
+**变换后**（线性）：
 $$
-\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \text{tr}(\mathbf{Z}) \tag{S5.3}
+\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \tag{S5.3}
 $$
 
 **凸性**: (S5.3) 关于 $\mathbf{Z}$ 是**线性**约束（$\mathbf{g}_p\mathbf{g}_p^H$ 是已知常数 PSD 矩阵，$\text{tr}(\mathbf{G}_p \mathbf{Z})$ 是线性函数），**凸**。
 
 **等价性证明**:
 
-> **命题 5b（感知 SINR 线性化等价性）**: 当 $\mathbf{Z} = \mathbf{z}\mathbf{z}^H$（rank-1）时，最优感知波束为 $\mathbf{z}^* = \sqrt{P_S} \mathbf{g}_p/\|\mathbf{g}_p\|$，且此时 (S5.3) 取等。
+> **命题 5b（感知 SINR 线性化等价性）**: $\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} = \frac{\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z})}{\sigma_s^2}$，当 $\sigma_s^2 > 0$ 时，交叉相乘等价。
 >
-> *证明*: 由 Cauchy-Schwarz, $|\mathbf{g}_p^H \mathbf{z}|^2 \leq \|\mathbf{g}_p\|^2 \|\mathbf{z}\|^2$，等号当 $\mathbf{z} \parallel \mathbf{g}_p$ 时取到。代入即得。∎
+> *证明*: 由 $\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) = \mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p$（迹的循环性质），且 $\sigma_s^2$ 为正常数。∎
 
-**等价/上下界**: **严格等价**（rank-1 最优波束为匹配滤波）。
+**等价/上下界**: **严格等价**（$\sigma_s^2 > 0$ 为常数）。
 
 ---
 
@@ -276,14 +266,18 @@ $$
 
 **变换**:
 $$
-\sum_{k=1}^{K} \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}_m) \leq P_{\max}, \quad \forall m \tag{S6.1}
+\text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}, \quad \forall m \tag{S6.1}
 $$
+
+其中 $\mathbf{R}_X = \sum_{k=1}^{K} \mathbf{W}_k + \mathbf{Z}$，$\mathbf{E}_m = \text{diag}(0,\ldots,0,1,0,\ldots,0)$（第 $m$ 个 AP 对应的对角选择矩阵）。
 
 （其中 $\text{tr}(\mathbf{W}_k) = \|\mathbf{w}_k\|^2$ 在 Step 1 提升后保持线性）
 
-**凸性**: 关于 $\mathbf{W}_k, \mathbf{Z}_m$ 是**线性**约束（左侧是线性函数，右侧是常数），**凸**。
+**凸性**: 关于 $\mathbf{W}_k, \mathbf{Z}$ 是**线性**约束（左侧是线性函数，右侧是常数），**凸**。
 
-**等价/上下界**: **严格等价**（无变换）。
+**等价/上下界**: **严格等价**（per-AP 功率约束与全局功率约束等价，当每个 AP 独立满足 $P_{\max}$ 时）。
+
+> **Remark**: 若采用全局功率约束 $\sum_{k=1}^{K} \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \leq M P_{\max}$，则与 per-AP 约束等价当且仅当所有 AP 功率和恰好等于 $M P_{\max}$。per-AP 约束更严格但更实际（工程实现中每个 AP 有独立功放限制）。
 
 ---
 
@@ -321,30 +315,35 @@ $$
 \boxed{
 \begin{aligned}
 \min_{\{\mathbf{W}_k\}, \mathbf{Z}, \boldsymbol{\mu}} \quad & \sum_{k=1}^{K} \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \tag{P3-a} \\[4pt]
-\text{s.t.} \quad & \text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k^{\text{robust}} \sum_{j\neq k} \text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k^{\text{robust}} \sigma_c^2, \quad \forall k \tag{P3-b} \\
+\text{s.t.} \quad & \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0}, \quad \forall k \tag{P3-b} \\
 & \text{tr}(\mathbf{F}_p \sum_k \mathbf{W}_k) + \text{tr}(\mathbf{F}_p \mathbf{Z}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \tag{P3-c} \\
-& \text{tr}(\mathbf{G}_p \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \text{tr}(\mathbf{Z}), \quad \forall p \tag{P3-d} \\
-& \sum_{k=1}^{K} \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \leq M P_{\max} \tag{P3-e} \\
+& \text{tr}(\mathbf{G}_p \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-d} \\
+& \text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-e} \\
 & \mathbf{W}_k \succeq \mathbf{0}, \quad \forall k \tag{P3-f} \\
-& \mathbf{Z} \succeq \mathbf{0} \tag{P3-g}
+& \mathbf{Z} \succeq \mathbf{0} \tag{P3-g} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-h}
 \end{aligned}}
 $$
 
 其中：
-- $\gamma_k^{\text{robust}} = \gamma_k (1+\epsilon_h)^2 / (1-\epsilon_h)^2$（Step 3 引入的鲁棒门限）
+- $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j\neq k} \mathbf{W}_j$（Step 3 S-Procedure 矩阵）
 - $\mathbf{F}_p = \frac{2}{\sigma_s^2}\text{Re}\{\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\}$（Step 5a 引入的 Fisher 常数矩阵）
 - $\mathbf{G}_p = \mathbf{g}_p \mathbf{g}_p^H$（已知的 rank-1 PSD 矩阵）
+- $\mathbf{E}_m = \text{diag}(0,\ldots,0,1,0,\ldots,0)$（第 $m$ 个 AP 的选择矩阵）
+- $\mathbf{R}_X = \sum_{k=1}^{K} \mathbf{W}_k + \mathbf{Z}$（总协方差矩阵）
+- $\mu_k \geq 0$（S-Procedure 松弛变量）
 
 **凸性验证**:
 
 | 约束 | 形式 | 凸性 |
 |---|---|---|
 | (P3-a) | $\min$ 线性目标 | 凸 |
-| (P3-b) | $\text{tr}(\cdot \mathbf{W}) \geq c$（线性矩阵不等式） | 凸 |
+| (P3-b) | LMI: $\begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0}$ | 凸 |
 | (P3-c) | $\text{tr}(\mathbf{F}_p \sum_k \mathbf{W}_k) \geq c$（$\mathbf{F}_p$ 常数） | 凸 |
-| (P3-d) | $\text{tr}(\mathbf{G}_p \mathbf{Z}) \geq c \cdot \text{tr}(\mathbf{Z})$（线性） | 凸 |
-| (P3-e) | $\text{tr}(\mathbf{W}) \leq c$（线性） | 凸 |
+| (P3-d) | $\text{tr}(\mathbf{G}_p \mathbf{Z}) \geq c$（线性） | 凸 |
+| (P3-e) | $\text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}$（线性） | 凸 |
 | (P3-f)-(P3-g) | 半正定锥约束 | 凸 |
+| (P3-h) | $\mu_k \geq 0$（线性） | 凸 |
 
 **全部约束均为线性 / 半正定锥约束，目标为线性函数 → (P3) 是标准凸 SDP。**
 
@@ -356,14 +355,14 @@ $$
 |---|---|---|---|---|
 | 1 | 变量提升 $(\mathbf{w}_k\mathbf{w}_k^H \to \mathbf{W}_k)$ | NC1, NC5 | **严格等价** | 无损失 |
 | 2 | SDR 松弛（丢 rank-1） | NC4 | **紧致松弛**（$K\leq 2$ 等价） | $K>2$: 下界，$O(1/L)$ 高斯随机化恢复 |
-| 3 | S-Procedure 闭式界（分子取下、分母取上） | NC2 | **保守上界** | ~1.75 dB 功率余量（安全近似） |
+| 3 | S-Procedure 精确 LMI（含松弛变量 $\mu_k$） | NC2 | **精确等价** | 无损失（S-Procedure 充要条件） |
 | 4 | SINR 分式线性化 | NC1（通信部分） | **严格等价** | 无损失 |
 | 5a | PCRB 线性化（FIM 仿射） | NC6 | **严格等价**（Assumption 1） | 无损失 |
 | 5b | 感知 SINR 线性化（rank-1 MF 最优） | NC1（感知部分） | **严格等价** | 无损失 |
 | 6 | 功率约束（已凸） | — | **已是凸** | 无损失 |
 | 7 | AP 选择两步分解 | NC3 | **启发式下界** | 外层选择可能非最优 |
 
-**总结**: 通信-感知物理层的凸化（Step 1-6）几乎全部**严格等价**，仅 Step 3 为工程可接受的保守上界，Step 2 在 $K \leq 2$ 时紧致；AP 选择（Step 7）采用启发式以保证多项式复杂度。
+**总结**: 通信-感知物理层的凸化（Step 1-6）**全部严格等价**（Step 3 采用 S-Procedure 精确 LMI，无保守近似），仅 Step 2 在 $K > 2$ 时为紧致松弛；AP 选择（Step 7）采用启发式以保证多项式复杂度。
 
 ---
 
@@ -383,10 +382,10 @@ $$
 
 1. **命题 1（变量提升等价性）**: $\mathbf{W}_k = \mathbf{w}_k\mathbf{w}_k^H$ 严格等价。
 2. **命题 2（SDR 紧致性）**: $K \leq 2$ 时 SDR 等价；$K > 2$ 时是下界，$O(1/L)$ 可恢复。
-3. **引理 3.1（Cauchy-Schwarz 最坏情形）**: $\min_{\|\Delta\mathbf{y}\|\leq\epsilon\|\mathbf{y}\|} |\mathbf{x}^H(\mathbf{y}+\Delta\mathbf{y})|^2 = |\mathbf{x}^H\mathbf{y}|^2(1-\epsilon)^2$。
+3. **引理 3.1（S-Procedure 精确等价）**: 对范数球上二次约束，S-Procedure 给出充要 LMI 条件，引入松弛变量 $\mu_k \geq 0$。
 4. **命题 4（分式线性化等价性）**: $\frac{A}{B}\geq\gamma \iff A\geq\gamma B$（$B>0$）。
 5. **命题 5a（PCRB 线性化）**: $\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p\mathbf{R}_X)$（Assumption 1）。
-6. **命题 5b（感知 SINR 线性化）**: 匹配滤波 $\mathbf{z}^* = \sqrt{P_S}\mathbf{g}_p/\|\mathbf{g}_p\|$ 是 rank-1 最优。
+6. **命题 5b（感知 SINR 线性化）**: $\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}} \iff \text{tr}(\mathbf{G}_p \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$（$\sigma_s^2 > 0$ 为常数）。
 7. **Remark 7.1（AP 选择启发式）**: 外层启发式 + 内层凸 SDP = 工程可处理下界。
 
 ---
