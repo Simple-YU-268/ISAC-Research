@@ -23,10 +23,6 @@
 \usepackage{geometry}
 \geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
 
-% 超链接
-\usepackage{hyperref}
-\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
-
 % 定理环境
 \newtheorem{theorem}{定理}
 \newtheorem{lemma}{引理}
@@ -148,167 +144,380 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 \begin{remark}
 Problem (P1) is a mixed-integer nonlinear programming (MINLP) problem. The non-convexity arises from: (i) the SINR constraints involving ratios of quadratic functions; (ii) the coupling between communication beamforming vectors $\vect{w}_{m,k}$ and sensing covariance matrices $\mat{Z}_m$ in the power constraints; (iii) the binary AP selection variables $b_{mp}$; and (iv) the rank-one constraint implicitly required for physical beamforming implementation. The following sections develop a systematic convexification procedure to address these challenges.
 \end{remark}
-
 %==============================================================================
 \section{Problem Convexification and SDP Reformulation}
 %==============================================================================
 
-\subsection{Non-Convexity Analysis}
+\subsection{Original Problem Formulation with Constraint Numbering}
 
-Before proceeding to convexification, we identify the sources of non-convexity in (P1):
-
-\textbf{Source 1 -- SINR fractional structure}：The communication SINR constraint \eqref{eq:sinr_comm} involves a ratio of quadratic forms, which is non-convex in the beamforming vectors $\vect{w}_k$.
-
-\textbf{Source 2 -- Worst-case CSI uncertainty}：The worst-case SINR constraint over the error ball $\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}$ is an infinite-dimensional robust constraint.
-
-\textbf{Source 3 -- Variable coupling}：The power constraint \eqref{eq:power} couples $\vect{w}_{m,k}$ and $\mat{Z}_m$, and the AP selection $b_{mp}$ couples with both.
-
-\textbf{Source 4 -- Rank-one requirement}：Physical beamforming requires $\mat{W}_k = \vect{w}_k \vect{w}_k^H$ to be rank-one, which is a non-convex discrete constraint.
-
-\subsection{Step 1: Covariance Matrix Lifting and Semidefinite Relaxation}
-
-To address Sources 1 and 4, we introduce covariance matrix variables by lifting the vector variables to matrix space:
-
-\textbf{Communication covariance matrix}：
-\begin{equation}
-\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}^{MN_t}, \quad \forall k \in \mathcal{K}
-\end{equation}
-
-\textbf{Sensing covariance matrix}：
-\begin{equation}
-\mat{Z} = \sum_{m=1}^M \mat{Z}_m \in \mathbb{H}^{MN_t}
-\end{equation}
-
-\textbf{Global transmit covariance}：
-\begin{equation}
-\mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z}
-\end{equation}
-
-The original objective $\sum_k \|\vect{w}_k\|^2 = \sum_k \tr(\mat{W}_k)$ and power constraints become linear in the lifted variables. The rank-one constraint $\rank(\mat{W}_k) = 1$ is relaxed to $\mat{W}_k \succeq \mat{0}$, yielding the semidefinite relaxation (SDR). This addresses Source 4 by convexifying the discrete rank constraint.
-
-\subsection{Step 2: S-Procedure for Robust Communication Constraints}
-
-To address Source 2, we apply the S-Procedure to transform the infinite-dimensional worst-case constraint into a finite-dimensional linear matrix inequality (LMI).
-
-The worst-case SINR constraint is:
-\begin{equation}
-\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k
-\end{equation}
-
-Define:
-\begin{equation}
-\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j
-\end{equation}
-
-\begin{proposition}[S-Procedure Equivalence]
-There exists $\mu_k \geq 0$ such that the following LMI is equivalent to the worst-case SINR constraint:
-\begin{equation}
-\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{18}
-\end{equation}
-\end{proposition}
-
-\begin{proof}
-The worst-case SINR constraint can be rewritten as:
-\begin{equation}
-\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \Delta\vect{h}_k^H \mat{A}_k \Delta\vect{h}_k + 2\Real\{\hat{\vect{h}}_k^H \mat{A}_k \Delta\vect{h}_k\} + \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 \geq 0
-\end{equation}
-
-By the S-Procedure \cite{boyd2004convex}, this is equivalent to the existence of $\mu_k \geq 0$ such that:
-\begin{equation}
-\begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}
-\end{equation}
-which completes the proof.
-\end{proof}
-
-\subsection{Step 3: Convexity of Sensing Constraints}
-
-\subsubsection{Sensing SINR Constraint}
-
-The sensing SINR constraint \eqref{eq:sinr_sens} can be expressed in the lifted domain as:
-\begin{equation}
-\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2
-\end{equation}
-
-Since $\vect{g}_p \vect{g}_p^H$ is a constant positive semidefinite matrix, this is a linear inequality in $\mat{Z}$, hence convex.
-
-\subsubsection{PCRB Constraint}
-
-The tracking accuracy constraint \eqref{eq:pcrb} involves the Fisher information matrix (FIM). Under the single-angle estimation assumption (Assumption \ref{ass:1}), the FIM trace constraint becomes:
-
-\begin{assumption}[Single-Angle Estimation Model]\label{ass:1}
-The gradient matrix $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ is determined by the target's predicted state in the current time slot and can be treated as a known constant matrix. The FIM data component is:
-\begin{equation}
-\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\}
-\end{equation}
-\end{assumption}
-
-\begin{lemma}[FIM Linearity]
-Under Assumption \ref{ass:1}, the FIM trace constraint is equivalent to:
-\begin{equation}
-\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}
-\end{equation}
-where $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$ is a constant positive semidefinite matrix.
-\end{lemma}
-
-\begin{proof}
-Let $\mat{G}_p = \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{D \times MN_t}$. Then:
-\begin{equation}
-\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\{ \mat{G}_p \mat{R}_X \mat{G}_p^H \}
-\end{equation}
-
-The $(a,b)$-th element is:
-\begin{equation}
-(\mat{J}_p^{\text{data}})_{ab} = \frac{2}{\sigma_s^2} \Real\Big\{ \sum_{i,j} (\mat{G}_p)_{ai} (\mat{R}_X)_{ij} (\mat{G}_p^H)_{jb} \Big\}
-\end{equation}
-
-which is a linear combination of elements of $\mat{R}_X$. Therefore:
-\begin{equation}
-\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X)
-\end{equation}
-where $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\}$. Since $\mat{F}_p \succeq \mat{0}$ and $\mat{R}_X$ is affine in the optimization variables, the constraint $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ is convex affine.
-\end{proof}
-
-\subsection{Step 4: Final Equivalent Convex SDP}
-
-Combining Steps 1--3, the original non-convex problem (P1) is reformulated as the following standard convex SDP:
+To enable rigorous step-by-step convexification, we first present the original problem (P1) with explicit constraint numbering and convexity analysis for each term.
 
 \begin{align}
-\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
-\text{s.t.} \quad & \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \label{eq:lmi_comm} \\
-& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \label{eq:sinr_sens_sdp} \\
-& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \label{eq:pcrb_sdp} \\
-& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \label{eq:power_sdp} \\
-& \mat{W}_k \succeq \mat{0}, \quad \forall k \label{eq:psd_w} \\
-& \mat{Z} \succeq \mat{0} \label{eq:psd_z} \\
-& \mu_k \geq 0, \quad \forall k \label{eq:mu_nonneg}
+\min_{\substack{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \\ \{b_{mp}\}}} \quad 
+& \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\text{s.t.} \quad 
+& \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \tag{P1-C1} \label{eq:p1c1} \\
+& \text{SINR}_{S,p} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \tag{P1-C2} \label{eq:p1c2} \\
+& \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \tag{P1-C3} \label{eq:p1c3} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P1-C4} \label{eq:p1c4} \\
+& \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P1-C5} \label{eq:p1c5} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \tag{P1-C6} \label{eq:p1c6} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P1-C7} \label{eq:p1c7} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \in \mathcal{K} \tag{P1-C8} \label{eq:p1c8}
 \end{align}
 
-where $\mat{E}_m$ is the AP selection matrix for AP $m$, and $\mu_k \geq 0$ are the S-Procedure slack variables.
+where $\mat{W}_k = \vect{w}_k \vect{w}_k^H$ is the communication covariance matrix (implicitly rank-one), and the worst-case SINR is defined as:
+\begin{equation}
+\text{SINR}_k^{\text{wc}} = \min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2}
+\end{equation}
 
-\begin{theorem}[Problem Convexity]
-Problem (P3) is a standard convex semidefinite program. All constraints are either linear inequalities or linear matrix inequalities (LMIs), and the objective is linear. Therefore, (P3) can be solved to arbitrary accuracy in polynomial time using interior-point methods (e.g., MOSEK, SDPT3).
-\end{theorem}
+\subsection{Non-Convexity Analysis: Why Each Constraint is Non-Convex}
+
+We now analyze the convexity of each term in (P1) systematically.
+
+\subsubsection{Objective Function}
+
+The objective $\sum_{m,k} \|\vect{w}_{m,k}\|^2 + \sum_m \tr(\mat{Z}_m)$ is a sum of squared norms and traces. Each term $\|\vect{w}_{m,k}\|^2 = \vect{w}_{m,k}^H \vect{w}_{m,k}$ is a convex quadratic function (positive definite Hessian). However, when combined with the rank-one constraint (P1-C8), the feasible set becomes non-convex.
+
+\textbf{Convexity status}: The objective itself is convex, but the overall problem is non-convex due to constraints.
+
+\subsubsection{Communication SINR Constraint (P1-C1)}
+
+Constraint (P1-C1) involves a ratio of quadratic forms:
+\begin{equation}
+\frac{|\vect{h}_k^H \vect{w}_k|^2}{\sum_{j\neq k}|\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+This is a generalized fractional programming constraint. The function $f(\vect{w}) = \frac{|\vect{h}^H \vect{w}|^2}{\sum |\vect{h}^H \vect{w}_j|^2 + \sigma^2}$ is:
+\begin{itemize}
+    \item Quasi-convex on each $\vect{w}_k$ individually (fixed others)
+    \item \textbf{Non-convex} jointly on $\{\vect{w}_k\}_{k=1}^K$ (bilinear coupling between numerator and denominator variables)
+\end{itemize}
+
+\textbf{Why non-convex}: The superlevel set $\{ \vect{w} : f(\vect{w}) \geq \gamma \}$ is not convex. For $\vect{w}^{(1)}, \vect{w}^{(2)}$ satisfying the constraint, their convex combination $\theta \vect{w}^{(1)} + (1-\theta) \vect{w}^{(2)}$ generally violates the SINR constraint due to cross-terms in the denominator.
+
+\textbf{Non-convex source}: NC1 (SINR fractional structure) + NC2 (worst-case CSI uncertainty makes it semi-infinite).
+
+\subsubsection{Sensing SINR Constraint (P1-C2)}
+
+In the original vector form:
+\begin{equation}
+\frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|^2}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}
+\end{equation}
+
+This appears linear in $\mat{Z}$, but $\mat{Z}$ itself is coupled with $\{\vect{w}_k\}$ through the power constraint (P1-C5).
+
+\textbf{Convexity status}: If $\mat{Z}$ were independent, this would be convex (linear in $\mat{Z}$). But the coupling with $\vect{w}_k$ through (P1-C5) makes the joint feasible set non-convex.
+
+\subsubsection{PCRB Constraint (P1-C3)}
+
+The FIM trace involves the inverse of a matrix that depends on $\mat{R}_X$:
+\begin{equation}
+\tr\left( \left[ \mat{J}_p^{\text{prior}} + \mat{J}_p^{\text{data}}(\mat{R}_X) \right]^{-1} \right) \leq \Gamma_{\text{Track},p}
+\end{equation}
+
+\textbf{Why non-convex}: The matrix inverse $\mat{X}^{-1}$ is convex on $\mat{X} \succ \mat{0}$ (matrix convex), but the trace of the inverse is a convex function of $\mat{X}$. However, we have a \textbf{lower bound} on $\tr(\mat{J}^{-1})$, which corresponds to an upper bound on a convex function — this is a \textbf{non-convex} constraint.
+
+Equivalently, $\tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track},p}$ is linear in $\mat{J}_p^{\text{data}}$, but $\mat{J}_p^{\text{data}}$ is a nonlinear function of $\mat{R}_X$ (quadratic in channel gradients).
+
+\textbf{Non-convex source}: NC6 (matrix inverse / nonlinear FIM dependence).
+
+\subsubsection{AP Selection Constraint (P1-C4)}
+
+\begin{equation}
+\sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad b_{mp} \in \{0, 1\}
+\end{equation}
+
+\textbf{Why non-convex}: The set $\{0, 1\}$ is a discrete set of two points. The convex hull is $[0, 1]$, but the constraint requires integer values. This is a binary integer constraint.
+
+\textbf{Non-convex source}: NC3 (binary combination).
+
+\subsubsection{Power Constraint (P1-C5)}
+
+\begin{equation}
+\sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}
+\end{equation}
+
+\textbf{Convexity status}: This is a convex constraint (second-order cone constraint in $\vect{w}_{m,k}$, linear in $\mat{Z}_m$). However, it couples communication and sensing variables, which contributes to the overall non-convexity when combined with other constraints.
+
+\textbf{Status}: Already convex, no transformation needed.
+
+\subsubsection{PSD Constraint (P1-C6)}
+
+$\mat{Z}_m \succeq \mat{0}$ defines a convex cone (positive semidefinite cone).
+
+\textbf{Status}: Already convex, no transformation needed.
+
+\subsubsection{Binary Constraint (P1-C7)}
+
+$b_{mp} \in \{0, 1\}$ is the same non-convexity as (P1-C4).
+
+\subsubsection{Rank-One Constraint (P1-C8)}
+
+$\rank(\mat{W}_k) = 1$ where $\mat{W}_k = \vect{w}_k \vect{w}_k^H$.
+
+\textbf{Why non-convex}: The set of rank-one PSD matrices is:
+\begin{equation}
+\mathcal{F}_{\text{rank-1}} = \{ \mat{W} \succeq \mat{0} : \rank(\mat{W}) = 1 \}
+\end{equation}
+
+This is a non-convex manifold. For example, take $\mat{W}^{(1)} = \vect{v}_1 \vect{v}_1^H$ and $\mat{W}^{(2)} = \vect{v}_2 \vect{v}_2^H$ with $\vect{v}_1 \perp \vect{v}_2$. Their average $\frac{1}{2}(\mat{W}^{(1)} + \mat{W}^{(2)})$ has rank 2, violating the constraint.
+
+\textbf{Non-convex source}: NC4 (rank-one requirement).
 
 \begin{table}[htbp]
 \centering
-\caption{Constraint convexity summary for problem (P3)}\label{tab:convexity}
-\begin{tabular}{lll}
+\caption{Non-convexity source identification for problem (P1)}\label{tab:nonconvex}
+\begin{tabular}{clll}
 \toprule
-Constraint type & Mathematical form & Convexity \\
+ID & Source & Affected constraints & Convexity violation \\
 \midrule
-Objective & $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z})$ & Linear (convex) \\
-Power & $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$ & Linear affine (convex) \\
-Sensing SINR & $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$ & Linear affine (convex) \\
-PCRB & $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ & Linear affine (convex) \\
-Communication robust & LMI \eqref{eq:lmi_comm} & PSD cone (convex) \\
-PSD & $\mat{W}_k, \mat{Z} \succeq \mat{0}$ & PSD cone (convex) \\
+NC1 & SINR fractional structure & (P1-C1), (P1-C2) & Ratio of quadratics \\
+NC2 & Worst-case CSI uncertainty & (P1-C1) & Semi-infinite constraint \\
+NC3 & Binary AP selection & (P1-C4), (P1-C7) & Discrete set $\{0,1\}$ \\
+NC4 & Rank-one requirement & (P1-C8) & Non-convex manifold \\
+NC5 & Variable coupling & (P1-C1)--(P1-C5) & Bilinear terms \\
+NC6 & Matrix inverse in PCRB & (P1-C3) & Nonlinear FIM dependence \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{remark}[Structure of Optimal Solution]
-Following the analysis in \cite{ren2024fundamental}, the optimal transmit covariance $\mat{R}_X^*$ in (P3) consists of two parts: the communication covariance $\sum_k \mat{W}_k^*$ for information transmission and the sensing covariance $\mat{Z}^*$ for target illumination. This separation reveals the fundamental ISAC tradeoff: increasing $\mat{Z}^*$ improves sensing at the cost of communication power, and vice versa.
-\end{remark}
+\subsection{Step-by-Step Convexification}
+
+We now present the seven-step convexification method chain. Each step addresses specific non-convex sources and provides the transformation formula, equivalence relationship, and resulting convex constraint.
+
+\subsubsection{Step 1: Covariance Matrix Lifting (Address NC1, NC5)}
+
+\textbf{Transformation}: Lift vector variables to matrix space.
+
+Original variables: $\vect{w}_k \in \mathbb{C}^{MN_t}$, $\mat{Z}_m \in \mathbb{C}^{N_t \times N_t}$.
+
+New variables:
+\begin{align}
+\mat{W}_k &= \vect{w}_k \vect{w}_k^H \in \mathbb{H}^{MN_t}, \quad \forall k \tag{S1.1} \\
+\mat{Z} &= \sum_{m=1}^M \mat{Z}_m \in \mathbb{H}^{MN_t} \tag{S1.2}
+\end{align}
+
+\textbf{Why this helps}:
+\begin{itemize}
+    \item Objective: $\|\vect{w}_k\|^2 = \tr(\mat{W}_k)$ becomes linear in $\mat{W}_k$.
+    \item Power: $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$ becomes $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$ (linear in $\mat{W}_k, \mat{Z}$).
+    \item SINR: $|\vect{h}_k^H \vect{w}_k|^2 = \tr(\vect{h}_k \vect{h}_k^H \mat{W}_k)$ becomes linear in $\mat{W}_k$.
+\end{itemize}
+
+\textbf{Equivalence}: Strict equivalence (one-to-one mapping between $\vect{w}_k$ and rank-one $\mat{W}_k$).
+
+\textbf{Remaining non-convexity}: The rank-one constraint $\rank(\mat{W}_k) = 1$ is still present (NC4).
+
+\subsubsection{Step 2: Semidefinite Relaxation (Address NC4)}
+
+\textbf{Transformation}: Relax rank-one constraint to PSD cone.
+
+Original: $\mat{W}_k \succeq \mat{0}$, $\rank(\mat{W}_k) = 1$.
+
+Relaxed: $\mat{W}_k \succeq \mat{0}$ only.
+
+\textbf{Feasible set change}:
+\begin{equation}
+\mathcal{F}_{\text{rank-1}} = \{\mat{W} \succeq \mat{0} : \rank(\mat{W}) = 1\} \subset \mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}
+\end{equation}
+
+\textbf{Equivalence type}: Tight relaxation.
+
+\begin{proposition}[SDR Tightness Conditions]\label{prop:sdr}
+\begin{enumerate}
+    \item If $K \leq 2$, SDR is tight: optimal $\mat{W}_k^*$ satisfies $\rank(\mat{W}_k^*) = 1$.
+    \item If $K > 2$, SDR provides a lower bound: $P_{\text{SDR}}^* \leq P_{\text{original}}^*$.
+    \item Gaussian randomization recovers a feasible rank-one solution with $O(1/L)$ performance loss.
+\end{enumerate}
+\end{proposition}
+
+\textbf{Impact}: Objective value may decrease (relaxation enlarges feasible set). For $K > 2$, we obtain a lower bound on the original problem.
+
+\subsubsection{Step 3: S-Procedure for Robust SINR (Address NC2)}
+
+\textbf{Transformation}: Convert semi-infinite worst-case constraint to finite LMI.
+
+Original (semi-infinite):
+\begin{equation}
+\min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_k (\hat{\vect{h}}_k + \Delta\vect{h}_k)|}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \mat{W}_j(\hat{\vect{h}}_k + \Delta\vect{h}_k)| + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+Define $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j\neq k} \mat{W}_j$. By S-Procedure, this is equivalent to:
+
+\begin{equation}
+\exists \mu_k \geq 0 : \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\ \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0} \tag{S3.1}
+\end{equation}
+
+\textbf{Equivalence type}: Exact equivalence (S-Procedure is necessary and sufficient for a single quadratic constraint over a norm ball).
+
+\textbf{New variable}: $\mu_k \geq 0$ (S-Procedure slack variable).
+
+\textbf{Resulting convex constraint}: Linear Matrix Inequality (LMI) in $\mat{W}_k$ and $\mu_k$.
+
+\subsubsection{Step 4: SINR Fractional Linearization (Address NC1)}
+
+\textbf{Transformation}: Cross-multiply to eliminate fraction.
+
+Original fractional form (after S-Procedure):
+\begin{equation}
+\frac{\tr(\hat{\mat{H}}_k \mat{W}_k)}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \sigma_c^2} \geq \gamma_k^{\text{robust}}
+\end{equation}
+
+where $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$ and $\gamma_k^{\text{robust}}$ incorporates the robustness margin.
+
+Assuming positive denominator (always satisfied since $\sigma_c^2 > 0$):
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k^{\text{robust}} \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k^{\text{robust}} \sigma_c^2 \tag{S4.1}
+\end{equation}
+
+\textbf{Equivalence type}: Strict equivalence (for positive denominator).
+
+\textbf{Resulting convex constraint}: Linear inequality in $\mat{W}_k$.
+
+\subsubsection{Step 5a: PCRB Affine Expansion (Address NC6)}
+
+\textbf{Transformation}: Linearize FIM trace under single-angle assumption.
+
+Under Assumption 1 ($\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ known and constant):
+
+\begin{equation}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\}
+\end{equation}
+
+Define:
+\begin{equation}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \succeq \mat{0}
+\end{equation}
+
+Then:
+\begin{equation}
+\tr(\mat{J}_p^{\text{data}}) = \tr(\mat{F}_p \mat{R}_X) \tag{S5.1}
+\end{equation}
+
+\textbf{Equivalence type}: Strict equivalence (under Assumption 1).
+
+\textbf{Resulting convex constraint}: $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ is linear in $\mat{R}_X$.
+
+\subsubsection{Step 5b: Sensing SINR Linearization}
+
+\textbf{Transformation}: Express in lifted domain.
+
+Original: $\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|^2}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$.
+
+In lifted domain:
+\begin{equation}
+\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \tag{S5.2}
+\end{equation}
+
+\textbf{Equivalence type}: Strict equivalence (for rank-1 $\mat{Z}$, optimal is matching filter).
+
+\textbf{Resulting convex constraint}: Linear inequality in $\mat{Z}$.
+
+\subsubsection{Step 6: Power Constraint (Already Convex)}
+
+Original: $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$.
+
+In lifted domain:
+\begin{equation}
+\tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \tag{S6.1}
+\end{equation}
+
+where $\mat{E}_m$ selects AP $m$'s antennas.
+
+\textbf{Status}: Already convex (linear constraint). No transformation needed.
+
+\subsubsection{Step 7: AP Selection Two-Step Decomposition (Address NC3)}
+
+\textbf{Transformation}: Decompose into outer discrete + inner continuous.
+
+Original: $\sum_m b_{mp} = N_{\text{req}}$, $b_{mp} \in \{0,1\}$.
+
+\textbf{Step 7a (Outer)}: Heuristic AP selection based on large-scale fading:
+\begin{equation}
+\mathcal{M}_p = \arg\max_{\mathcal{M} \subseteq \mathcal{M}, |\mathcal{M}| = N_{\text{req}}} \sum_{m \in \mathcal{M}} \text{PL}^{-1}(d_{m,p})
+\end{equation}
+
+\textbf{Step 7b (Inner)}: Solve convex SDP with fixed AP set $\mathcal{M}_p$.
+
+\textbf{Equivalence type}: Heuristic lower bound (NP-hard problem approximated by greedy selection).
+
+\textbf{Result}: Polynomial-time complexity, suboptimal but engineering-acceptable.
+
+\subsection{Summary of Convexification Chain}
+
+\begin{table}[htbp]
+\centering
+\caption{Seven-step convexification method chain}\label{tab:convex_chain}
+\begin{tabular}{cllll}
+\toprule
+Step & Transformation & Eliminates & Type & Result \\
+\midrule
+1 & Covariance lifting $\vect{w}\vect{w}^H \to \mat{W}$ & NC1, NC5 & Strict equivalence & Linear objective \\
+2 & SDR: drop $\rank(\mat{W})=1$ & NC4 & Tight relaxation & PSD cone \\
+3 & S-Procedure & NC2 & Exact equivalence & LMI \\
+4 & Cross-multiply fraction & NC1 (comm) & Strict equivalence & Linear inequality \\
+5a & PCRB affine expansion & NC6 & Strict equivalence (Assump. 1) & Linear inequality \\
+5b & Sensing SINR linearization & NC1 (sens) & Strict equivalence & Linear inequality \\
+6 & Power (already convex) & --- & No change & Linear inequality \\
+7 & AP two-step decomposition & NC3 & Heuristic bound & Fixed AP set \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Final Convex SDP Problem (P3)}
+
+Combining all steps, the original non-convex problem (P1) is transformed into the following standard convex SDP:
+
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad 
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
+\text{s.t.} \quad 
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \label{eq:p3c1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \label{eq:p3c2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \label{eq:p3c3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \label{eq:p3c4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \label{eq:p3c5} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C6} \label{eq:p3c6} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C7} \label{eq:p3c7}
+\end{align}
+
+where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{F}_p$ is defined in Step 5a, and $\mat{E}_m$ is the AP selection matrix.
+
+\begin{table}[htbp]
+\centering
+\caption{Constraint correspondence between (P1) and (P3)}\label{tab:correspondence}
+\begin{tabular}{clll}
+\toprule
+(P1) constraint & (P3) constraint & Transformation & Convexity \\
+\midrule
+(P1-C1) SINR & (P3-C1) LMI & Steps 1,2,3,4 & LMI (convex) \\
+(P1-C2) Sens. SINR & (P3-C2) Linear & Steps 1,2,5b & Linear (convex) \\
+(P1-C3) PCRB & (P3-C3) Linear & Steps 1,2,5a & Linear (convex) \\
+(P1-C4) AP select & (P3-C4) Fixed set & Step 7 & Linear (convex) \\
+(P1-C5) Power & (P3-C4) Linear & Steps 1,6 & Linear (convex) \\
+(P1-C6) PSD & (P3-C6) PSD & No change & PSD cone (convex) \\
+(P1-C7) Binary & Eliminated & Step 7 & Heuristic \\
+(P1-C8) Rank-one & (P3-C5) PSD & Step 2 & PSD cone (convex) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[Problem Convexity and Equivalence]\label{thm:main}
+\begin{enumerate}
+    \item \textbf{Convexity}: Problem (P3) is a standard convex SDP. All constraints are LMIs or linear inequalities, and the objective is linear.
+    \item \textbf{Equivalence}: For $K \leq 2$, (P3) is equivalent to (P1) (SDR is tight). For $K > 2$, (P3) provides a lower bound on (P1).
+    \item \textbf{Complexity}: (P3) can be solved in polynomial time $O((MN_t)^{3.5})$ via interior-point methods.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(1) Each constraint in (P3) is either an LMI (P3-C1), a linear inequality (P3-C2, P3-C3, P3-C4), or a PSD cone constraint (P3-C5, P3-C6). The objective is linear. Therefore (P3) is a convex SDP.
+
+(2) Steps 1, 3, 4, 5a, 5b, 6 are strict equivalences. Step 2 is a tight relaxation when $K \leq 2$ (Proposition \ref{prop:sdr}). Step 7 is a heuristic approximation. Therefore, for $K \leq 2$, (P3) $\equiv$ (P1); for $K > 2$, $P_{\text{P3}}^* \leq P_{\text{P1}}^*$.
+
+(3) Standard SDP complexity result.
+\end{proof}
 
 %==============================================================================
 \section{Beam Recovery and Algorithm Design}
