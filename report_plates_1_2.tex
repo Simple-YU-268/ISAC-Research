@@ -34,7 +34,7 @@
 \tableofcontents
 \newpage
 
-\section{Problem Formulation}
+\section{System Modeling and Problem Formulation (Plate I: Physical Modeling)}
 %==============================================================================
 
 \subsection{Optimization Problem (Standard Form)}
@@ -92,8 +92,10 @@ Specific numerical parameters (e.g., $M=16$, $N_t=4$, $P_{\max}=30$ W) will be p
 \end{remark}
 
 %==============================================================================
-\section{System Model and Signal Model}
+\section{System Model and Imperfect CSI}
 %==============================================================================
+
+The second step of physical modeling: characterizing the transmission of communication and sensing signals under imperfect channel state information.
 
 \subsection{Communication Signal Model}
 
@@ -141,6 +143,8 @@ where $\hat{\vect{h}}_k$ and $\hat{\vect{g}}_p$ are the estimated channels, $\De
 %==============================================================================
 \section{Communication Constraint Derivation}
 %==============================================================================
+
+The third step of physical modeling: starting from the signal model, we derive the original non-convex expressions of worst-case SINR, sensing SINR, and PCRB.
 
 \subsection{SINR Definition}
 
@@ -267,8 +271,10 @@ where:
 is a constant positive semidefinite matrix independent of the optimization variables. \hfill$\square$
 
 %==============================================================================
-\section{SDP Relaxation and Global Variable Reformulation}
+\section{SDP Relaxation and Global Variable Reformulation (Plate II: Mathematical Reformulation)}
 %==============================================================================
+
+The physical modeling in Section II yields a highly non-convex problem (P1). This section presents a seven-step convexification chain that transforms (P1) into a standard convex SDP (P3).
 
 %----- BEGIN Convexification chain insertion (EN) -----
 \input{convex_block_en}
@@ -399,6 +405,8 @@ Sensing channels are self-calibrating (the probing signal is transmitted and the
 %==============================================================================
 \section{Proof of Sensing Constraint Convexity}
 %==============================================================================
+
+This section proves the convexity of the sensing-side constraints.
 
 \subsection{PCRB Constraint Convexity}
 

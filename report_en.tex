@@ -54,7 +54,7 @@ This paper establishes a mathematical framework for joint beamforming optimizati
 \newpage
 
 %==============================================================================
-\section{Problem Formulation}
+\section{System Modeling and Problem Formulation (Plate I: Physical Modeling)}
 %==============================================================================
 
 \subsection{Optimization Problem (Standard Form)}
@@ -112,8 +112,10 @@ Specific numerical parameters (e.g., $M=16$, $N_t=4$, $P_{\max}=30$ W) will be p
 \end{remark}
 
 %==============================================================================
-\section{System Model and Signal Model}
+\section{System Model and Imperfect CSI}
 %==============================================================================
+
+As the second step of physical modeling, this section characterizes the transmission of communication and sensing signals under imperfect channel state information.
 
 \subsection{Communication Signal Model}
 
@@ -161,6 +163,8 @@ where $\hat{\vect{h}}_k$ and $\hat{\vect{g}}_p$ are the estimated channels, $\De
 %==============================================================================
 \section{Communication Constraint Derivation}
 %==============================================================================
+
+The third step of physical modeling: starting from the signal model, we derive the original non-convex expressions of worst-case SINR, sensing SINR, and PCRB. These constraints will be convexified in Section III.
 
 \subsection{SINR Definition}
 
@@ -287,8 +291,10 @@ where:
 is a constant positive semidefinite matrix independent of the optimization variables. \hfill$\square$
 
 %==============================================================================
-\section{SDP Relaxation and Global Variable Reformulation}
+\section{SDP Relaxation and Global Variable Reformulation (Plate II: Mathematical Reformulation)}
 %==============================================================================
+
+The physical modeling in Section II yields a highly non-convex problem (P1). This section presents a seven-step convexification chain that transforms (P1) into a standard convex SDP (P3). The equivalence proof of each step is given explicitly in §III.2.
 
 %----- BEGIN Convexification chain insertion (EN) -----
 \input{convex_block_en}
@@ -420,6 +426,8 @@ Sensing channels are self-calibrating (the probing signal is transmitted and the
 \section{Proof of Sensing Constraint Convexity}
 %==============================================================================
 
+This section proves the convexity of the sensing-side constraints that were intentionally left in their non-convex form during the seven-step chain.
+
 \subsection{PCRB Constraint Convexity}
 
 \textbf{Constraint}: $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$
@@ -480,8 +488,10 @@ Problem (P3) is a standard convex SDP, solvable to arbitrary precision via inter
 \end{theorem}
 
 %==============================================================================
-\section{Rank-One Recovery and Fallback Scheme}
+\section{Rank-One Recovery and Fallback Scheme (Plate III: Engineering Feasibility)}
 %==============================================================================
+
+The solution of (P3) is a covariance matrix; to obtain the physically realizable rank-one beamforming vector, an additional recovery step is required. This section presents Gaussian randomization together with a power-scaling fallback to convert the convex optimum of (P3) into a deployable beamforming vector.
 
 \subsection{Problem Background}
 
@@ -547,7 +557,10 @@ The rank of the sensing covariance $\mat{Z}^*$ exceeding 1 is a \textbf{design i
 \end{remark}
 
 %==============================================================================
-\section{Closed-Form Solution Derivation}
+\section{Closed-Form Solution Derivation (Plate IV: Benchmark)}
+%==============================================================================
+
+As a benchmark against (P3) in Section III, this section derives a suboptimal closed-form solution based on ZF and matched filtering. This solution does not guarantee strict satisfaction of the robust constraints (success rate approximately 25\%), but its complexity is only $O(K^3)$, making it an indispensable engineering baseline.
 %==============================================================================
 
 \subsection{Assumptions}
@@ -639,8 +652,10 @@ $\vect{g}_p^{\text{all}} \leftarrow \mat{G}(\mathcal{M}^{\text{all}}, p)$ for al
 \end{algorithm}
 
 %==============================================================================
-\section{Complexity Analysis}
+\section{Complexity, Tightness, and Feasibility Analysis}
 %==============================================================================
+
+As an extension of Section III, this section presents the SDR tightness theorem (tight for $K\leq 2$, approximately tight in the high-SNR regime), the necessary and sufficient feasibility conditions, and a complexity comparison between (P3) and the closed-form solution.
 
 \subsection{SDP Solving Complexity}
 
@@ -723,6 +738,9 @@ P_{\text{sens}}^{\min} &= \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} \
 \section{Key Formulas Summary}
 %==============================================================================
 
+For ease of reference, this section consolidates the core formulas of the paper.
+%==============================================================================
+
 Table~\ref{tab:formulas} summarizes the core formulas of this paper.
 
 \begin{table}[htbp]
@@ -748,6 +766,11 @@ Number & Name & Expression \\
 
 %==============================================================================
 \section{Conclusion and Future Work}
+%==============================================================================
+
+This work establishes a complete theoretical framework for robust beamforming in cell-free ISAC MIMO systems, spanning physical modeling, mathematical reformulation, engineering realization, and benchmark baseline. The core contributions are fourfold. First, the highly non-convex MINLP (P1) is transformed, via a seven-step rigorous derivation, into a standard convex SDP (P3). Second, each step of the transformation is accompanied by an explicit identification of the non-convex source, the pre- and post-transformation form, and a strict equivalence, tightness, or conservative-boundedness proof. Third, a Gaussian-randomization and power-scaling fallback algorithm is provided so that the convex optimum of (P3) can be converted into a physically realizable rank-one beamforming vector. Fourth, a closed-form ZF-plus-matched-filtering baseline is proposed as a comparison reference.
+
+Future work includes: implementing a full MOSEK-based SDP solver and verifying the tightness boundary of (P3); investigating multi-target time-slot coupled MPC; extending the present framework to RIS-aided ISAC scenarios; and benchmarking against recent deep reinforcement learning approaches (such as the cell-free ISAC beam selection work by Derrick Wing Kwan Ng and colleagues in 2024) on a unified platform.
 %==============================================================================
 
 This paper establishes a complete mathematical framework for joint beamforming optimization in Cell-Free ISAC systems. The main contributions include:
