@@ -111,7 +111,7 @@ Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) 
 \begin{equation}
 \mat{W}_k \succeq \mat{0}, \quad \forall k. \tag{S1.1}
 \end{equation}
-可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 关于 MISO 多播波束成形的结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
+可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。SDR 松弛提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$。需要说明的是，对于我们的 per-user SINR + cell-free 协作 + 鲁棒问题，**无通用 SDR 紧致性定理**——多组 multicasting 的 $G_k \leq 2$ 紧致（Karipidis, Sidiropoulos, Luo 2008）与鲁棒 MISO 的 $N_t \leq 2$ 紧致（Tuan, Apaydin, Lu 2012 *Eurasip JWCN*）都不直接套用。当 SDR 解 $\text{rank}(\mat{W}_k^*) > 1$ 时，需**高斯随机化**恢复可行 rank-1 解——这是 SDR-based beamforming 的标准做法（Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.* 综述），但**无紧致性能损失上界**；实际工程通常用 $L = 100 \sim 1000$ 候选并选最优。
 
 处理完 rank-1 后，约束 (P2-C1) 中仍残留分式结构与最坏情况不确定性，必须按两步走：先把分式改写为 S-Procedure 可处理的二次型，再让 S-Procedure 处理 $\Delta\vect{h}$ 的不确定性。具体地，固定某个最坏情况 $\Delta\vect{h}_k$ 满足 $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$，SINR 不等式
 $$
@@ -203,18 +203,18 @@ per-AP 功率约束 (P2-C4) 在提升域下保持线性：利用 $\mat{E}_m$ 选
 \end{table}
 
 \begin{theorem}[问题凸性与等价性]
-问题 (P3) 是标准凸 SDP。所有约束为 LMI 或线性不等式，目标线性。$K \leq 2$ 时 (P3) $\equiv$ (P2) $\equiv$ (P1)（SDR 紧致 + (P1)↔(P2) 严格等价 + Step 1-6 等价 + Step 7 启发式不影响此结论）。$K > 2$ 时 (P3) 提供 (P2) 的下界，即 (P1) 的下界。(P3) 可通过内点法在多项式时间求解，复杂度上界为 $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$——精确源于 (P3) 决策变量维数 $n = O(K (MN_t)^2)$，LMI 约束最大尺寸 $(MN_t+1)$；简化量级 $O((K M N_t^2)^{3.5})$。
+问题 (P3) 是标准凸 SDP。所有约束为 LMI 或线性不等式，目标线性。SDR 是 (P2) 的下界：$P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$（无通用紧致性定理——见 §逐步凸化 Step 1 注释）。(P3) 可通过内点法在多项式时间求解，复杂度上界为 $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$——精确源于 (P3) 决策变量维数 $n = O(K (MN_t)^2)$，LMI 约束最大尺寸 $(MN_t+1)$；简化量级 $O((K M N_t^2)^{3.5})$。
 \end{theorem}
 
 \begin{proof}
 (P3) 中各约束为 LMI (P3-C1)、线性不等式 (P3-C2, P3-C3, P3-C4) 或 PSD 锥约束 (P3-C5, P3-C6)。目标线性。故 (P3) 为凸 SDP。变换链：
 \begin{itemize}
     \item \textbf{(P1) $\Leftrightarrow$ (P2)}: 严格等价（变量提升，rank-1 约束保证可恢复）
-    \item \textbf{Step 1-6}：严格等价（协方差提升、SDR 紧致条件、S-Procedure 充要、分式线性化、PCRB 仿射、感知 SINR 线性化、功率约束）
-    \item \textbf{Step 2 (SDR) 在 $K>2$ 时为紧致松弛}：$P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$
+    \item \textbf{Step 1-6}：严格等价（协方差提升、SDR 松弛（非紧致）、S-Procedure 充要、分式线性化、PCRB 仿射、感知 SINR 线性化、功率约束）
+    \item \textbf{Step 2 (SDR)}：下界松弛，$P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$（无通用紧致性定理）
     \item \textbf{Step 7 (AP 启发式)}：外层 AP 集合由大尺度衰落排序选取，\textbf{无理论最优性保证}——既可能给出原问题下界，也可能因启发式选错 AP 而给出不可比较的目标值
 \end{itemize}
-故 $K \leq 2$ 时 (P3) $\equiv$ (P1)；$K > 2$ 时 $P_{\text{P3}}^* \leq P_{\text{P1}}^*$。复杂度上界由内点法对 SDP 的标准结论给出（Nesterov-Todd 路径跟踪，最坏情况 $O(n^3 L)$，其中 $n$ 为决策变量维数，$L$ 为输入数据位长）。
+故 (P3) 是 (P1) 的下界：$P_{\text{P3}}^* \leq P_{\text{P1}}^*$。复杂度上界由内点法对 SDP 的标准结论给出（Nesterov-Todd 路径跟踪，最坏情况 $O(n^3 L)$，其中 $n$ 为决策变量维数，$L$ 为输入数据位长）。
 \end{proof}
 
 \end{document}

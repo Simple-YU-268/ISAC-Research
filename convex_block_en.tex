@@ -74,9 +74,9 @@ The feasible set enlarges from $\mathcal{F}_{\text{rank-1}} = \{\mat{W}_k \succe
 \begin{proposition}[SDR tightness conditions]\label{prop:sdr_tight}
 SDR is equivalent to the original problem iff the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$.
 \begin{enumerate}
-    \item SDR is tight for $K \leq 2$ (guaranteed by Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 for MISO multicast).
+    \item SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$. No universal tightness theorem applies to our per-user SINR + cell-free cooperative + robust problem (multicast $G_k \leq 2$ tightness of Karipidis et al. 2008 and robust MISO $N_t \leq 2$ tightness of Tuan, Apaydin, Lu 2012 *Eurasip JWCN* do not transfer).
     \item SDR is approximately tight in the high-SNR regime.
-    \item For general $K>2$: Gaussian randomization ($\xi_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$) extracts a feasible rank-1 solution with $O(1/L)$ performance loss.
+    \item For general $K>2$: Gaussian randomization ($\xi_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$) recovers a feasible rank-1 solution with **no tight performance-loss bound**; engineering practice uses $L = 100 \sim 1000$ candidates and selects the best.
 \end{enumerate}
 \end{proposition}
 
@@ -167,7 +167,7 @@ This work adopts a two-step decomposition:
 \end{enumerate}
 
 \begin{remark}[Engineering trade-off for AP selection]\label{rem:ap_heuristic}
-The AP selection problem is NP-hard (a variant of the $K$-medoid problem). This work uses an outer heuristic plus inner convex SDP to obtain a polynomial-complexity, engineering-acceptable sub-optimal solution. The complexity lower bound is established in the companion document~\cite{convex_chain} \S6.
+The AP selection problem is NP-hard (a variant of the $K$-medoid problem). This work uses an outer heuristic plus inner convex SDP to obtain a polynomial-complexity, engineering-acceptable sub-optimal solution. The complexity lower bound is established in the companion document §6.
 \end{remark}
 
 %==============================================================================
@@ -240,7 +240,7 @@ Problem (P3) is a standard convex SDP: the objective is linear and all constrain
 \end{theorem}
 
 \begin{theorem}[SDR tightness]\label{thm:sdr_tight}
-For the total power minimization problem, SDR is tight when $K \leq 2$, i.e., the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$. In the high-SNR regime, SDR is approximately tight. For general $K>2$, beam recovery via Gaussian randomization incurs a performance loss upper bounded by $O(1/L)$ (where $L$ is the number of candidates).
+For the total power minimization problem, SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$. Note that no universal tightness theorem applies to our per-user SINR + cell-free cooperative + robust problem—the multicast $G_k \leq 2$ tightness of Karipidis, Sidiropoulos, Luo 2008 and the robust MISO $N_t \leq 2$ tightness of Tuan, Apaydin, Lu 2012 *Eurasip JWCN* do not transfer. In the high-SNR regime, SDR is approximately tight. For general $K>2$, beam recovery via Gaussian randomization (the standard practice in SDR-based beamforming, see Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.*) has **no tight performance-loss bound**; engineering practice uses $L = 100 \sim 1000$ candidates and selects the best.
 \end{theorem}
 
 %==============================================================================

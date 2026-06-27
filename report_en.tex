@@ -364,11 +364,11 @@ Constraint & Type & Variables & Physical Meaning \\
 \subsection{Tightness Conditions}
 
 \begin{theorem}[SDR Tightness]\label{thm:1}
-For the total power minimization problem, when $K \leq 2$, SDR is tight, i.e., the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$.
+For the total power minimization problem, SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$. Note that no universal SDR tightness theorem applies to our per-user SINR + cell-free cooperative + robust problem—the multicast $G_k \leq 2$ tightness of Karipidis, Sidiropoulos, Luo 2008 and the robust MISO $N_t \leq 2$ tightness of Tuan, Apaydin, Lu 2012 (*Eurasip JWCN*) do not transfer.
 \end{theorem}
 
 \begin{remark}
-In the high-SNR regime, SDR is approximately tight with controllable performance loss. For the general case, beam recovery via Gaussian randomization provides a performance loss upper bounded by $O(1/L)$ (where $L$ is the number of candidates).
+In the high-SNR regime, SDR is approximately tight with controllable performance loss. For the general case, beam recovery via Gaussian randomization (the standard practice in SDR-based beamforming, see Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.*) recovers a feasible rank-one candidate with **no tight performance-loss bound**; engineering practice uses $L = 100 \sim 1000$ candidates and selects the best.
 \end{remark}
 
 %==============================================================================
@@ -538,8 +538,8 @@ Generate multi-stream transmission waveform: $\vect{z}_p = \sum_{i=1}^{r} \sqrt{
 }
 
 \tcp{Step 4: Performance guarantee}
-\lIf{$K \leq 2$}{SDR is tight, optimal solution recovered}
-\lIf{$K > 2$}{Gaussian randomization provides suboptimal solution with performance loss upper bounded by $O(1/L)$}
+\lIf{$\rank(\mat{W}_k^*) = 1$}{rank-one, direct extraction (no relaxation gap)}
+\lIf{$\rank(\mat{W}_k^*) > 1$}{Gaussian randomization (no tight bound on performance loss)}
 \label{alg:rank1}
 \end{algorithm}
 
@@ -655,7 +655,7 @@ $\vect{g}_p^{\text{all}} \leftarrow \mat{G}(\mathcal{M}^{\text{all}}, p)$ for al
 \section{Complexity, Tightness, and Feasibility Analysis}
 %==============================================================================
 
-As an extension of Section III, this section presents the SDR tightness theorem (tight for $K\leq 2$, approximately tight in the high-SNR regime), the necessary and sufficient feasibility conditions, and a complexity comparison between (P3) and the closed-form solution.
+As an extension of Section III, this section presents the SDR tightness discussion (no universal tightness theorem for our per-user SINR + cell-free + robust problem; approximately tight in the high-SNR regime), the necessary and sufficient feasibility conditions, and a complexity comparison between (P3) and the closed-form solution.
 
 \subsection{SDP Solving Complexity}
 

@@ -258,11 +258,11 @@ $$\mu_k \geq 0, \quad \forall k \in \mathcal{K} \tag{P3h}$$
 
 ### 5.3 紧致性条件
 
-**定理**: 对于总功率最小化问题，当 $K \leq 2$ 时，SDR 紧致，即最优解满足 $\text{rank}(\mathbf{W}_k^*) = 1$。
+**说明**: per-user SINR + cell-free 协作 + 鲁棒问题**无通用 SDR 紧致性定理**——多组 multicast $G_k \leq 2$ 紧致（Karipidis et al. 2008）与 robust MISO $N_t \leq 2$ 紧致（Tuan, Apaydin, Lu 2012）都不直接套用。一般 $K>2$ 情形下需高斯随机化恢复可行 rank-1 解（**无紧致性能损失上界**）。
 
 **高 SNR  regime**: 近似紧致，性能损失可控。
 
-**一般情况**: 通过高斯随机化恢复波束，性能损失上界 $O(1/L)$ ($L$ 为候选数)。
+**一般情况**: 通过高斯随机化恢复波束（**无紧致性能损失上界**；实际工程通常用 $L = 100 \sim 1000$ 候选并选最优——参见 Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.* 综述）。注意 per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**。
 
 ---
 
@@ -388,8 +388,8 @@ SDR 松弛丢弃了 $\text{rank}(\mathbf{W}_k) = 1$ 约束。求解后:
 
 **步骤 4: 性能保证声明**
 
-- $K \leq 2$ 时，SDR 紧致，高斯随机化以概率 1 恢复最优解
-- $K > 2$ 时，高斯随机化提供**次优解**，性能损失上界为 $O(1/L)$
+- SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$——per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**（multicast $G_k \leq 2$ / robust MISO $N_t \leq 2$ 紧致条件不直接套用）
+- 高斯随机化提供可行 rank-1 解（**无紧致性能损失上界**；实际工程用 $L = 100 \sim 1000$ 候选）
 - 感知协方差 $\mathbf{Z}^*$ 的秩 $> 1$ 是**设计意图** (多目标覆盖)，非恢复失败
 
 > **LaTeX 排版建议**：使用 `algorithm2e` 或 `algorithmic` 宏包将上述步骤包裹为规范浮动算法块（如 Algorithm 1），提升版面学术质感。关键步骤添加行内注释，例如 `\tcp{秩一检测}`。
@@ -574,7 +574,7 @@ $$P_{\text{sens}}^{\min} = \sum_{p=1}^P (\gamma_S^{\text{PoD}})^{\text{robust}} 
 
 > **Algorithm 1**: 当 SDR 求解得到的通信协方差 $\mathbf{W}_k^*$ 秩大于 1 时，采用高斯随机化技术提取次优波束。具体地，生成 $L$ 个候选波束 $\mathbf{w}_k^{(l)} \sim \mathcal{CN}(\mathbf{0}, \mathbf{W}_k^*)$，选择满足所有约束的最佳候选。若仍不满足，采用功率缩放兜底。感知协方差 $\mathbf{Z}^*$ 的多秩性质是物理需求 (多目标覆盖)，非算法缺陷。
 >
-> **性能保证**: $K \leq 2$ 时 SDR 紧致；$K > 2$ 时性能损失上界 $O(1/L)$。感知协方差 $\mathbf{Z}^*$ 的多秩是物理需求 (多目标覆盖)，非算法缺陷。
+> **性能保证**: SDR 提供原问题下界（per-user SINR + cell-free + 鲁棒问题**无通用紧致性定理**）；高斯随机化恢复可行 rank-1 解，**无紧致性能损失上界**。感知协方差 $\mathbf{Z}^*$ 的多秩是物理需求 (多目标覆盖)，非算法缺陷。
 
 ---
 

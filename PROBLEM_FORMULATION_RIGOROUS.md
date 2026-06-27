@@ -982,7 +982,7 @@ $$\text{Success Rate} = \frac{1}{T} \sum_{t=1}^T \text{Success}_t$$
 > - $\mathbf{w}_{m,k} \leftarrow \mathbf{w}_{m,k} \cdot \sqrt{\beta_m}$
 > - $\mathbf{Z}_m \leftarrow \mathbf{Z}_m \cdot \beta_m$
 >
-> **性能保证**：$K \leq 2$ 时 SDR 紧致；$K > 2$ 时性能损失上界 $O(1/L)$。感知协方差 $\mathbf{Z}^*$ 的多秩是物理需求（多目标覆盖），非算法缺陷。
+> **性能保证**：SDR 提供原问题下界（per-user SINR + cell-free + 鲁棒问题**无通用紧致性定理**）；高斯随机化恢复可行 rank-1 解（**无紧致性能损失上界**；实际工程用 $L = 100 \sim 1000$ 候选）。感知协方差 $\mathbf{Z}^*$ 的多秩是物理需求（多目标覆盖），非算法缺陷。
 >
 > **Remark**：纯通信 MU-MIMO 中功率最小化倾向于"笔形波束"（秩一）；ISAC 中感知任务要求能量空间发散，多秩是设计意图。通信与感知在协方差域的"角色分离"是 ISAC 波形设计的本质特征。
 

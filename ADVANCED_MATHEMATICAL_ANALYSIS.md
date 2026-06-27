@@ -276,7 +276,7 @@ $$\min_{\{\mathbf{W}_k\}, \mathbf{Z}} \quad \alpha \sum_k \text{tr}(\mathbf{W}_k
 
 ### 6.2 Cell-Free ISAC的紧致条件
 
-**充分条件1**：$K \leq 2$ 时，SDR紧致。
+**充分条件1**（参考非直接套用）：多组 multicast $G_k \leq 2$ 紧致（Karipidis, Sidiropoulos, Luo 2008）——但我们的 per-user SINR + cell-free 协作 + 鲁棒问题**不直接套用**此结论。
 
 **充分条件2**：高SNR regime（$\text{SINR}_k \gg 1$），近似紧致。
 
@@ -383,7 +383,7 @@ $$\kappa(\mathbf{H}) = \frac{\lambda_{\max}(\mathbf{H}^H\mathbf{H})}{\lambda_{\m
 1. **完整鲁棒SDP**：通信+感知均使用S-Procedure，精确处理CSI误差
 2. **可行性条件**：$M^{\text{all}} N_t \geq K$，功率预算足够，误差界适中
 3. **复杂度**：固定AP选择时多项式时间，AP选择优化时NP-hard
-4. **SDR紧致性**：$K \leq 2$ 时精确紧致，一般情况近似紧致
+4. **SDR 紧致性**：per-user SINR + cell-free + 鲁棒问题**无通用紧致性定理**；高 SNR regime 近似紧致；一般情况用高斯随机化恢复（**无紧致性能损失上界**）
 5. **强对偶性**：Slater条件满足时成立，对偶变量有物理意义
 
 ---

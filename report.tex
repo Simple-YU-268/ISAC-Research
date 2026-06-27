@@ -156,13 +156,13 @@ Problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a
 
 To address the aforementioned non-convexity, we develop a systematic convexification procedure that transforms the lifted problem (P2) into a standard convex semidefinite program (P3). The procedure consists of six steps, each targeting a specific non-convex source while preserving the problem structure as much as possible.
 
-We apply six transformations to (P2), progressively converting each non-convexity into a convex form. The roadmap is: first use SDR to sacrifice rank-one tightness for convexification of the feasible set, then apply the S-Procedure to handle semi-infinite robust constraints, and finally linearize or retain the PCRB / sensing SINR / power constraints. Each transformation preserves strict equivalence when possible (only Step~1 is a tight relaxation for $K>2$, and Step~6 is an engineering heuristic), with the equivalence type annotated inline.
+We apply six transformations to (P2), progressively converting each non-convexity into a convex form. The roadmap is: first use SDR to sacrifice rank-one tightness for convexification of the feasible set, then apply the S-Procedure to handle semi-infinite robust constraints, and finally linearize or retain the PCRB / sensing SINR / power constraints. Each transformation preserves strict equivalence when possible (Step~1 SDR is a non-tight lower-bound relaxation in general—no universal tightness theorem applies to our per-user SINR + cell-free + robust problem; Step~6 is an engineering heuristic), with the equivalence type annotated inline.
 
 We start with the most stubborn non-convexity, the rank-one constraint (P2-C7). Although (P1) $\Leftrightarrow$ (P2) preserves rank-one, the rank-one manifold is itself non-convex. SDR removes this by relaxing (P2-C7) to merely $\mat{W}_k \succeq \mat{0}$:
 \begin{equation}
 \mat{W}_k \succeq \mat{0}, \quad \forall k,
 \end{equation}
-enlarging the feasible set from the rank-one manifold $\mathcal{F}_{\text{rank-1}}$ to the PSD cone $\mathcal{F}_{\text{SDR}}$. By Sidiropoulos, Davidson, Luo 2006 (*IEEE Trans. Signal Process.*) Theorem 1 for the MISO multicast beamforming case, the SDR is tight when $K \leq 2$ (the optimal $\mat{W}_k^*$ naturally satisfies $\rank(\mat{W}_k^*) = 1$) and provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$ when $K > 2$; in the latter case, Gaussian randomization recovers a feasible rank-one solution with bounded performance loss $O(1/L)$.
+enlarging the feasible set from the rank-one manifold $\mathcal{F}_{\text{rank-1}}$ to the PSD cone $\mathcal{F}_{\text{SDR}}$. SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$ on the original (P2). Note that no universal SDR tightness theorem applies to our per-user SINR + cell-free cooperative + robust problem—the multicast $G_k \leq 2$ tightness of Karipidis, Sidiropoulos, Luo 2008 and the robust MISO $N_t \leq 2$ tightness of Tuan, Apaydin, Lu 2012 (*Eurasip JWCN*) do not transfer. When the SDR solution has $\rank(\mat{W}_k^*) > 1$, Gaussian randomization (Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.*) recovers a feasible rank-one candidate with no tight performance-loss bound; engineering practice uses $L = 100 \sim 1000$ candidates and selects the best.
 
 After the SDR, the SINR constraint (P2-C1) still carries a fractional structure and worst-case uncertainty, which must be addressed in two coupled steps: first rewrite the fraction as a quadratic form that the S-Procedure can process, then let the S-Procedure handle the $\Delta\vect{h}$ uncertainty. Fixing a worst-case realization $\Delta\vect{h}_k$ satisfying $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$, the SINR inequality
 $$
@@ -213,18 +213,18 @@ Combining all six transformations applied to the lifted problem (P2), the origin
 where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{F}_p$ is defined in Step 5, and $\mat{E}_m$ is the AP selection matrix. Constraint (P3-C1) is the LMI from the S-Procedure, (P3-C2) and (P3-C3) are the linearized sensing SINR and PCRB constraints, (P3-C4) is the per-AP power constraint, (P3-C5) and (P3-C6) are the PSD constraints from SDR, and (P3-C7) ensures the S-Procedure slack variables are non-negative.
 
 \begin{theorem}[Problem Convexity and Equivalence]\label{thm:main}
-Problem (P3) is a standard convex SDP. All constraints are either LMIs or linear inequalities, and the objective is linear. For $K \leq 2$, (P3) is equivalent to (P1) since (P1) $\Leftrightarrow$ (P2) is strict, and SDR is tight on (P2). For $K > 2$, (P3) provides a lower bound on (P1). Furthermore, (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\!\big((K+1)^3 (MN_t)^6 (K+P+M)\big)$; simplified order $O((K M N_t^2)^{3.5})$.
+Problem (P3) is a standard convex SDP. All constraints are either LMIs or linear inequalities, and the objective is linear. SDR provides a lower bound on (P1) with no general tightness guarantee: $P_{\text{P3}}^* \leq P_{\text{P1}}^*$ (the bound may not be attained; see the SDR discussion in §III.2). Furthermore, (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\!\big((K+1)^3 (MN_t)^6 (K+P+M)\big)$; simplified order $O((K M N_t^2)^{3.5})$.
 \end{theorem}
 
 \begin{proof}
 Each constraint in (P3) is either an LMI (P3-C1), a linear inequality (P3-C2, P3-C3, P3-C4), or a PSD cone constraint (P3-C5, P3-C6). The objective is linear. Therefore (P3) is a convex SDP. The transformation chain is:
 \begin{itemize}
     \item \textbf{(P1) $\Leftrightarrow$ (P2)}: strict equivalence (variable lifting with rank-one constraint)
-    \item \textbf{Step 1 (SDR)}: tight relaxation when $K \leq 2$, lower bound when $K > 2$
+    \item \textbf{Step 1 (SDR)}: lower-bound relaxation (no universal tightness theorem)
     \item \textbf{Steps 2--5}: strict equivalences (fractional rewriting, S-Procedure, PCRB/SINR linearization, power constraint already convex)
     \item \textbf{Step 6 (AP selection)}: heuristic decomposition with no theoretical optimality guarantee
 \end{itemize}
-Therefore, for $K \leq 2$, (P3) $\equiv$ (P1); for $K > 2$, $P_{\text{P3}}^* \leq P_{\text{P1}}^*$. The complexity follows from the standard interior-point complexity $O(n^3 L)$ for SDPs, where $n = O(K(MN_t)^2)$ is the decision-variable dimension and $L$ is the input bit-length.
+Therefore, $P_{\text{P3}}^* \leq P_{\text{P1}}^*$ (SDR is a lower-bound relaxation in general; tightness is not guaranteed). The complexity follows from the standard interior-point complexity $O(n^3 L)$ for SDPs, where $n = O(K(MN_t)^2)$ is the decision-variable dimension and $L$ is the input bit-length.
 \end{proof}
 
 %==============================================================================
@@ -268,8 +268,8 @@ Generate multi-stream waveform: $\vect{z}_p = \sum_{i=1}^{r} \sqrt{\lambda_i} \v
 }
 
 \tcp{Step 4: Performance guarantee}
-\lIf{$K \leq 2$}{SDR is tight, recovered solution is optimal}
-\lIf{$K > 2$}{Gaussian randomization provides suboptimal solution with bounded performance loss $O(1/L)$}
+\lIf{$\rank(\mat{W}_k^*) = 1$}{rank-one, direct extraction (no relaxation gap)}
+\lIf{$\rank(\mat{W}_k^*) > 1$}{Gaussian randomization (no tight bound on performance loss)}
 \label{alg:rank1}
 \end{algorithm}
 

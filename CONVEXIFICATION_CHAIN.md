@@ -19,7 +19,7 @@
 | 逐步推导链 | §3 — Step 1 → Step 7 严格编号 |
 | 最终凸问题 | §4 — 完整 P3 凸 SDP |
 
-**核心结论**: 原问题 (P1) 经过 7 步严格变换后，化为**标准 SDP** (P3)。其中 Step 1、Step 4、Step 6 为**等价变换**（不改最优解），Step 2、Step 5 为**紧致松弛**（在 $K \leq 2$ 时等价，$K > 2$ 时是下界），Step 3、Step 7 为**保守上界**（worst-case 鲁棒性的安全近似）。
+**核心结论**: 原问题 (P1) 经过 7 步变换后，化为**标准 SDP** (P3)。其中 Step 1、Step 4、Step 6 为**等价变换**（不改最优解），Step 2 为**下界松弛**（无通用紧致性定理，per-user SINR + cell-free 协作 + 鲁棒问题），Step 5 为**紧致松弛**（视具体 S-Procedure 形式），Step 3、Step 7 为**保守上界**（worst-case 鲁棒性的安全近似）。
 
 ---
 
@@ -87,7 +87,7 @@ $$
 \mat{W}_k \succeq \mat{0}, \quad \forall k.
 $$
 
-可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 关于 MISO 多播波束成形的结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
+可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$。需要说明的是，对于我们的 per-user SINR + cell-free 协作 + 鲁棒问题，**无通用 SDR 紧致性定理**——多组 multicasting 的 $G_k \leq 2$ 紧致（Karipidis, Sidiropoulos, Luo 2008）与鲁棒 MISO 的 $N_t \leq 2$ 紧致（Tuan, Apaydin, Lu 2012 *Eurasip JWCN*）都不直接套用。当 SDR 解 $\text{rank}(\mat{W}_k^*) > 1$ 时，需**高斯随机化**恢复可行 rank-1 解——这是 SDR-based beamforming 的标准做法（Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.* 综述），但**无紧致性能损失上界**；实际工程通常用 $L = 100 \sim 1000$ 候选并选最优。
 
 ### Step 2: SINR 分式改写为二次型 — **等价预处理**
 
@@ -201,14 +201,14 @@ $$
 
 | 步骤 | 变换 | 影响的非凸源 | 类型 | 性能影响 |
 |---|---|---|---|---|
-| 1 | SDR 松弛（丢 (P2-C7) rank-1） | NC4 | **紧致松弛**（$K\leq 2$ 等价） | $K>2$: 下界，$O(1/L)$ 高斯随机化恢复 |
+| 1 | SDR 松弛（丢 (P2-C7) rank-1） | NC4 | **下界松弛**（无通用紧致性定理） | $L = 100 \sim 1000$ 高斯随机化恢复 |
 | 2 | SINR 分式改写为二次型 | NC1（预处理） | **严格等价** | 无损失 |
 | 3 | S-Procedure 精确 LMI（含松弛变量 $\mu_k$） | NC2 | **精确等价** | 无损失（S-Procedure 充要条件） |
 | 4 | 感知约束线性化（PCRB 仿射 + 感知 SINR 线性化） | NC6, NC1（感知） | **严格等价** | 无损失 |
 | 5 | 功率约束（已凸） | — | **已是凸** | 无损失 |
 | 6 | AP 选择两步分解 | NC3 | **工程启发式解** | 外层选择无理论最优性保证（非上界非下界） |
 
-**总结**: 通信-感知物理层的凸化（Step 1-5）**全部严格等价**（Step 1 SDR 在 $K \leq 2$ 时为紧致，Step 3 S-Procedure 精确 LMI 无保守近似），仅 Step 1 在 $K > 2$ 时为下界；AP 选择（Step 6）采用启发式以保证多项式复杂度。**(P1) ↔ (P2) 严格等价 + (P2) → (P3) 的 6 步凸化** 是完整变换链。
+**总结**: 通信-感知物理层的凸化（Step 1-5）**全部严格等价**（Step 1 SDR 为下界松弛，无通用紧致性定理；Step 3 S-Procedure 精确 LMI 无保守近似），AP 选择（Step 6）采用启发式以保证多项式复杂度。**(P1) ↔ (P2) 严格等价 + (P2) → (P3) 的 6 步凸化** 是完整变换链。
 
 ---
 
@@ -227,7 +227,7 @@ $$
 ## 7. 关键命题汇总（供答辩引用）
 
 1. **命题 1（变量提升等价性）**: $\mathbf{W}_k = \mathbf{w}_k\mathbf{w}_k^H$ 严格等价。
-2. **命题 2（SDR 紧致性）**: $K \leq 2$ 时 SDR 等价；$K > 2$ 时是下界，$O(1/L)$ 可恢复。
+2. **命题 2（SDR 紧致性）**: per-user SINR + cell-free + 鲁棒问题**无通用紧致性定理**；multicast $G_k \leq 2$（Karipidis 2008）和 robust MISO $N_t \leq 2$（Tuan 2012）不直接套用。一般 $K > 2$ 时是下界。
 3. **引理 3.1（S-Procedure 精确等价）**: 对范数球上二次约束，S-Procedure 给出充要 LMI 条件，引入松弛变量 $\mu_k \geq 0$。
 4. **命题 4（分式线性化等价性）**: $\frac{A}{B}\geq\gamma \iff A\geq\gamma B$（$B>0$）。
 5. **命题 5a（PCRB 线性化）**: $\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p\mathbf{R}_X)$（Assumption 1）。
@@ -255,7 +255,7 @@ $$
 
 > **导师问题 3**: 凸化之后是什么公式？和之前的是否等价？还是 lower/upper bound？
 >
-> **答**: 最终凸形式为 §4 中的 (P3)，是标准 SDP。每步类型见 §5 总结表——5 步严格等价（Step 1, 3, 4, 5a, 5b）、1 步紧致松弛（$K\leq 2$ 等价，$K>2$ 下界）、1 步工程启发式（Step 7，无理论最优性保证）。
+> **答**: 最终凸形式为 §4 中的 (P3)，是标准 SDP。每步类型见 §5 总结表——5 步严格等价（Step 1, 3, 4, 5a, 5b）、1 步下界松弛（SDR，无通用紧致性定理）、1 步工程启发式（Step 7，无理论最优性保证）。
 
 > **导师问题 4**: 具体是哪一个怎么变，都要写清楚。
 >

@@ -373,11 +373,11 @@ P_{S,p}^{\min} = \frac{\gamma_S^{\text{PoD}} \sigma_s^2}{\norm{\vect{g}_p}^2} \t
 \subsection{紧致性条件}
 
 \begin{theorem}[SDR紧致性]\label{thm:1}
-对于总功率最小化问题，当$K \leq 2$时，SDR紧致，即最优解满足$\rank(\mat{W}_k^*) = 1$。
+对于总功率最小化问题，SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$。需要说明的是，per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**——多组 multicast $G_k \leq 2$ 紧致（Karipidis et al. 2008）与 robust MISO $N_t \leq 2$ 紧致（Tuan, Apaydin, Lu 2012 *Eurasip JWCN*）都不直接套用。
 \end{theorem}
 
 \begin{remark}
-在高SNR regime下，SDR近似紧致，性能损失可控。对于一般情况，可通过高斯随机化恢复波束，性能损失上界为$O(1/L)$（$L$为候选数）。
+在高SNR regime下，SDR近似紧致。对于一般情况，可通过高斯随机化恢复波束——这是 SDR-based beamforming 的标准做法（Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.* 综述），但**无紧致性能损失上界**，实际工程通常用 $L = 100 \sim 1000$ 候选并选最优。
 \end{remark}
 
 %==============================================================================
@@ -545,8 +545,8 @@ SDR松弛丢弃了$\rank(\mat{W}_k) = 1$约束。求解后：
 }
 
 \tcp{步骤4：性能保证}
-\lIf{$K \leq 2$}{SDR紧致，恢复最优解}
-\lIf{$K > 2$}{高斯随机化提供次优解，性能损失上界$O(1/L)$}
+\lIf{$\rank(\mat{W}_k^*) = 1$}{秩一，直接抽取（无松弛 gap）}
+\lIf{$\rank(\mat{W}_k^*) > 1$}{高斯随机化（无紧致性能损失上界）}
 \label{alg:rank1}
 \end{algorithm}
 

@@ -74,9 +74,9 @@ SDR 丢弃 rank-1 约束，仅要求
 \begin{proposition}[SDR 紧致性条件]\label{prop:sdr_tight}
 SDR 与原问题等价的充要条件是最优解满足 $\rank(\mat{W}_k^*) = 1$。
 \begin{enumerate}
-    \item $K \leq 2$ 时 SDR 紧致（由 Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 关于 MISO 多播问题保证）。
+    \item SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$。per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**（多组 multicast $G_k \leq 2$ 与 robust MISO $N_t \leq 2$ 紧致条件不直接套用——见 Karipidis et al. 2008 与 Tuan, Apaydin, Lu 2012）。
     \item 高 SNR regime 下 SDR 近似紧致。
-    \item 一般 $K>2$ 情形：高斯随机化（$\xi_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$）以 $O(1/L)$ 性能损失提取可行 rank-1 解。
+    \item 一般 $K>2$ 情形：高斯随机化（$\xi_l \sim \mathcal{CN}(\mat{0}, \mat{W}_k^*)$）恢复可行 rank-1 解，**无紧致性能损失上界**（实际工程通常用 $L = 100 \sim 1000$ 候选并选最优）。
 \end{enumerate}
 \end{proposition}
 
@@ -167,7 +167,7 @@ PCRB 约束化为
 \end{enumerate}
 
 \begin{remark}[AP 选择的工程取舍]\label{rem:ap_heuristic}
-AP 选择问题本身是 NP-hard（$K$-medoid 问题的变种）。本工作以外层启发式 + 内层凸 SDP 的分解策略，以多项式复杂度获得工程可接受的次优解。复杂度下界证明详见配套文档~\cite{convex_chain} §6。
+AP 选择问题本身是 NP-hard（$K$-medoid 问题的变种）。本工作以外层启发式 + 内层凸 SDP 的分解策略，以多项式复杂度获得工程可接受的次优解。复杂度下界证明详见配套文档 §6。
 \end{remark}
 
 %==============================================================================
@@ -196,7 +196,7 @@ Step & 变换 & 消除非凸源 & 变换类型 \\
 \end{tabular}
 \end{table}
 
-\textbf{关键结论}：通信-感知物理层的凸化（Step 1--6）几乎全部严格等价，仅 Step 3 为工程可接受的保守上界，Step 2 在 $K \leq 2$ 时紧致；AP 选择（Step 7）采用启发式以保证多项式复杂度。
+\textbf{关键结论}：通信-感知物理层的凸化（Step 1--6）几乎全部严格等价，仅 Step 3 为工程可接受的保守上界，Step 2 为下界松弛（per-user SINR + cell-free + 鲁棒问题**无通用紧致性定理**——见 §逐步凸化 Step 1 注释）；AP 选择（Step 7）采用启发式以保证多项式复杂度。
 
 %==============================================================================
 % 最终凸问题 P3
@@ -240,7 +240,7 @@ Step & 变换 & 消除非凸源 & 变换类型 \\
 \end{theorem}
 
 \begin{theorem}[SDR 紧致性]\label{thm:sdr_tight}
-对于总功率最小化问题，当 $K \leq 2$ 时，SDR 紧致，即最优解满足 $\rank(\mat{W}_k^*) = 1$。高 SNR regime 下 SDR 近似紧致。一般 $K>2$ 情形，通过高斯随机化恢复波束，性能损失上界为 $O(1/L)$（$L$ 为候选数）。
+对于总功率最小化问题，SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$。需要说明的是，per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**——多组 multicast $G_k \leq 2$ 紧致（Karipidis et al. 2008）与 robust MISO $N_t \leq 2$ 紧致（Tuan, Apaydin, Lu 2012 *Eurasip JWCN*）都不直接套用。高 SNR regime 下 SDR 近似紧致。一般 $K>2$ 情形下，通过高斯随机化恢复波束——这是 SDR-based beamforming 的标准做法（Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.* 综述），但**无紧致性能损失上界**，实际工程通常用 $L = 100 \sim 1000$ 候选并选最优。
 \end{theorem}
 
 %==============================================================================

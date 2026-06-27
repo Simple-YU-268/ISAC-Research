@@ -76,10 +76,11 @@ $$\sum_{j \neq k} |\mathbf{h}_k^H \mathbf{w}_j|^2 = \sum_{j \neq k} \mathbf{h}_k
 
 **定理**：对于单组多播（single-group multicast）或特定结构的MISO问题，若满足一定条件，SDR松弛是紧致的，即最优解自动满足 $\text{rank}(\mathbf{W}_k^*) = 1$。
 
-**Cell-Free ISAC的紧致条件**：
-1. 用户数 $K \leq 2$ 时，SDR紧致（理论保证）
-2. 高SNR regime，近似紧致
-3. 一般情况，通过随机化恢复波束，性能损失可控
+**Cell-Free ISAC 的紧致条件**（注意 per-user SINR + cell-free 协作 + 鲁棒问题**无通用紧致性定理**）：
+
+1. 多组 multicast $G_k \leq 2$ 紧致（Karipidis, Sidiropoulos, Luo 2008）——不直接套用
+2. 高 SNR regime，近似紧致
+3. 一般情况，通过高斯随机化恢复波束（**无紧致性能损失上界**）
 
 ### 2.4 目标函数的线性化
 

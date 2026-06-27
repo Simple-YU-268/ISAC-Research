@@ -344,11 +344,11 @@ Constraint & Type & Variables & Physical Meaning \\
 \subsection{Tightness Conditions}
 
 \begin{theorem}[SDR Tightness]\label{thm:1}
-For the total power minimization problem, when $K \leq 2$, SDR is tight, i.e., the optimal solution satisfies $\rank(\mat{W}_k^*) = 1$.
+For the total power minimization problem, SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$. No universal SDR tightness theorem applies to our per-user SINR + cell-free cooperative + robust problem—the multicast $G_k \leq 2$ tightness of Karipidis, Sidiropoulos, Luo 2008 and the robust MISO $N_t \leq 2$ tightness of Tuan, Apaydin, Lu 2012 (*Eurasip JWCN*) do not transfer.
 \end{theorem}
 
 \begin{remark}
-In the high-SNR regime, SDR is approximately tight with controllable performance loss. For the general case, beam recovery via Gaussian randomization provides a performance loss upper bounded by $O(1/L)$ (where $L$ is the number of candidates).
+In the high-SNR regime, SDR is approximately tight with controllable performance loss. For the general case, beam recovery via Gaussian randomization (the standard practice in SDR-based beamforming, see Luo, Ma, So, Ye, Zhang 2010 *IEEE Signal Process. Mag.*) recovers a feasible rank-one candidate with **no tight performance-loss bound**; engineering practice uses $L = 100 \sim 1000$ candidates and selects the best.
 \end{remark}
 
 %==============================================================================
