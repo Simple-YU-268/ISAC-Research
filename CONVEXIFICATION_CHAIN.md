@@ -98,243 +98,77 @@ $$
 
 ### Step 1: SDR 松弛（Semidefinite Relaxation）— **紧致松弛**
 
-**目标**: 消除 rank-1 约束（NC4），即丢弃 (P2-C7)。
+我们首先处理非凸性中最棘手的部分——rank-1 约束 (P2-C7)。尽管 (P1)↔(P2) 严格等价保留了 rank-1，但 rank-1 流形本身是非凸的。SDR 通过将 (P2-C7) 松弛为仅 $\mat{W}_k \succeq \mat{0}$ 来去除这一非凸性：
 
-**变换前** (双线性):
 $$
-\mathbf{h}_k^H \mathbf{w}_k = \sum_{i} h_{k,i}^* w_{k,i} \quad \Rightarrow \quad \text{关于 } (\mathbf{h}_k, \mathbf{w}_k) \text{ 双线性}
-$$
-
-**变换**:
-- 定义通信全局协方差矩阵 $\mathbf{W}_k \triangleq \mathbf{w}_k \mathbf{w}_k^H \in \mathbb{C}^{MN_t \times MN_t}$，其中 $\mathbf{w}_k = [\mathbf{w}_{1,k}^T, \ldots, \mathbf{w}_{M,k}^T]^T$ 为所有 AP 到用户 $k$ 的协作合并波束
-- 定义感知全局协方差 $\mathbf{Z} \triangleq \sum_p \mathbf{z}_p \mathbf{z}_p^H \in \mathbb{C}^{MN_t \times MN_t}$
-- 定义总发射协方差 $\mathbf{R}_X \triangleq \sum_{k=1}^K \mathbf{W}_k + \mathbf{Z}$
-- 定义每 AP 选择矩阵 $\mathbf{E}_m = \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t})$，使 $\mathbf{E}_m \mathbf{w}_k$ 提取 AP $m$ 分量、$\tr(\mathbf{E}_m \mathbf{R}_X) = \sum_k \|\mathbf{w}_{m,k}\|^2 + \tr(\mathbf{Z}_m)$ 为该 AP 总功率
-
-**变换后**:
-$$
-\mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k = \text{tr}(\mathbf{H}_k \mathbf{W}_k), \quad \mathbf{H}_k \triangleq \mathbf{h}_k \mathbf{h}_k^H \tag{S1.1}
+\mat{W}_k \succeq \mat{0}, \quad \forall k.
 $$
 
-每 AP 功率：$\sum_k \|\mathbf{w}_{m,k}\|^2 + \text{tr}(\mathbf{Z}_m) = \text{tr}(\mathbf{E}_m \mathbf{R}_X)$
+可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Luo 等关于 MISO 多播问题的紧致性结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
 
-**等价性证明**:
+### Step 2: SINR 分式改写为二次型 — **等价预处理**
 
-> **命题 1（变量提升等价性）**: 当 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$ 时，$\text{tr}(\mathbf{H}_k \mathbf{W}_k) = |\mathbf{h}_k^H \mathbf{w}_k|^2$。
->
-> *证明*: 直接展开 $\text{tr}(\mathbf{H}_k \mathbf{W}_k) = \text{tr}(\mathbf{h}_k\mathbf{h}_k^H \mathbf{w}_k\mathbf{w}_k^H) = \mathbf{h}_k^H \mathbf{w}_k \mathbf{w}_k^H \mathbf{h}_k = |\mathbf{h}_k^H \mathbf{w}_k|^2$。∎
-
-**凸性影响**: 目标 (5a) 由二次变为关于 $\mathbf{W}_k$ 的线性函数 $\text{tr}(\mathbf{W}_k)$（在 PSD 锥上），**变凸**。
-
-**等价/上下界**: **严格等价**（变量一对一映射）。
-
-**遗留非凸**: rank-1 约束 $\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H$ 仍未消除。
-
----
-
-### Step 2: SDR 松弛（Semidefinite Relaxation）— **紧致松弛**
-
-**目标**: 消除 rank-1 约束（NC4）。
-
-**变换前**:
+处理完 rank-1 后，约束 (P2-C1) 中仍残留分式结构与最坏情况不确定性，必须按两步走：先把分式改写为 S-Procedure 可处理的二次型，再让 S-Procedure 处理 $\Delta\vect{h}$ 的不确定性。具体地，固定某个最坏情况 $\Delta\vect{h}_k$ 满足 $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$，SINR 不等式
 $$
-\mathbf{W}_k = \mathbf{w}_k \mathbf{w}_k^H \quad \Leftrightarrow \quad \mathbf{W}_k \succeq 0, \text{rank}(\mathbf{W}_k) = 1
+\frac{\tr(\hat{\mat{H}}_k \mat{W}_k) + \text{($\Delta\vect{h}$ 修正项)}}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \text{($\Delta\vect{h}$ 修正项)} + \sigma_c^2} \geq \gamma_k
 $$
-
-**变换**: 丢弃 rank-1 约束，仅保留半正定。
-
-**变换后**:
+在分母恒为正（$\sigma_c^2 > 0$）的前提下，交叉相乘化为二次型不等式
 $$
-\mathbf{W}_k \succeq 0 \tag{S2.1}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2.
 $$
-
-**可行域变化**:
-- 变换前: $\mathcal{F}_{\text{rank-1}} = \{\mathbf{W}_k \succeq 0 : \text{rank}(\mathbf{W}_k) = 1\}$（非凸）
-- 变换后: $\mathcal{F}_{\text{SDR}} = \{\mathbf{W}_k \succeq 0\}$（凸，PSD 锥）
-
-由于 $\mathcal{F}_{\text{rank-1}} \subset \mathcal{F}_{\text{SDR}}$，**SDR 扩大了可行域**。
-
-**等价性证明**:
-
-> **命题 2（SDR 紧致性条件）**: 若 SDR 最优解 $\{\mathbf{W}_k^*\}$ 满足 $\text{rank}(\mathbf{W}_k^*) = 1, \forall k$，则 SDR 与原问题等价；否则 SDR 给出的目标值是原问题的**下界**。
->
-> **紧致条件**:
-> 1. **$K \leq 2$ 时 SDR 紧致**（由 Luo 等 2010 关于 MISO 多播问题的结果保证）
-> 2. **高 SNR regime 紧致**（最优解趋于 rank-1）
-> 3. **一般 $K > 2$**: 通过高斯随机化（$\xi_l \sim \mathcal{CN}(\mathbf{0}, \mathbf{W}_k^*)$）以 $O(1/L)$ 性能损失提取可行 rank-1 解（$L$ 为候选数）
-
-**等价/上下界**:
-- 紧致时：**等价**
-- 一般情况：**目标下界**（松弛扩大可行域 → 最优值不超过原值）
-- 实际性能损失：随机化恢复后与原最优值的差距上界为 $O(1/L)$，详见 `MATHEMATICAL_DERIVATION.md §8`
-
-**遗留非凸**: 半无限鲁棒约束 (5b) 中的 $\min_{\Delta\mathbf{h}}$ 未消除。
+这一步是严格等价而非近似——分母为正保证了乘以分母的双向成立。得到的二次型正是 S-Procedure 的输入。
 
 ---
 
 ### Step 3: S-Procedure 处理鲁棒 SINR — **精确等价**
 
-**变换前**（半无限约束）:
+现在将最坏情况 $\Delta\vect{h}_k$ 恢复为变量。定义 $\mat{A}_k \triangleq \frac{1}{\gamma_k} \mat{W}_k - \sum_{j\neq k} \mat{W}_j$ 后，(P2-C1) 可改写为关于 $\Delta\vect{h}_k$ 的二次不等式
 $$
-\min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_h \|\hat{\mathbf{h}}_k\|} \frac{|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)|}{\sum_{j\neq k}|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_j(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)| + \sigma_c^2} \geq \gamma_k
+\tilde{f}_1(\Delta\vect{h}) = (\hat{\vect{h}} + \Delta\vect{h})^H \mat{A}_k (\hat{\vect{h}} + \Delta\vect{h}) - \sigma_c^2 \geq 0, \quad \forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|.
 $$
+不确定集由二次约束 $\tilde{f}_2(\Delta\vect{h}) = \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 - \|\Delta\vect{h}_k\|^2 \geq 0$ 描述。S-Procedure 指出，对范数球上的单个二次约束，"$\forall \Delta\vect{h} \in \mathcal{B}_\epsilon: \tilde{f}_1 \geq 0$" 等价于 "$\exists \mu_k \geq 0: \tilde{f}_1 - \mu_k \tilde{f}_2 \geq 0, \forall \Delta\vect{h}$"——后者是关于 $\Delta\vect{h}$ 的二次型 $\succeq 0$ 条件，可写为 LMI：
 
-**变换**: 定义 $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j\neq k} \mathbf{W}_j$。由 S-Procedure（球上二次约束充要条件，含 $\mu_k \geq 0$ 松弛变量），半无限约束等价于：
-
-**变换后**（LMI）：
 $$
-\exists \mu_k \geq 0 : \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\[1.2ex] \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \norm{\hat{\mathbf{h}}_k}^2 \end{bmatrix} \succeq \mathbf{0} \tag{S3.1}
+\exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}.
 $$
 
-**详细推导**：将最坏 SINR 改写为关于 $\Delta\mathbf{h}_k$ 的二次不等式 $\tilde{f}_1(\Delta\mathbf{h}) = (\hat{\mathbf{h}}+\Delta\mathbf{h})^H \mathbf{A}_k(\hat{\mathbf{h}}+\Delta\mathbf{h}) - \sigma_c^2 \geq 0$，不确定集由 $\tilde{f}_2(\Delta\mathbf{h}) = \epsilon_h^2 \norm{\hat{\mathbf{h}}}^2 - \norm{\Delta\mathbf{h}}^2 \geq 0$ 描述。S-Procedure 给出："$\exists \mu_k \geq 0$ 使 $\tilde{f}_1 - \mu_k \tilde{f}_2 \geq 0, \forall \Delta\mathbf{h}$" $\Leftrightarrow$ 上述 LMI (S3.1)。充分性显然；必要性由 $\mathbf{A}_k + \mu_k \mathbf{I} \succeq \mathbf{0}$ 与 Lagrangian 对偶保证。
-
-**等价/上下界**: **精确等价**（S-Procedure 对范数球上单个二次约束是充要条件）。
-
-**新变量**: $\mu_k \geq 0$（S-Procedure 松弛变量）。
-
-**结果凸约束**: 关于 $\mathbf{W}_k$ 和 $\mu_k$ 的线性矩阵不等式（LMI）。
-
-**遗留非凸**: 仍含分式结构（NC1），需 Step 4 进一步线性化。
-
----
-
-### Step 2: SINR 分式改写为二次型 — **等价预处理**
-
-**目标**: 把 SINR 分式形式改写为 S-Procedure 可处理的二次型。
-
-**变换前**（分式）:
-$$
-\frac{|\hat{\mathbf{h}}_k^H \mathbf{W}_k \hat{\mathbf{h}}_k|}{\sum_{j\neq k}|\hat{\mathbf{h}}_k^H \mathbf{W}_j \hat{\mathbf{h}}_k| + \sigma_c^2} \geq \gamma_k
-$$
-
-**变换**: 分母假设 > 0（可行性必要条件），交叉相乘。
-
-**变换后**（线性不等式）：
-$$
-\tr(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k \sigma_c^2 \tag{S4.1}
-$$
-
-其中 $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$，$\gamma_k$ 为原始 SINR 门限（S-Procedure 已精确处理鲁棒性，此处无需额外缩放）。
-
-**等价性证明**:
-
-> **命题 4（分式线性化等价性）**: 当分母 $\sum_{j\neq k}|\hat{\mathbf{h}}_k^H \mathbf{W}_j \hat{\mathbf{h}}_k| + \sigma_c^2 > 0$ 时，
-> $$\frac{A}{B} \geq \gamma \iff A \geq \gamma B$$
->
-> *证明*: 两侧同乘正数 $B$。∎
-
-**凸性影响**: (S4.1) 是关于 $\mathbf{W}_k, \mathbf{W}_j$ 的**线性矩阵不等式**（左侧是线性函数，右侧是常数），**变凸**。
-
-**等价/上下界**: **严格等价**（前提：分母 > 0）。
-
-**遗留非凸**: PCRB 约束 (5d) 中的 $\text{tr}(\mathbf{J}_p^{-1})$ 仍非凸。
+充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证，参见 Luo 2010 推论 3.4。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
 
 ---
 
 ### Step 4: 感知约束线性化 — **等价变换**
 
-**变换前**:
-$$
-\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\right\} \in \mathbb{C}^{D \times D}
-$$
-其中 $D$ 是目标状态维度（如 2D 平面 $D=2$）。
+接下来处理感知侧与跟踪精度约束。PCRB 约束 (P2-C3) 涉及 Fisher 信息矩阵的迹——但 FIM 本身对 $\mat{R}_X$ 是**仿射**的，原因是 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ 在当前时隙由目标预测状态确定，可视为已知常数。在 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$（$D$ 为目标状态维度）下，$\mat{J}_p^{\text{data}} \in \mathbb{C}^{D\times D}$，其迹通过循环性质 $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$ 化为对 $\mat{R}_X$ 的线性函数：
 
-**变换**: Fisher 信息矩阵是 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \mathbf{Z}$ 的**仿射函数**（关键观察：$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p$ 在当前时隙由目标预测状态确定，视为已知常数矩阵）。利用迹的循环性质 $\text{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \text{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$，将 $\text{tr}(\mathbf{J}_p^{\text{data}})$ 改写为对 $\mathbf{R}_X$ 的线性函数：
-
-\begin{align}
-\text{tr}(\mathbf{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \text{Re}\left\{ \text{tr}\big(\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\big) \right\} \notag \\
-&= \frac{2}{\sigma_s^2} \text{Re}\left\{ \text{tr}\big(\mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\big) \right\}
-\end{align}
-
-记
 $$
-\mathbf{F}_p \triangleq \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\right\} \in \mathbb{C}^{MN_t \times MN_t}
-$$
-（注意维度：$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p^H \in \mathbb{C}^{MN_t \times D}$，$\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \in \mathbb{C}^{D \times MN_t}$，外积为 $\mathbb{C}^{MN_t \times MN_t}$；PSD 由 $\mathbf{x}^H(\mathbf{A}^H\mathbf{A})\mathbf{x} = \|\mathbf{A}\mathbf{x}\|^2 \geq 0$ 保证）
-
-**变换后**（线性）：
-$$
-\text{tr}\left(\mathbf{F}_p \left(\sum_{k=1}^{K} \mathbf{W}_k + \mathbf{Z}\right)\right) \geq \Gamma_{\text{Track}, p} \tag{S5.1}
+\tr(\mat{J}_p^{\text{data}}) = \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p\big) \Big\}.
 $$
 
-**等价性证明**:
-
-> **命题 5a（PCRB 线性化等价性）**: 在 Assumption 1（$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p$ 在当前时隙已知）下，$\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p \mathbf{R}_X)$。
->
-> *证明*: 由 $\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2}\text{Re}\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \mathbf{R}_X \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\}$，迹的循环性质 $\text{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \text{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$ 得
-> $$\text{tr}(\mathbf{J}_p^{\text{data}}) = \frac{2}{\sigma_s^2} \text{Re}\{\text{tr}(\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \mathbf{R}_X)\} = \text{tr}(\mathbf{F}_p \mathbf{R}_X)$$
-> 第二个等号利用 $\mathbf{F}_p$ 的 Hermitian 对称性（$\text{Re}\{\mathbf{A}\mathbf{A}^H\}$ 自动 Hermitian）。∎
-
-**凸性**: (S5.1) 关于 $\mathbf{W}_k, \mathbf{Z}$ 是**线性**约束，**凸**。
-
-**等价/上下界**: **严格等价**（在 Assumption 1 下）。
-
-#### 5b. 感知 SINR 约束 (5c)
-
-**变换前**（分式）:
+定义 Hermitian PSD 常数矩阵 $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p\} \in \mathbb{H}_+^{MN_t}$（PSD 由 $\vect{x}^H(\mat{A}^H\mat{A})\vect{x} = \|\mat{A}\vect{x}\|^2 \geq 0$ 保证），则 (P2-C3) 等价于
 $$
-\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}
+\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p},
 $$
+对 $\mat{W}_k, \mat{Z}$ 是线性约束。
 
-**变换**: 分母 $\sigma_s^2$ 为常数，直接交叉相乘。
-
-**变换后**（线性）：
+感知 SINR 约束 (P2-C2) 在提升域下同样简单：$\frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$ 直接交叉相乘（$\sigma_s^2$ 为常数，$\mat{Z} \succeq \mat{0} \Rightarrow \vect{g}_p^H \mat{Z} \vect{g}_p \geq 0$ 保证分子非负）得到
 $$
-\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2 \tag{S5.3}
+\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2,
 $$
-
-**凸性**: (S5.3) 关于 $\mathbf{Z}$ 是**线性**约束（$\mathbf{g}_p\mathbf{g}_p^H$ 是已知常数 PSD 矩阵，$\text{tr}(\mathbf{G}_p \mathbf{Z})$ 是线性函数），**凸**。
-
-**等价性证明**:
-
-> **命题 5b（感知 SINR 线性化等价性）**: $\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} = \frac{\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z})}{\sigma_s^2}$，当 $\sigma_s^2 > 0$ 时，交叉相乘等价。
->
-> *证明*: 由 $\text{tr}(\mathbf{g}_p\mathbf{g}_p^H \mathbf{Z}) = \mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p$（迹的循环性质），且 $\sigma_s^2$ 为正常数。∎
-
-**等价/上下界**: **严格等价**（$\sigma_s^2 > 0$ 为常数）。
+对 $\mat{Z}$ 线性。
 
 ---
 
-### Step 5: 功率约束保持线性 — **已是凸**
-
-**目标**: 验证 (5f) 已为凸。
-
-**变换**:
+per-AP 功率约束 (P2-C4) 在提升域下保持线性：利用 $\mat{E}_m$ 选择 AP $m$ 的天线分量（$\mat{E}_m \in \mathbb{R}^{MN_t \times MN_t}$ 对角选择矩阵），$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) = \tr(\mat{E}_m \mat{R}_X)$，故 (P2-C4) 等价于
 $$
-\text{tr}(\mathbf{E}_m \mathbf{R}_X) \leq P_{\max}, \quad \forall m \tag{S6.1}
+\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m,
 $$
-
-其中 $\mathbf{R}_X = \sum_{k=1}^{K} \mathbf{W}_k + \mathbf{Z}$，$\mathbf{E}_m = \text{diag}(0,\ldots,0,1,0,\ldots,0)$（第 $m$ 个 AP 对应的对角选择矩阵）。
-
-（其中 $\text{tr}(\mathbf{W}_k) = \|\mathbf{w}_k\|^2$ 在 Step 1 提升后保持线性）
-
-**凸性**: 关于 $\mathbf{W}_k, \mathbf{Z}$ 是**线性**约束（左侧是线性函数，右侧是常数），**凸**。
-
-**等价/上下界**: **严格等价**（per-AP 功率约束与全局功率约束等价，当每个 AP 独立满足 $P_{\max}$ 时）。
-
-> **Remark**: 若采用全局功率约束 $\sum_{k=1}^{K} \text{tr}(\mathbf{W}_k) + \text{tr}(\mathbf{Z}) \leq M P_{\max}$，则与 per-AP 约束等价当且仅当所有 AP 功率和恰好等于 $M P_{\max}$。per-AP 约束更严格但更实际（工程实现中每个 AP 有独立功放限制）。
+无需任何变换。per-AP 约束比全局功率约束更严格但更符合工程实际（每个 AP 有独立功放限制）；若改用全局约束 $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) \leq MP_{\max}$，则二者等价当且仅当所有 AP 功率之和恰好等于 $MP_{\max}$。
 
 ---
 
-### Step 6: AP 选择变量的凸化 — **两步：外层启发式 + 内部完全凸**
+### Step 6: AP 选择两步分解（消除 NC3，作用于 (P2-C8)）— **工程启发式**
 
-**变换**: 给定 AP 集合 $\mathcal{M}^{\text{all}}$（由 Step 7b 确定），提取子信道并求解 **仅含连续变量的凸 SDP**（无 $b_{mp}$）。
-
-**凸性**: 固定 $\mathcal{M}^{\text{all}}$ 后，(5a)-(5g) 已是凸 SDP。
-
-#### 7b. 外层 AP 集合搜索
-
-**变换**: 离散 AP 组合通过外层**穷举或启发式搜索**（如基于信道强度 top-$N_{\text{req}}$）求解。
-
-**等价的"内点启发式"声明**:
-
-> **Remark 7.1（AP 选择的工程取舍）**: AP 选择问题本身是 NP-hard（$K$-medoid 问题的变种）。本工作采用**两步分解**：
-> 1. **外层**（离散）: 基于大尺度衰落 $\text{PL}(d_{m,p})$ 排序选择 top-$N_{\text{req}}$ AP，确定 $\mathcal{M}^{\text{all}}$
-> 2. **内层**（凸）: 在固定 AP 集合上求解凸 SDP (P3)
->
-> 这不是全局最优（**无理论下界或上界保证**），但**复杂度可控**且工程实践证明足够（详见 `ADVANCED_MATHEMATICAL_ANALYSIS.md §4` 的复杂度下界证明）。
-
-**等价/上下界**: **工程启发式解**（外层选择**无理论最优性保证**——既不保证下界也不保证上界；内层 SDP 在固定 AP 集上凸紧）。
+最后处理 AP 选择约束 (P2-C8) 的离散性。该约束是 NP-hard（$K$-medoid 变种），我们采用两步分解近似：外层按大尺度衰落排序 $\text{PL}(d_{m,p})$ 选取 top-$N_{\text{req}}$ AP，确定服务集 $\mathcal{M}_p$；内层在固定 $\mathcal{M}_p$ 上求解凸 SDP。这一分解**无理论最优性保证**——外层选择可能不是真正的最优组合（NP-hard），但工程实践中足够，且内层 SDP 在固定 AP 集上仍是凸紧的，最终算法复杂度为多项式时间。
 
 ---
 
