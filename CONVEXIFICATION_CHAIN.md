@@ -215,13 +215,22 @@ $$
 
 **变换前**:
 $$
-\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\right\}
+\text{tr}(\mathbf{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\right\} \in \mathbb{C}^{D \times D}
 $$
+其中 $D$ 是目标状态维度（如 2D 平面 $D=2$）。
 
-**变换**: Fisher 信息矩阵是 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \mathbf{Z}$ 的**仿射函数**（关键观察：$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p$ 在当前时隙由目标预测状态确定，视为已知常数矩阵）。记
+**变换**: Fisher 信息矩阵是 $\mathbf{R}_X = \sum_k \mathbf{W}_k + \mathbf{Z}$ 的**仿射函数**（关键观察：$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p$ 在当前时隙由目标预测状态确定，视为已知常数矩阵）。利用迹的循环性质 $\text{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \text{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$，将 $\text{tr}(\mathbf{J}_p^{\text{data}})$ 改写为对 $\mathbf{R}_X$ 的线性函数：
+
+\begin{align}
+\text{tr}(\mathbf{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \text{Re}\left\{ \text{tr}\big(\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \cdot \mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\big) \right\} \notag \\
+&= \frac{2}{\sigma_s^2} \text{Re}\left\{ \text{tr}\big(\mathbf{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\big) \right\}
+\end{align}
+
+记
 $$
-\mathbf{F}_p \triangleq \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \cdot \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\right\} \in \mathbb{S}^{D \times D}_+
+\mathbf{F}_p \triangleq \frac{2}{\sigma_s^2} \text{Re}\left\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\right\} \in \mathbb{C}^{MN_t \times MN_t}
 $$
+（注意维度：$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p^H \in \mathbb{C}^{MN_t \times D}$，$\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \in \mathbb{C}^{D \times MN_t}$，外积为 $\mathbb{C}^{MN_t \times MN_t}$；PSD 由 $\mathbf{x}^H(\mathbf{A}^H\mathbf{A})\mathbf{x} = \|\mathbf{A}\mathbf{x}\|^2 \geq 0$ 保证）
 
 **变换后**（线性）：
 $$
@@ -232,9 +241,9 @@ $$
 
 > **命题 5a（PCRB 线性化等价性）**: 在 Assumption 1（$\nabla_{\boldsymbol{\theta}_p}\mathbf{g}_p$ 在当前时隙已知）下，$\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p \mathbf{R}_X)$。
 >
-> *证明*: 由 $\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2}\text{Re}\{\nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \mathbf{R}_X \nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H\}$，迹的循环性质 $\text{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \text{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$ 得
+> *证明*: 由 $\mathbf{J}_p^{\text{data}} = \frac{2}{\sigma_s^2}\text{Re}\{\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \mathbf{R}_X \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p\}$，迹的循环性质 $\text{tr}(\mathbf{A}\mathbf{B}\mathbf{C}) = \text{tr}(\mathbf{C}\mathbf{A}\mathbf{B})$ 得
 > $$\text{tr}(\mathbf{J}_p^{\text{data}}) = \frac{2}{\sigma_s^2} \text{Re}\{\text{tr}(\nabla_{\boldsymbol{\theta}_p} \mathbf{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \mathbf{g}_p \mathbf{R}_X)\} = \text{tr}(\mathbf{F}_p \mathbf{R}_X)$$
-> 第二个等号利用 $\mathbf{F}_p$ 的 Hermitian 对称性。∎
+> 第二个等号利用 $\mathbf{F}_p$ 的 Hermitian 对称性（$\text{Re}\{\mathbf{A}\mathbf{A}^H\}$ 自动 Hermitian）。∎
 
 **凸性**: (S5.1) 关于 $\mathbf{W}_k, \mathbf{Z}$ 是**线性**约束，**凸**。
 

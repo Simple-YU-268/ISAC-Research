@@ -287,15 +287,21 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 \textbf{变换}：在单角度假设下线性化 FIM 迹。
 
 在假设 1（$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ 已知且恒定）下：
-
 \begin{equation}
-\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\}
+\mat{J}_p^{\text{data}} = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\} \in \mathbb{C}^{D \times D}
 \end{equation}
+其中 $D$ 是目标状态维度（如 2D 平面 $D=2$）。迹循环 $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$ 得：
 
-定义：
+\begin{align}
+\tr(\mat{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H\big) \Big\} \notag \\
+&= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\mat{R}_X \cdot \underbrace{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p}_{\in\, \mathbb{C}^{MN_t \times MN_t}}\big) \Big\}
+\end{align}
+
+定义 Hermitian PSD 常数矩阵
 \begin{equation}
-\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \Big\} \succeq \mat{0}
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\Big\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \Big\} \in \mathbb{H}^{MN_t}_+ \tag{S5.0}
 \end{equation}
+（注意：$\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{MN_t \times D}$、$\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \in \mathbb{C}^{D \times MN_t}$，外积为 $\mathbb{C}^{MN_t \times MN_t}$；PSD 由 $\vect{x}^H (\mat{A}^H \mat{A}) \vect{x} = \|\mat{A}\vect{x}\|^2 \geq 0$ 保证）
 
 则：
 \begin{equation}
