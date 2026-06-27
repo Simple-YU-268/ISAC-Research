@@ -111,7 +111,7 @@ Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) 
 \begin{equation}
 \mat{W}_k \succeq \mat{0}, \quad \forall k. \tag{S1.1}
 \end{equation}
-可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Luo 等关于 MISO 多播问题的紧致性结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
+可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 关于 MISO 多播波束成形的结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
 
 处理完 rank-1 后，约束 (P2-C1) 中仍残留分式结构与最坏情况不确定性，必须按两步走：先把分式改写为 S-Procedure 可处理的二次型，再让 S-Procedure 处理 $\Delta\vect{h}$ 的不确定性。具体地，固定某个最坏情况 $\Delta\vect{h}_k$ 满足 $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$，SINR 不等式
 $$
@@ -131,7 +131,7 @@ $$
 \begin{equation}
 \exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}. \tag{S3.1}
 \end{equation}
-充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证，参见 Luo 2010 推论 3.4。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
+充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证；S-lemma 的标准证明见 Boyd et al. 1994 *Linear Matrix Inequalities in System and Control Theory* §2.3.2 或 Vorobyov, Gershman, Luo 2003 *IEEE Trans. SP* Lemma 1。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
 
 接下来处理感知侧与跟踪精度约束。PCRB 约束 (P2-C3) 涉及 Fisher 信息矩阵的迹——但 FIM 本身对 $\mat{R}_X$ 是\textbf{仿射}的，原因是 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ 在当前时隙由目标预测状态确定，可视为已知常数。在 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$（$D$ 为目标状态维度）下，$\mat{J}_p^{\text{data}} \in \mathbb{C}^{D\times D}$，其迹通过循环性质 $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$ 化为对 $\mat{R}_X$ 的线性函数：
 \begin{align}

@@ -162,7 +162,7 @@ We start with the most stubborn non-convexity, the rank-one constraint (P2-C7). 
 \begin{equation}
 \mat{W}_k \succeq \mat{0}, \quad \forall k,
 \end{equation}
-enlarging the feasible set from the rank-one manifold $\mathcal{F}_{\text{rank-1}}$ to the PSD cone $\mathcal{F}_{\text{SDR}}$. By Luo's tightness result for MISO multicast, the SDR is tight when $K \leq 2$ (the optimal $\mat{W}_k^*$ naturally satisfies $\rank(\mat{W}_k^*) = 1$) and provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$ when $K > 2$; in the latter case, Gaussian randomization recovers a feasible rank-one solution with bounded performance loss $O(1/L)$.
+enlarging the feasible set from the rank-one manifold $\mathcal{F}_{\text{rank-1}}$ to the PSD cone $\mathcal{F}_{\text{SDR}}$. By Sidiropoulos, Davidson, Luo 2006 (*IEEE Trans. Signal Process.*) Theorem 1 for the MISO multicast beamforming case, the SDR is tight when $K \leq 2$ (the optimal $\mat{W}_k^*$ naturally satisfies $\rank(\mat{W}_k^*) = 1$) and provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$ when $K > 2$; in the latter case, Gaussian randomization recovers a feasible rank-one solution with bounded performance loss $O(1/L)$.
 
 After the SDR, the SINR constraint (P2-C1) still carries a fractional structure and worst-case uncertainty, which must be addressed in two coupled steps: first rewrite the fraction as a quadratic form that the S-Procedure can process, then let the S-Procedure handle the $\Delta\vect{h}$ uncertainty. Fixing a worst-case realization $\Delta\vect{h}_k$ satisfying $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$, the SINR inequality
 $$
@@ -182,7 +182,7 @@ with the uncertainty set captured by the quadratic $\tilde{f}_2(\Delta\vect{h}) 
 \begin{equation}
 \exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}. \tag{S3.1}
 \end{equation}
-Sufficiency is immediate; necessity follows from the Lagrangian dual and the requirement $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ (Luo 2010, Corollary 3.4). The new slack variable $\mu_k \geq 0$ is the S-Procedure multiplier.
+Necessity follows from the Lagrangian dual and the requirement $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$; for the standard proof of the S-lemma, see Boyd et al. 1994 *Linear Matrix Inequalities in System and Control Theory* §2.3.2, or Vorobyov, Gershman, Luo 2003 *IEEE Trans. SP* Lemma 1. The new slack variable $\mu_k \geq 0$ is the S-Procedure multiplier.
 
 We now turn to the sensing-side and tracking constraints. The PCRB constraint (P2-C3) involves the trace of the Fisher information matrix, but the FIM itself is \textbf{affine} in $\mat{R}_X$ because the channel gradient $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ is fixed by the predicted target state in the current slot and can be treated as a known constant. With $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$ ($D$ being the target state dimension), $\mat{J}_p^{\text{data}} \in \mathbb{C}^{D \times D}$, and by the cyclic property $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$ its trace becomes linear in $\mat{R}_X$:
 \begin{align}

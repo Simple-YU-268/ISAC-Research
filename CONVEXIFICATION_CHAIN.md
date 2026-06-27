@@ -87,7 +87,7 @@ $$
 \mat{W}_k \succeq \mat{0}, \quad \forall k.
 $$
 
-可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Luo 等关于 MISO 多播问题的紧致性结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
+可行域从 rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 扩大为半正定锥 $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$。由 Sidiropoulos, Davidson, Luo 2006 *IEEE Trans. SP* Theorem 1 关于 MISO 多播波束成形的结论，$K \leq 2$ 时 SDR 紧致（最优 $\mat{W}_k^*$ 自然满足 $\rank(\mat{W}_k^*)=1$），$K > 2$ 时 SDR 提供原问题下界 $P_{\text{SDR}}^* \leq P_{\text{original}}^*$；后者情形下，高斯随机化以 $O(1/L)$ 性能损失恢复可行 rank-1 解。
 
 ### Step 2: SINR 分式改写为二次型 — **等价预处理**
 
@@ -115,7 +115,7 @@ $$
 \exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}.
 $$
 
-充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证，参见 Luo 2010 推论 3.4。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
+充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证；S-lemma 的标准证明见 Boyd et al. 1994 *Linear Matrix Inequalities in System and Control Theory* §2.3.2 或 Vorobyov, Gershman, Luo 2003 *IEEE Trans. SP* Lemma 1。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
 
 ---
 
