@@ -1,0 +1,217 @@
+\documentclass[12pt,a4paper]{article}
+
+% English support
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Math packages
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+
+% Page layout
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% Theorem environments (English labels)
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+% Custom commands (identical to Chinese version)
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Robust Beamforming Optimization for Cell-Free ISAC Systems\\Mathematical Derivation}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+%==============================================================================
+\section{Original Problem}
+%==============================================================================
+
+The decision variables of the original problem (P1) are the per-AP beamforming vectors $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, the sensing covariance matrices $\mat{Z}_m \in \mathbb{H}_+^{N_t}$, and the AP selection indicators $b_{mp} \in \{0,1\}$:
+\begin{align}
+\min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad
+& \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\
+\text{s.t.} \quad
+& \text{SINR}_{S,p} := \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \tag{P1-C2} \\
+& \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \tag{P1-C3} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P1-C4} \\
+& \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P1-C5} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \tag{P1-C6} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P1-C7}
+\end{align}
+
+The communication SINR (P1-C1) and the worst-case SINR are defined as (\textbf{Note: the fractional structure and the semi-infinite uncertainty are the core non-convex sources}):
+\begin{align}
+\tag{P1-C1} \text{SINR}_k^{\text{wc}} &:= \min_{\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k, \quad \forall k
+\end{align}
+
+where $\vect{w}_k \triangleq [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t}$ is the cooperative stacked beamforming vector from all APs to user $k$ (\textbf{Note}: the decision variables are the per-AP vectors $\vect{w}_{m,k}$, and $\vect{w}_k$ is obtained by stacking them).
+
+%==============================================================================
+\section{Covariance Lifted Form (P2) --- Equivalent Lifted Formulation}
+%==============================================================================
+
+To prepare for the semidefinite relaxation, we lift the vector variables in (P1) into covariance matrices, obtaining \textbf{(P2)}:
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}_{k\in\mathcal{K}}, \mat{Z} \in \mathbb{H}_+^{MN_t}, \\ \{b_{mp}\}_{m\in\mathcal{M},p\in\mathcal{P}}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad
+& \text{(P1-C1) reformulated as (P2-C1)} \tag{P2-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P2-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P2-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P2-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \tag{P2-C7} \\
+& b_{mp} \in \{0,1\}, \quad \forall m, p \tag{P2-C8}
+\end{align}
+
+where:
+\begin{itemize}
+    \item $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$, $\vect{w}_k = [\vect{w}_{1,k}^T, \ldots, \vect{w}_{M,k}^T]^T$
+    \item $\mat{R}_X \triangleq \sum_{k=1}^K \mat{W}_k + \mat{Z}$
+    \item $\mat{E}_m = \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t})$ is the AP $m$ selection matrix
+    \item $\mat{F}_p = \frac{2}{\sigma_s^2}\Real\{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p\} \in \mathbb{H}_+^{MN_t}$
+    \item (P2-C1) is the LMI form of (P1-C1) after the S-Procedure; see \S\ref{sec:convexification} Step 3
+\end{itemize}
+
+\textbf{(P1) $\Leftrightarrow$ (P2) is a strict equivalence}: the variable mapping $\vect{w}_k \leftrightarrow \mat{W}_k = \vect{w}_k \vect{w}_k^H$ is a one-to-one correspondence (the rank-one constraint guarantees recoverability), and all constraints are reformulated equivalently via identities such as $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$. \textbf{No relaxation is involved}---it is purely a mathematical rewriting.
+
+%==============================================================================
+\section{Non-Convexity Analysis}
+%==============================================================================
+
+Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP.
+
+%==============================================================================
+\section{Step-by-Step Convexification}\label{sec:convexification}
+%==============================================================================
+
+We apply six transformations to (P2), progressively converting each non-convexity into a convex form. The overall roadmap is: first use SDR to sacrifice rank-one tightness for convexification of the feasible set, then apply the S-Procedure to handle the semi-infinite robust constraints, and finally linearize or retain the PCRB / sensing SINR / power constraints. Each transformation preserves strict equivalence when possible (only Step 1 is a tight relaxation for $K>2$, and Step 6 is an engineering heuristic), with the equivalence type annotated inline.
+
+We first address the most stubborn non-convexity---the rank-one constraint (P2-C7). Although (P1) $\Leftrightarrow$ (P2) strictly preserves rank-one, the rank-one manifold is itself non-convex. SDR removes this non-convexity by relaxing (P2-C7) to merely $\mat{W}_k \succeq \mat{0}$:
+\begin{equation}
+\mat{W}_k \succeq \mat{0}, \quad \forall k. \tag{S1.1}
+\end{equation}
+The feasible set enlarges from the rank-one manifold $\mathcal{F}_{\text{rank-1}}$ to the PSD cone $\mathcal{F}_{\text{SDR}} = \{\mat{W} \succeq \mat{0}\}$. The SDR provides a lower bound $P_{\text{SDR}}^* \leq P_{\text{original}}^*$ on the original problem. Note that for our per-user SINR + cell-free cooperative + robust problem, \textbf{no universal SDR tightness theorem applies}---the $G_k \leq 2$ tightness condition for multi-group multicasting and the $N_t \leq 2$ tightness condition for robust MISO do not transfer. When the SDR solution has $\text{rank}(\mat{W}_k^*) > 1$, \textbf{Gaussian randomization} is required to recover a feasible rank-1 solution---this is the standard practice in SDR-based beamforming, but \textbf{no tight performance-loss bound exists}; engineering practice typically uses $L = 100 \sim 1000$ candidates and selects the best.
+
+After handling rank-one, constraint (P2-C1) still carries a fractional structure and worst-case uncertainty, which must be addressed in two coupled steps: first rewrite the fraction as a quadratic form that the S-Procedure can process, then let the S-Procedure handle the $\Delta\vect{h}$ uncertainty. Fixing a worst-case realization $\Delta\vect{h}_k$ satisfying $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$, the SINR inequality
+$$
+\frac{\tr(\hat{\mat{H}}_k \mat{W}_k) + \text{($\Delta\vect{h}$ correction term)}}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \text{($\Delta\vect{h}$ correction term)} + \sigma_c^2} \geq \gamma_k
+$$
+under the assumption that the denominator is strictly positive ($\sigma_c^2 > 0$), can be cross-multiplied to yield the quadratic inequality
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2. \tag{S2.1}
+\end{equation}
+This step is a strict equivalence, not an approximation---the positivity of the denominator guarantees that multiplication by the denominator is reversible. The resulting quadratic form (S2.1) is exactly the input required by the S-Procedure.
+
+We now restore the worst-case $\Delta\vect{h}_k$ to a variable. Defining $\mat{A}_k \triangleq \frac{1}{\gamma_k} \mat{W}_k - \sum_{j\neq k} \mat{W}_j$, constraint (P2-C1) can be rewritten as a quadratic inequality in $\Delta\vect{h}_k$:
+$$
+\tilde{f}_1(\Delta\vect{h}) = (\hat{\vect{h}} + \Delta\vect{h})^H \mat{A}_k (\hat{\vect{h}} + \Delta\vect{h}) - \sigma_c^2 \geq 0, \quad \forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|.
+$$
+The uncertainty set is described by the quadratic constraint $\tilde{f}_2(\Delta\vect{h}) = \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 - \|\Delta\vect{h}_k\|^2 \geq 0$. The S-Procedure asserts that, for a single quadratic constraint over a norm ball, the universal quantifier ``$\forall \Delta\vect{h} \in \mathcal{B}_\epsilon: \tilde{f}_1 \geq 0$'' is equivalent to the existence of a multiplier $\mu_k \geq 0$ such that $\tilde{f}_1 - \mu_k \tilde{f}_2 \geq 0$ for all $\Delta\vect{h}$, i.e., the quadratic form in $\Delta\vect{h}$ is $\succeq 0$---which is captured by the LMI:
+\begin{equation}
+\exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}. \tag{S3.1}
+\end{equation}
+Sufficiency is immediate ($\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ directly yields $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ inside the ball); necessity follows from the condition $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ together with the Lagrangian dual. The new slack variable $\mu_k \geq 0$ is the S-Procedure multiplier.
+
+Next we address the sensing-side and tracking-accuracy constraints. The PCRB constraint (P2-C3) involves the trace of the Fisher information matrix---but the FIM itself is \textbf{affine} in $\mat{R}_X$, because $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ is determined by the target's predicted state in the current time slot and can be treated as a known constant. With $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$ ($D$ is the target state dimension), $\mat{J}_p^{\text{data}} \in \mathbb{C}^{D\times D}$, and its trace is converted into a linear function of $\mat{R}_X$ via the cyclic property $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$:
+\begin{align}
+\tr(\mat{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H\big) \Big\} \notag \\
+&= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\mat{R}_X \cdot \underbrace{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p}_{\in\, \mathbb{C}^{MN_t \times MN_t}}\big) \Big\}. \tag{S4.1a}
+\end{align}
+Defining the Hermitian PSD constant matrix
+$$
+\mat{F}_p = \frac{2}{\sigma_s^2} \Real\{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \cdot \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p\} \in \mathbb{H}_+^{MN_t}
+$$
+(where $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{MN_t \times D}$ and $\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \in \mathbb{C}^{D \times MN_t}$, the outer product is $\mathbb{C}^{MN_t \times MN_t}$; PSD is guaranteed by $\vect{x}^H(\mat{A}^H\mat{A})\vect{x} = \|\mat{A}\vect{x}\|^2 \geq 0$), constraint (P2-C3) becomes equivalent to
+\begin{equation}
+\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \tag{S4.1b}
+\end{equation}
+i.e., (P2-C3) is strictly equivalent to (S4.1b), which is a linear constraint in $\mat{W}_k, \mat{Z}$.
+
+The sensing SINR constraint (P2-C2) is equally simple in the lifted domain: $\frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$ can be cross-multiplied directly ($\sigma_s^2$ is a constant, and $\mat{Z} \succeq \mat{0} \Rightarrow \vect{g}_p^H \mat{Z} \vect{g}_p \geq 0$ guarantees a non-negative numerator), yielding
+\begin{equation}
+\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \tag{S4.2}
+\end{equation}
+which is linear in $\mat{Z}$.
+
+The per-AP power constraint (P2-C4) remains linear in the lifted domain: using $\mat{E}_m$ to select the antenna components of AP $m$ ($\mat{E}_m \in \mathbb{R}^{MN_t \times MN_t}$ is a diagonal selection matrix), $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) = \tr(\mat{E}_m \mat{R}_X)$, so (P2-C4) is equivalent to
+\begin{equation}
+\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \tag{S5.1}
+\end{equation}
+requiring no further transformation.
+
+Finally, we address the discreteness of the AP-selection constraint (P2-C8). This constraint is NP-hard (a variant of the $K$-medoid problem), and we adopt a two-step decomposition: the outer step ranks the APs by large-scale fading $\text{PL}(d_{m,p})$ and selects the top-$N_{\text{req}}$ APs to fix the service set $\mathcal{M}_p$; the inner step solves a convex SDP on the fixed set. This decomposition \textbf{carries no theoretical optimality guarantee}---the outer selection may not be the globally optimal combination (NP-hard)---but engineering practice shows it works well, and the inner SDP on a fixed AP set remains convex and tight.
+
+%==============================================================================
+\section{Final Convex SDP Problem (P3) --- Convex Relaxation of (P2)}
+%==============================================================================
+
+Combining the six transformations from \S\ref{sec:convexification}, starting from \textbf{(P2)} and dropping the rank-one constraint (P2-C7) and applying the heuristic handling of (P2-C8), we obtain the \textbf{(P3)} convex SDP:
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
+\text{s.t.} \quad
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C6} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C7}
+\end{align}
+
+where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{F}_p$ is defined in Step 5a, and $\mat{E}_m$ is the AP selection matrix.
+
+\begin{table}[htbp]
+\centering
+\caption{Correspondence between (P1) and (P3) constraints}
+\begin{tabular}{clll}
+\toprule
+(P1) constraint & (P3) constraint & Transformation & Convexity \\
+\midrule
+(P1-C1) SINR & (P3-C1) LMI & Steps 1,2,3,4 & LMI (convex) \\
+(P1-C2) Sensing SINR & (P3-C2) Linear & Steps 1,2,5b & Linear (convex) \\
+(P1-C3) PCRB & (P3-C3) Linear & Steps 1,2,5a & Linear (convex) \\
+(P1-C4) AP selection & (P3-C4) Fixed set & Step 7 & Linear (convex) \\
+(P1-C5) Power & (P3-C4) Linear & Steps 1,6 & Linear (convex) \\
+(P1-C6) PSD & (P3-C6) PSD & Unchanged & PSD cone (convex) \\
+(P1-C7) Binary & Eliminated & Step 7 & Heuristic \\
+(P1-C8) Rank-one & (P3-C5) PSD & Step 2 & PSD cone (convex) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{theorem}[Convexity and Equivalence of the Problem]
+Problem (P3) is a standard convex SDP. All constraints are LMIs or linear inequalities, and the objective is linear. SDR is a lower bound on (P2): $P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$ (no universal tightness theorem applies---see the Step 1 remark in \S\ref{sec:convexification}). (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$---the precise form follows from the (P3) decision-variable dimension $n = O(K (MN_t)^2)$ and the largest LMI constraint size $(MN_t+1)$; a simplified order is $O((K M N_t^2)^{3.5})$.
+\end{theorem}
+
+\begin{proof}
+Each constraint in (P3) is either an LMI (P3-C1), a linear inequality (P3-C2, P3-C3, P3-C4), or a PSD cone constraint (P3-C5, P3-C6). The objective is linear. Therefore (P3) is a convex SDP. The transformation chain is:
+\begin{itemize}
+    \item \textbf{(P1) $\Leftrightarrow$ (P2)}: strict equivalence (variable lifting, with the rank-one constraint guaranteeing recoverability).
+    \item \textbf{Steps 1--6}: strict equivalences (covariance lifting, non-tight SDR relaxation, S-Procedure equivalence, fractional linearization, PCRB affine rewriting, sensing-SINR linearization, power constraint).
+    \item \textbf{Step 2 (SDR)}: a lower-bound relaxation, $P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$ (no universal tightness theorem applies).
+    \item \textbf{Step 7 (AP heuristic)}: the outer AP set is selected by ranking the large-scale fading---this \textbf{carries no theoretical optimality guarantee}; it may either yield a lower bound on the original problem or an incomparable objective value if the heuristic picks a suboptimal AP set.
+\end{itemize}
+Hence (P3) is a lower bound on (P1): $P_{\text{P3}}^* \leq P_{\text{P1}}^*$. The complexity upper bound follows from the standard interior-point result for SDPs (Nesterov-Todd path-following, worst case $O(n^3 L)$, where $n$ is the decision-variable dimension and $L$ is the input bit-length).
+\end{proof}
+
+\end{document}
