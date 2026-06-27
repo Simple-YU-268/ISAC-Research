@@ -45,24 +45,55 @@
 \section{原始问题}
 %==============================================================================
 
+原始 (P1) 问题的决策变量为 per-AP 波束 $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$、感知协方差 $\mat{Z}_m \in \mathbb{H}_+^{N_t}$、AP 选择指示 $b_{mp} \in \{0,1\}$：
 \begin{align}
-\min_{\substack{\{\vect{w}_{m,k}\}, \{\mat{Z}_m\}, \\ \{b_{mp}\}}} \quad 
-& \sum_{m=1}^{M} \left( \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \right) \tag{P1} \\
+\min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad 
+& \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\
 \text{s.t.} \quad 
-& \text{SINR}_k^{\text{wc}} \geq \gamma_k, \quad \forall k \in \mathcal{K} \tag{P1-C1} \\
 & \text{SINR}_{S,p} := \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P} \tag{P1-C2} \\
 & \tr(\mat{J}_p^{\text{data}}) \geq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P} \tag{P1-C3} \\
 & \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P1-C4} \\
-& \sum_{k=1}^{K} \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P1-C5} \\
+& \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}, \quad \forall m \in \mathcal{M} \tag{P1-C5} \\
 & \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M} \tag{P1-C6} \\
-& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P1-C7} \\
-& \rank(\mat{W}_k) = 1, \quad \forall k \in \mathcal{K} \tag{P1-C8}
+& b_{mp} \in \{0, 1\}, \quad \forall m \in \mathcal{M}, p \in \mathcal{P} \tag{P1-C7}
 \end{align}
 
-其中 $\mat{W}_k = \vect{w}_k \vect{w}_k^H$ 为协作通信协方差矩阵，$\vect{w}_k = [\vect{w}_{1,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t}$ 为所有 AP 到用户 $k$ 的波束协作合并向量（每 AP 独立约束在 per-AP 功率 (P1-C5) 中，详见 (P1-C5) 注）。最坏情况 SINR 定义为：
-\begin{equation}
-\text{SINR}_k^{\text{wc}} = \min_{\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j\neq k}|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2}
-\end{equation}
+通信 SINR (P1-C1) 与最坏情况 SINR 定义为（**注意：分式结构与半无限不确定性是核心非凸源**）：
+\begin{align}
+\tag{P1-C1} \text{SINR}_k^{\text{wc}} &:= \min_{\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k, \quad \forall k
+\end{align}
+
+其中 $\vect{w}_k \triangleq [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t}$ 为所有 AP 到用户 $k$ 的协作合并波束向量（**注意**：决策变量是 per-AP 的 $\vect{w}_{m,k}$，$\vect{w}_k$ 由其堆叠得到）。
+
+%==============================================================================
+\section{协方差提升形式 (P2) — 等价 lifted 形式}
+%==============================================================================
+
+为后续半定松弛做准备，将 (P1) 中向量变量提升为协方差矩阵，得到 \textbf{(P2)}：
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}_{k\in\mathcal{K}}, \mat{Z} \in \mathbb{H}_+^{MN_t}, \\ \{b_{mp}\}_{m\in\mathcal{M},p\in\mathcal{P}}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad
+& \text{(P1-C1) 改写为 (P2-C1)} \tag{P2-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P2-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P2-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P2-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \tag{P2-C7} \\
+& b_{mp} \in \{0,1\}, \quad \forall m, p \tag{P2-C8}
+\end{align}
+
+其中：
+\begin{itemize}
+    \item $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$，$\vect{w}_k = [\vect{w}_{1,k}^T, \ldots, \vect{w}_{M,k}^T]^T$
+    \item $\mat{R}_X \triangleq \sum_{k=1}^K \mat{W}_k + \mat{Z}$
+    \item $\mat{E}_m = \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t})$ 为 AP $m$ 选择矩阵
+    \item $\mat{F}_p = \frac{2}{\sigma_s^2}\Real\{\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p\} \in \mathbb{H}_+^{MN_t}$
+    \item (P2-C1) 是 (P1-C1) 经 S-Procedure 处理后的 LMI 形式，详见 §逐步凸化 Step 3
+\end{itemize}
+
+\textbf{(P1) $\Leftrightarrow$ (P2) 严格等价}：变量映射 $\vect{w}_k \leftrightarrow \mat{W}_k = \vect{w}_k \vect{w}_k^H$ 为一一对应（秩一约束保证可恢复），所有约束都通过 $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$ 等恒等式等价改写。**无任何松弛**，仅是数学形式重写。
 
 %==============================================================================
 \section{非凸性分析}
@@ -70,7 +101,7 @@
 
 \subsection{目标函数}
 
-目标函数 $\sum_{m,k} \|\vect{w}_{m,k}\|^2 + \sum_m \tr(\mat{Z}_m)$ 是平方范数与迹之和。每个项 $\|\vect{w}_{m,k}\|^2 = \vect{w}_{m,k}^H \vect{w}_{m,k}$ 是凸二次函数（正定 Hessian）。但与秩一约束 (P1-C8) 结合后，可行集变为非凸。
+目标函数 $\sum_{m,k} \|\vect{w}_{m,k}\|^2 + \sum_m \tr(\mat{Z}_m)$ 是平方范数与迹之和。每个项 $\|\vect{w}_{m,k}\|^2 = \vect{w}_{m,k}^H \vect{w}_{m,k}$ 是凸二次函数（正定 Hessian）。但与 lifted 形式 (P2-C7) 的秩一约束结合后，可行集变为非凸（rank-1 流形）。
 
 \textbf{凸性状态}：目标本身凸，但整体问题因约束而非凸。
 
@@ -171,41 +202,11 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 \section{逐步凸化}
 %==============================================================================
 
-\subsection{Step 1: 协方差矩阵提升（消除 NC1, NC5）}
+\subsection{Step 1: 半定松弛（消除 NC4，作用于 (P2-C7)）}
 
-\textbf{变换}：将每 AP 的向量变量提升到全局矩阵空间。
+\textbf{变换}：丢弃 (P2-C7) 秩一约束，仅保留半正定。
 
-原始变量：$\vect{w}_{m,k} \in \mathbb{C}^{N_t}$，$\mat{Z}_m \in \mathbb{H}^{N_t}_+$。
-
-定义 AP 协作合并波束 $\vect{w}_k \in \mathbb{C}^{MN_t}$ 与每 AP 选择矩阵 $\mat{E}_m \in \mathbb{R}^{MN_t \times MN_t}$：
-
-\begin{align}
-\vect{w}_k &\triangleq [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t} \\
-\mat{E}_m &\triangleq \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t}) \in \mathbb{R}^{MN_t \times MN_t}
-\end{align}
-
-则 $\vect{E}_m \vect{w}_k = [\vect{0}^T, \vect{w}_{m,k}^T, \vect{0}^T]^T$（仅取 AP $m$ 的分量），每 AP 功率 $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) = \tr(\mat{E}_m \mat{R}_X)$，其中
-
-\begin{equation}
-\mat{R}_X \triangleq \sum_{k=1}^K \mat{W}_k + \mat{Z}, \quad \mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}^{MN_t}, \quad \mat{Z} = \sum_{m=1}^M \mat{Z}_m \in \mathbb{H}^{MN_t} \tag{S1.1}
-\end{equation}
-
-\textbf{作用}：
-\begin{itemize}
-    \item 目标：$\|\vect{w}_k\|^2 = \tr(\mat{W}_k)$ 对 $\mat{W}_k$ 线性化。
-    \item 功率：$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$ 变为 $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$（对 $\mat{W}_k, \mat{Z}$ 线性）。
-    \item SINR：$|\vect{h}_k^H \vect{w}_k|^2 = \tr(\vect{h}_k \vect{h}_k^H \mat{W}_k)$ 对 $\mat{W}_k$ 线性化。
-\end{itemize}
-
-\textbf{等价性}：严格等价（$\vect{w}_k$ 与秩一 $\mat{W}_k$ 一一映射；每 AP 功率与 $\tr(\mat{E}_m \mat{R}_X)$ 也一一对应）。
-
-\textbf{剩余非凸性}：秩一约束 $\rank(\mat{W}_k) = 1$ 仍存在（NC4）。
-
-\subsection{Step 2: 半定松弛（消除 NC4）}
-
-\textbf{变换}：将秩一约束松弛为 PSD 锥。
-
-原始：$\mat{W}_k \succeq \mat{0}$，$\rank(\mat{W}_k) = 1$。
+原始（(P2-C7)）：$\mat{W}_k \succeq \mat{0}$，$\rank(\mat{W}_k) = 1$。
 
 松弛后：仅 $\mat{W}_k \succeq \mat{0}$。
 
@@ -226,7 +227,31 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 
 \textbf{影响}：目标值可能降低（松弛扩大可行集）。$K > 2$ 时获得原问题下界。
 
-\subsection{Step 3: S-Procedure 处理鲁棒 SINR（消除 NC2）}
+\subsection{Step 2: SINR 分式改写为二次型（消除 NC1）}
+
+\textbf{变换}：将 SINR 分式改写为分母乘到右边的二次型不等式（**注意：这不是线性化，也不是近似，而是等价改写**）。
+
+原始分式形式（(P1-C1) 在最坏情况固定时，即固定某个 $\Delta\vect{h}_k$）：
+
+\begin{equation}
+\frac{\tr(\hat{\mat{H}}_k \mat{W}_k) + \text{(Δh 修正项)}}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \text{(Δh 修正项)} + \sigma_c^2} \geq \gamma_k
+\end{equation}
+
+分母恒为正（$\sigma_c^2 > 0$），交叉相乘得到：
+
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2 \tag{S2.1}
+\end{equation}
+
+其中 $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$。
+
+\textbf{等价性类型}：严格等价（分母为正时双向成立）。
+
+\textbf{说明}：此步单独看是 trivial 的"重写"，但**是 Step 3 S-Procedure 之前必经的预处理**——S-Procedure 处理的是二次型 `h^H A h` 的不确定性，原始分式必须先转成二次型才能进入 S-Procedure 框架。
+
+\textbf{结果}：得到的二次型不等式为 Step 3 S-Procedure 的输入。
+
+\subsection{Step 3: S-Procedure 处理鲁棒 SINR（消除 NC2，作用于 (P2-C1)）}
 
 \textbf{变换}：将半无限最坏情况约束转化为有限 LMI。
 
@@ -262,27 +287,7 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 
 \textbf{结果凸约束}：关于 $\mat{W}_k$ 和 $\mu_k$ 的线性矩阵不等式（LMI）。
 
-\subsection{Step 4: SINR 分式线性化（消除 NC1）}
-
-\textbf{变换}：交叉相乘消去分式。
-
-原始分式形式（S-Procedure 后）：
-\begin{equation}
-\frac{\tr(\hat{\mat{H}}_k \mat{W}_k)}{\sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) + \sigma_c^2} \geq \gamma_k
-\end{equation}
-
-其中 $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$。
-
-假设分母为正（因 $\sigma_c^2 > 0$ 恒满足）：
-\begin{equation}
-\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2 \tag{S4.1}
-\end{equation}
-
-\textbf{等价性类型}：严格等价（分母为正时）。
-
-\textbf{结果凸约束}：关于 $\mat{W}_k$ 的线性不等式。
-
-\subsection{Step 5a: PCRB 仿射展开（消除 NC6）}
+\subsection{Step 4a: PCRB 仿射展开（消除 NC6，作用于 (P2-C3)）}
 
 \textbf{变换}：在单角度假设下线性化 FIM 迹。
 
@@ -312,7 +317,7 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 
 \textbf{结果凸约束}：$\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$ 对 $\mat{R}_X$ 线性。
 
-\subsection{Step 5b: 感知 SINR 线性化}
+\subsection{Step 4b: 感知 SINR 线性化（作用于 (P2-C2)）}
 
 \textbf{变换}：在提升域表达。
 
@@ -327,7 +332,7 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 
 \textbf{结果凸约束}：关于 $\mat{Z}$ 的线性不等式。
 
-\subsection{Step 6: 功率约束（已凸）}
+\subsection{Step 5: 功率约束（已凸，作用于 (P2-C4)）}
 
 原始：$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$。
 
@@ -340,7 +345,7 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 
 \textbf{状态}：已凸（线性约束），无需变换。
 
-\subsection{Step 7: AP 选择两步分解（消除 NC3）}
+\subsection{Step 6: AP 选择两步分解（消除 NC3，作用于 (P2-C8)）}
 
 \textbf{变换}：分解为外层离散 + 内层连续。
 
@@ -358,10 +363,10 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 \textbf{结果}：多项式时间复杂度，次优但工程可接受。
 
 %==============================================================================
-\section{最终凸 SDP 问题}
+\section{最终凸 SDP 问题 (P3) — (P2) 的凸松弛}
 %==============================================================================
 
-综合所有步骤，原始非凸问题 (P1) 转化为如下标准凸 SDP：
+综合 §逐步凸化 7 步，从 \textbf{(P2)} 出发，丢弃 (P2-C7) 秩一约束并对 (P2-C8) 启发式处理后，得到 \textbf{(P3)} 凸 SDP：
 
 \begin{align}
 \min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad 
@@ -398,11 +403,18 @@ NC6 & PCRB 中矩阵逆 & (P1-C3) & FIM 非线性依赖 \\
 \end{table}
 
 \begin{theorem}[问题凸性与等价性]
-问题 (P3) 是标准凸 SDP。所有约束为 LMI 或线性不等式，目标线性。$K \leq 2$ 时 (P3) 与 (P1) 等价（SDR 紧致）。$K > 2$ 时 (P3) 提供 (P1) 下界。(P3) 可通过内点法在多项式时间求解，复杂度上界为 $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$——精确源于 (P3) 决策变量维数 $n = O(K (MN_t)^2)$，LMI 约束最大尺寸 $(MN_t+1)$；简化量级 $O((K M N_t^2)^{3.5})$。
+问题 (P3) 是标准凸 SDP。所有约束为 LMI 或线性不等式，目标线性。$K \leq 2$ 时 (P3) $\equiv$ (P2) $\equiv$ (P1)（SDR 紧致 + (P1)↔(P2) 严格等价 + Step 1-6 等价 + Step 7 启发式不影响此结论）。$K > 2$ 时 (P3) 提供 (P2) 的下界，即 (P1) 的下界。(P3) 可通过内点法在多项式时间求解，复杂度上界为 $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$——精确源于 (P3) 决策变量维数 $n = O(K (MN_t)^2)$，LMI 约束最大尺寸 $(MN_t+1)$；简化量级 $O((K M N_t^2)^{3.5})$。
 \end{theorem}
 
 \begin{proof}
-(P3) 中各约束为 LMI (P3-C1)、线性不等式 (P3-C2, P3-C3, P3-C4) 或 PSD 锥约束 (P3-C5, P3-C6)。目标线性。故 (P3) 为凸 SDP。Steps 1, 3, 4, 5a, 5b, 6 为严格等价。Step 2 在 $K \leq 2$ 时为紧致松弛。Step 7 为启发式近似（外层 AP 集合由大尺度衰落排序选取，\textbf{无理论最优性保证}——既可能给出原问题下界，也可能因启发式选错 AP 而给出不可比较的目标值）。故 $K \leq 2$ 时 (P3) $\equiv$ (P1)；$K > 2$ 时 $P_{\text{P3}}^* \leq P_{\text{P1}}^*$。复杂度上界由内点法对 SDP 的标准结论给出（Nesterov-Todd 路径跟踪，最坏情况 $O(n^3 L)$，其中 $n$ 为决策变量维数，$L$ 为输入数据位长）。
+(P3) 中各约束为 LMI (P3-C1)、线性不等式 (P3-C2, P3-C3, P3-C4) 或 PSD 锥约束 (P3-C5, P3-C6)。目标线性。故 (P3) 为凸 SDP。变换链：
+\begin{itemize}
+    \item \textbf{(P1) $\Leftrightarrow$ (P2)}: 严格等价（变量提升，rank-1 约束保证可恢复）
+    \item \textbf{Step 1-6}：严格等价（协方差提升、SDR 紧致条件、S-Procedure 充要、分式线性化、PCRB 仿射、感知 SINR 线性化、功率约束）
+    \item \textbf{Step 2 (SDR) 在 $K>2$ 时为紧致松弛}：$P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$
+    \item \textbf{Step 7 (AP 启发式)}：外层 AP 集合由大尺度衰落排序选取，\textbf{无理论最优性保证}——既可能给出原问题下界，也可能因启发式选错 AP 而给出不可比较的目标值
+\end{itemize}
+故 $K \leq 2$ 时 (P3) $\equiv$ (P1)；$K > 2$ 时 $P_{\text{P3}}^* \leq P_{\text{P1}}^*$。复杂度上界由内点法对 SDP 的标准结论给出（Nesterov-Todd 路径跟踪，最坏情况 $O(n^3 L)$，其中 $n$ 为决策变量维数，$L$ 为输入数据位长）。
 \end{proof}
 
 \end{document}

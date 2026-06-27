@@ -45,6 +45,32 @@ $$
 
 ---
 
+## 1.5. 中间问题 (P2) — 协方差提升（等价 lifted 形式）
+
+为后续 SDR 做准备，将 (P1) 中向量变量提升为协方差矩阵：
+
+$$
+\boxed{
+\begin{aligned}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\[4pt]
+\text{s.t.} \quad & \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P2-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track}, p}, \quad \forall p \tag{P2-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P2-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \tag{P2-C7} \\
+& b_{mp} \in \{0, 1\}, \quad \forall m, p \tag{P2-C8}
+\end{aligned}}
+$$
+
+其中 $\mat{W}_k = \mat{w}_k \mat{w}_k^H \in \mathbb{H}_+^{MN_t}$，$\mat{R}_X = \sum_k \mat{W}_k + \mat{Z}$，$\mat{E}_m$ 为 AP $m$ 选择矩阵。
+
+**重要**：通信 SINR (P2-C1) 在 (P2) 中以**二次型 + S-Procedure 形式**给出（详见 §3 Step 2-3）。
+
+**(P1) $\Leftrightarrow$ (P2) 严格等价**：变量映射 $\mat{w}_k \leftrightarrow \mat{W}_k = \mat{w}_k \mat{w}_k^H$ 为一一对应（rank-1 约束保证可恢复），所有约束都通过 $\tr(\mat{x}\mat{x}^H \mat{W}) = \mat{x}^H \mat{W} \mat{x}$ 等恒等式等价改写。**无任何松弛**。
+
+---
+
 ## 2. 非凸性来源（6 项）
 
 | # | 来源 | 受影响约束 | 非凸性质 | 数学定义违反 |
@@ -68,11 +94,11 @@ $$
 
 ---
 
-## 3. 七步凸化推导链
+## 3. 六步凸化推导链（从 (P2) 出发）
 
-### Step 1: 全局变量提升（提升到协方差形式）— **等价变换**
+### Step 1: SDR 松弛（Semidefinite Relaxation）— **紧致松弛**
 
-**目标**: 消除 (5b)-(5d) 中的双线性 $\mathbf{h}^H \mathbf{w}$。
+**目标**: 消除 rank-1 约束（NC4），即丢弃 (P2-C7)。
 
 **变换前** (双线性):
 $$
@@ -148,8 +174,6 @@ $$
 
 ### Step 3: S-Procedure 处理鲁棒 SINR — **精确等价**
 
-**目标**: 消除半无限约束中的 $\min_{\Delta\mathbf{h}}$（NC2）。
-
 **变换前**（半无限约束）:
 $$
 \min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_h \|\hat{\mathbf{h}}_k\|} \frac{|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)|}{\sum_{j\neq k}|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_j(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)| + \sigma_c^2} \geq \gamma_k
@@ -174,13 +198,13 @@ $$
 
 ---
 
-### Step 4: SINR 分式线性化 — **等价变换**
+### Step 2: SINR 分式改写为二次型 — **等价预处理**
 
-**目标**: 消除 SINR 分式结构（NC1）。
+**目标**: 把 SINR 分式形式改写为 S-Procedure 可处理的二次型。
 
 **变换前**（分式）:
 $$
-\frac{|\hat{\mathbf{h}}_k^H \mathbf{W}_k \hat{\mathbf{h}}_k|}{\sum_{j\neq k}|\hat{\mathbf{h}}_k^H \mathbf{W}_j \hat{\mathbf{h}}_k| + \sigma_c^2} \geq \gamma_k^{\text{robust}}
+\frac{|\hat{\mathbf{h}}_k^H \mathbf{W}_k \hat{\mathbf{h}}_k|}{\sum_{j\neq k}|\hat{\mathbf{h}}_k^H \mathbf{W}_j \hat{\mathbf{h}}_k| + \sigma_c^2} \geq \gamma_k
 $$
 
 **变换**: 分母假设 > 0（可行性必要条件），交叉相乘。
@@ -207,11 +231,7 @@ $$
 
 ---
 
-### Step 5: 感知约束凸化 — **等价变换（PCRB） + 等价变换（SINR）**
-
-**目标**: 消除 (5c) 感知 SINR 分式和 (5d) PCRB 矩阵逆。
-
-#### 5a. PCRB 约束 (5d)
+### Step 4: 感知约束线性化 — **等价变换**
 
 **变换前**:
 $$
@@ -275,7 +295,7 @@ $$
 
 ---
 
-### Step 6: 功率约束保持线性 — **已是凸**
+### Step 5: 功率约束保持线性 — **已是凸**
 
 **目标**: 验证 (5f) 已为凸。
 
@@ -296,11 +316,7 @@ $$
 
 ---
 
-### Step 7: AP 选择变量的凸化 — **两步：外层启发式 + 内部完全凸**
-
-**目标**: 处理 (5e) 和 (5h) 的二进制约束（NC3）。
-
-#### 7a. 内部 SDP 固定 AP 子问题（无二进制）
+### Step 6: AP 选择变量的凸化 — **两步：外层启发式 + 内部完全凸**
 
 **变换**: 给定 AP 集合 $\mathcal{M}^{\text{all}}$（由 Step 7b 确定），提取子信道并求解 **仅含连续变量的凸 SDP**（无 $b_{mp}$）。
 
@@ -322,9 +338,9 @@ $$
 
 ---
 
-## 4. 最终凸问题 (P3)
+## 4. 最终凸问题 (P3) — (P2) 的凸松弛
 
-经过 Step 1-7，原问题 (P1) 化为以下**标准凸 SDP**：
+经过 Step 1-6，原问题 (P1) 经 (P2) 提升后化为以下**标准凸 SDP** (P3)：
 
 $$
 \boxed{
@@ -366,18 +382,16 @@ $$
 
 ## 5. 每步变换的等价性总结表
 
-| Step | 变换 | 影响的非凸源 | 类型 | 性能影响 |
+| 步骤 | 变换 | 影响的非凸源 | 类型 | 性能影响 |
 |---|---|---|---|---|
-| 1 | 变量提升 $(\mathbf{w}_k\mathbf{w}_k^H \to \mathbf{W}_k)$ | NC1, NC5 | **严格等价** | 无损失 |
-| 2 | SDR 松弛（丢 rank-1） | NC4 | **紧致松弛**（$K\leq 2$ 等价） | $K>2$: 下界，$O(1/L)$ 高斯随机化恢复 |
+| 1 | SDR 松弛（丢 (P2-C7) rank-1） | NC4 | **紧致松弛**（$K\leq 2$ 等价） | $K>2$: 下界，$O(1/L)$ 高斯随机化恢复 |
+| 2 | SINR 分式改写为二次型 | NC1（预处理） | **严格等价** | 无损失 |
 | 3 | S-Procedure 精确 LMI（含松弛变量 $\mu_k$） | NC2 | **精确等价** | 无损失（S-Procedure 充要条件） |
-| 4 | SINR 分式线性化 | NC1（通信部分） | **严格等价** | 无损失 |
-| 5a | PCRB 线性化（FIM 仿射） | NC6 | **严格等价**（Assumption 1） | 无损失 |
-| 5b | 感知 SINR 线性化（rank-1 MF 最优） | NC1（感知部分） | **严格等价** | 无损失 |
-| 6 | 功率约束（已凸） | — | **已是凸** | 无损失 |
-| 7 | AP 选择两步分解 | NC3 | **工程启发式解** | 外层选择无理论最优性保证（非上界非下界） |
+| 4 | 感知约束线性化（PCRB 仿射 + 感知 SINR 线性化） | NC6, NC1（感知） | **严格等价** | 无损失 |
+| 5 | 功率约束（已凸） | — | **已是凸** | 无损失 |
+| 6 | AP 选择两步分解 | NC3 | **工程启发式解** | 外层选择无理论最优性保证（非上界非下界） |
 
-**总结**: 通信-感知物理层的凸化（Step 1-6）**全部严格等价**（Step 3 采用 S-Procedure 精确 LMI，无保守近似），仅 Step 2 在 $K > 2$ 时为紧致松弛；AP 选择（Step 7）采用启发式以保证多项式复杂度。
+**总结**: 通信-感知物理层的凸化（Step 1-5）**全部严格等价**（Step 1 SDR 在 $K \leq 2$ 时为紧致，Step 3 S-Procedure 精确 LMI 无保守近似），仅 Step 1 在 $K > 2$ 时为下界；AP 选择（Step 6）采用启发式以保证多项式复杂度。**(P1) ↔ (P2) 严格等价 + (P2) → (P3) 的 6 步凸化** 是完整变换链。
 
 ---
 

@@ -169,13 +169,28 @@ NC6 & Matrix inverse in PCRB & (P1-C3) & Nonlinear FIM dependence \\
 \end{tabular}
 \end{table}
 
+\subsection{Covariance-Lifted Form (P2)}
+
+To set up the SDR in the next subsection, we first lift the per-AP beamforming vectors to their covariance form. Define $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$ where $\vect{w}_k = [\vect{w}_{1,k}^T, \ldots, \vect{w}_{M,k}^T]^T$, and aggregate the sensing covariances as $\mat{Z} = \sum_{m=1}^M \mat{Z}_m$. The lifted problem \textbf{(P2)} is:
+\begin{align}
+\min_{\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad & \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P2-C2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P2-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P2-C4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0} \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \tag{P2-C7} \\
+& b_{mp} \in \{0,1\}, \quad \forall m, p \tag{P2-C8}
+\end{align}
+where $\mat{R}_X = \sum_k \mat{W}_k + \mat{Z}$ and the sensing SINR / PCRB / power constraints are already in lifted form (their derivations are deferred to Steps 2--5 for clarity). \textbf{(P1) $\Leftrightarrow$ (P2)} is a strict equivalence: the rank-one constraint (P2-C7) guarantees recoverability of $\vect{w}_k$ from $\mat{W}_k$, and all other constraints are rewritten via the identity $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$ with no relaxation.
+
 \subsection{Convexification Procedure}
 
-To address the aforementioned non-convexity, we develop a systematic convexification procedure that transforms the original problem (P1) into a standard convex semidefinite program (SDP). The procedure consists of seven steps, each targeting a specific non-convex source while preserving the problem structure as much as possible.
+To address the aforementioned non-convexity, we develop a systematic convexification procedure that transforms the lifted problem (P2) into a standard convex semidefinite program (P3). The procedure consists of six steps, each targeting a specific non-convex source while preserving the problem structure as much as possible.
 
-\textbf{Step 1: Covariance matrix lifting.} We first lift the per-AP vector variables to the global matrix space. The cooperative beamforming vector $\vect{w}_k \in \mathbb{C}^{MN_t}$ is defined as the concatenation of per-AP beams $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, i.e., $\vect{w}_k = [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T$, and the per-AP selection matrix $\mat{E}_m = \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t})$ extracts AP $m$'s sub-vector. We then define $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}^{MN_t}$ for all $k$, $\mat{Z} = \sum_{m=1}^M \mat{Z}_m \in \mathbb{H}^{MN_t}$, and the aggregate transmit covariance $\mat{R}_X = \sum_{k=1}^K \mat{W}_k + \mat{Z}$. The per-AP power constraint $\sum_k \norm{\vect{w}_{m,k}}^2 + \tr(\mat{Z}_m) \leq P_{\max}$ becomes $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$. This transformation is strictly equivalent since there is a one-to-one mapping between $\vect{w}_k$ and rank-one $\mat{W}_k$. The lifting linearizes the objective function ($\norm{\vect{w}_k}^2 = \tr(\mat{W}_k)$), the per-AP power constraints, and the SINR expressions ($|\vect{h}_k^H \vect{w}_k|^2 = \tr(\vect{h}_k \vect{h}_k^H \mat{W}_k)$). However, the rank-one constraint $\rank(\mat{W}_k) = 1$ remains non-convex.
+\textbf{Step 1: Semidefinite relaxation.} We drop the rank-one constraint (P2-C7) and only require $\mat{W}_k \succeq \mat{0}$, which enlarges the feasible set from the non-convex rank-one manifold to the convex PSD cone. This is a tight relaxation when $K \leq 2$, where the optimal $\mat{W}_k^*$ naturally satisfies $\rank(\mat{W}_k^*) = 1$. For $K > 2$, SDR provides a lower bound on the original problem, and Gaussian randomization can recover a feasible rank-one solution with bounded performance loss $O(1/L)$.
 
-\textbf{Step 2: Semidefinite relaxation.} We relax the rank-one constraint by only requiring $\mat{W}_k \succeq \mat{0}$, which enlarges the feasible set from the non-convex rank-one manifold to the convex PSD cone. This is a tight relaxation when $K \leq 2$, where the optimal $\mat{W}_k^*$ naturally satisfies $\rank(\mat{W}_k^*) = 1$. For $K > 2$, SDR provides a lower bound on the original problem, and Gaussian randomization can recover a feasible rank-one solution with bounded performance loss $O(1/L)$.
+\textbf{Step 2: SINR fractional rewriting.} Before applying the S-Procedure, we rewrite the SINR fraction (P2-C1) as a quadratic inequality by cross-multiplying the positive denominator. This is a strict equivalence, not a relaxation: $\text{tr}(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j \neq k} \text{tr}(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2$. The result is a quadratic form in $\vect{h}_k$, the input required by the S-Procedure.
 
 \textbf{Step 3: S-Procedure for robust SINR.} The worst-case SINR constraint is semi-infinite due to the relative uncertainty set $\norm{\Delta\vect{h}_k} \leq \epsilon_h \norm{\hat{\vect{h}}_k}$. We rewrite it as a quadratic inequality in $\Delta\vect{h}_k$: $\tilde{f}_1(\Delta\vect{h}) = (\hat{\vect{h}}+\Delta\vect{h})^H \mat{A}_k (\hat{\vect{h}}+\Delta\vect{h}) - \sigma_c^2 \geq 0$, where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j\neq k} \mat{W}_j$. The uncertainty set is described by $\tilde{f}_2(\Delta\vect{h}) = \epsilon_h^2 \norm{\hat{\vect{h}}_k}^2 - \norm{\Delta\vect{h}_k}^2 \geq 0$. By the S-Procedure (which is necessary and sufficient for a single quadratic constraint over a norm ball), the semi-infinite worst-case constraint is equivalently transformed into the following linear matrix inequality with the slack variable $\mu_k \geq 0$:
 \begin{equation}
@@ -183,23 +198,17 @@ To address the aforementioned non-convexity, we develop a systematic convexifica
 \end{equation}
 This transformation is exact since the S-Procedure is necessary and sufficient for a single quadratic constraint over a norm ball.
 
-\textbf{Step 4: SINR fractional linearization.} After the S-Procedure, the SINR constraint still involves a fractional structure. Assuming the denominator is positive (which always holds since $\sigma_c^2 > 0$), we cross-multiply to obtain a linear inequality:
-\begin{equation}
-\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2, \quad \forall k
-\end{equation}
-where $\hat{\mat{H}}_k = \hat{\vect{h}}_k \hat{\vect{h}}_k^H$. This is a strict equivalence transformation for positive denominator.
+\textbf{Step 4: PCRB and sensing SINR linearization.} Under the assumption that the channel gradient $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$ (with $D$ the target state dimension) is known and constant in the current time slot, the Fisher information matrix becomes an affine function of $\mat{R}_X$. Defining $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \} \in \mathbb{H}_+^{MN_t}$ (note: $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{MN_t \times D}$ multiplied by $\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \in \mathbb{C}^{D \times MN_t}$ yields an $MN_t \times MN_t$ Hermitian PSD matrix; PSD follows from $\vect{x}^H \mat{A}^H \mat{A} \vect{x} = \|\mat{A}\vect{x}\|^2 \geq 0$), the PCRB constraint simplifies to $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$, which is linear in $\mat{R}_X$. Similarly, the sensing SINR constraint $\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$ (note the linear — not squared — definition) becomes $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$, which is also linear in $\mat{Z}$.
 
-\textbf{Step 5: PCRB and sensing SINR linearization.} Under the assumption that the channel gradient $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$ (with $D$ the target state dimension) is known and constant in the current time slot, the Fisher information matrix becomes an affine function of $\mat{R}_X$. Defining $\mat{F}_p = \frac{2}{\sigma_s^2} \Real\{ \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \} \in \mathbb{H}_+^{MN_t}$ (note: $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H \in \mathbb{C}^{MN_t \times D}$ multiplied by $\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \in \mathbb{C}^{D \times MN_t}$ yields an $MN_t \times MN_t$ Hermitian PSD matrix; PSD follows from $\vect{x}^H \mat{A}^H \mat{A} \vect{x} = \|\mat{A}\vect{x}\|^2 \geq 0$), the PCRB constraint simplifies to $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}$, which is linear in $\mat{R}_X$. Similarly, the sensing SINR constraint $\text{SINR}_{S,p} = \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}$ (note the linear — not squared — definition) becomes $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$, which is also linear in $\mat{Z}$.
+\textbf{Step 5: Power constraint.} The per-AP power constraint $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$ is already convex. In the lifted domain, it becomes $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$, which is a linear inequality. No additional transformation is needed.
 
-\textbf{Step 6: Power constraint.} The per-AP power constraint $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \leq P_{\max}$ is already convex. In the lifted domain, it becomes $\tr(\mat{E}_m \mat{R}_X) \leq P_{\max}$, which is a linear inequality. No additional transformation is needed.
+\textbf{Step 6: AP selection decomposition.} The binary AP selection constraint is NP-hard in general. We adopt a two-step decomposition: first, a heuristic outer step selects the top-$N_{\text{req}}$ APs for each target based on large-scale fading; then, the inner step solves the convex SDP with the fixed AP set. This yields a polynomial-time algorithm with suboptimal but engineering-acceptable performance.
 
-\textbf{Step 7: AP selection decomposition.} The binary AP selection constraint is NP-hard in general. We adopt a two-step decomposition: first, a heuristic outer step selects the top-$N_{\text{req}}$ APs for each target based on large-scale fading; then, the inner step solves the convex SDP with the fixed AP set. This yields a polynomial-time algorithm with suboptimal but engineering-acceptable performance.
-
-Table \ref{tab:convex_chain} summarizes the seven-step convexification chain.
+Table \ref{tab:convex_chain} summarizes the six-step convexification chain (applied to (P2)).
 
 \begin{table}[htbp]
 \centering
-\caption{Seven-step convexification method chain}\label{tab:convex_chain}
+\caption{Six-step convexification method chain (applied to (P2))}\label{tab:convex_chain}
 \begin{tabular}{cllll}
 \toprule
 Step & Transformation & Eliminates & Type & Result \\
@@ -216,9 +225,9 @@ Step & Transformation & Eliminates & Type & Result \\
 \end{tabular}
 \end{table}
 
-\subsection{Final Convex SDP Problem}
+\subsection{Final Convex SDP Problem (P3)}
 
-Combining all the transformations described above, the original non-convex problem (P1) is reformulated as the following standard convex SDP:
+Combining all six transformations applied to the lifted problem (P2), the original non-convex problem (P1) is reformulated as the following standard convex SDP (via the chain (P1) $\Leftrightarrow$ (P2) $\to$ (P3)):
 \begin{align}
 \min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad 
 & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
@@ -253,11 +262,18 @@ where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\
 \end{table}
 
 \begin{theorem}[Problem Convexity and Equivalence]\label{thm:main}
-Problem (P3) is a standard convex SDP. All constraints are either LMIs or linear inequalities, and the objective is linear. For $K \leq 2$, (P3) is equivalent to (P1) since the SDR is tight. For $K > 2$, (P3) provides a lower bound on (P1). Furthermore, (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\!\big((K+1)^3 (MN_t)^6 (K+P+M)\big)$; simplified order $O((K M N_t^2)^{3.5})$.
+Problem (P3) is a standard convex SDP. All constraints are either LMIs or linear inequalities, and the objective is linear. For $K \leq 2$, (P3) is equivalent to (P1) since (P1) $\Leftrightarrow$ (P2) is strict, and SDR is tight on (P2). For $K > 2$, (P3) provides a lower bound on (P1). Furthermore, (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\!\big((K+1)^3 (MN_t)^6 (K+P+M)\big)$; simplified order $O((K M N_t^2)^{3.5})$.
 \end{theorem}
 
 \begin{proof}
-Each constraint in (P3) is either an LMI (P3-C1), a linear inequality (P3-C2, P3-C3, P3-C4), or a PSD cone constraint (P3-C5, P3-C6). The objective is linear. Therefore (P3) is a convex SDP. Steps 1, 3, 4, 5a, 5b, 6 are strict equivalences. Step 2 is a tight relaxation when $K \leq 2$ (SDR is tight for $K \leq 2$ and provides a lower bound for $K > 2$). Step 7 is a heuristic decomposition (outer AP selection by large-scale fading ordering \textbf{has no theoretical optimality guarantee}---it is neither a lower bound nor an upper bound; the inner SDP on the fixed AP set is convex and tight). Therefore, for $K \leq 2$, (P3) $\equiv$ (P1); for $K > 2$, $P_{\text{P3}}^* \leq P_{\text{P1}}^*$. The complexity follows from the standard interior-point complexity $O(n^3 L)$ for SDPs, where $n = O(K(MN_t)^2)$ is the decision-variable dimension and $L$ is the input bit-length.
+Each constraint in (P3) is either an LMI (P3-C1), a linear inequality (P3-C2, P3-C3, P3-C4), or a PSD cone constraint (P3-C5, P3-C6). The objective is linear. Therefore (P3) is a convex SDP. The transformation chain is:
+\begin{itemize}
+    \item \textbf{(P1) $\Leftrightarrow$ (P2)}: strict equivalence (variable lifting with rank-one constraint)
+    \item \textbf{Step 1 (SDR)}: tight relaxation when $K \leq 2$, lower bound when $K > 2$
+    \item \textbf{Steps 2--5}: strict equivalences (fractional rewriting, S-Procedure, PCRB/SINR linearization, power constraint already convex)
+    \item \textbf{Step 6 (AP selection)}: heuristic decomposition with no theoretical optimality guarantee
+\end{itemize}
+Therefore, for $K \leq 2$, (P3) $\equiv$ (P1); for $K > 2$, $P_{\text{P3}}^* \leq P_{\text{P1}}^*$. The complexity follows from the standard interior-point complexity $O(n^3 L)$ for SDPs, where $n = O(K(MN_t)^2)$ is the decision-variable dimension and $L$ is the input bit-length.
 \end{proof}
 
 %==============================================================================
