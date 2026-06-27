@@ -71,26 +71,9 @@ $$
 
 ---
 
-## 2. 非凸性来源（6 项）
+## 2. 非凸性来源
 
-| # | 来源 | 受影响约束 | 非凸性质 | 数学定义违反 |
-|---|---|---|---|---|
-| NC1 | **SINR 分式结构** | (5b), (5c) | 分母为多波束二次型之和 | 凸集对乘法不封闭 |
-| NC2 | **半无限鲁棒约束** | (5b), (5c) | 变量在 $\min_{\Delta\mathbf{h}}$ 内层 | 无限约束违反凸性 |
-| NC3 | **二进制组合约束** | (5h) | $b_{mp} \in \{0,1\}$ 是离散集 | 离散集非凸 |
-| NC4 | **rank-1 隐含约束** | (5a)-(5f) | $\mathbf{W}_k = \mathbf{w}_k\mathbf{w}_k^H$ 要求秩一 | rank-1 集合非凸 |
-| NC5 | **波束-信道双线性耦合** | (5b), (5d) | $|\mathbf{h}_k^H \mathbf{w}_k|^2$ 关于 $(\mathbf{h},\mathbf{w})$ 双线性 | 双线性非凸 |
-| NC6 | **矩阵逆约束** | (5d) | PCRB 含 $\mathbf{J}^{-1}$ 的迹 | 逆映射保凸性的充要条件不满足 |
-
-下表给出**凸性判定的数学依据**（回忆：凸集 $\mathcal{C}$ 满足 $\forall \mathbf{x},\mathbf{y}\in\mathcal{C}, \forall \theta\in[0,1]: \theta\mathbf{x}+(1-\theta)\mathbf{y}\in\mathcal{C}$）：
-
-| 约束 | 非凸反例 | 凸性状态 |
-|---|---|---|
-| $\|\mathbf{w}\|_2^2 \leq \alpha$ | $\mathbf{w}_1, \mathbf{w}_2$ 各自满足，但 $\theta\mathbf{w}_1+(1-\theta)\mathbf{w}_2$ 不满足 | **凸** |
-| $\text{tr}(\mathbf{H}_k \mathbf{W}_k) \geq \beta$（$\mathbf{W}_k \succeq 0$）| 半正定锥 $\mathbb{S}_+$ 是凸集，线性矩阵不等式 | **凸** |
-| $\text{rank}(\mathbf{W}_k) = 1$ | rank-1 集合不是仿射集 | **非凸** |
-| $\frac{x^2}{y} \leq \alpha, y > 0$ | 分式结构不保持凸性 | **非凸** |
-| $b \in \{0,1\}$ | 离散点集 | **非凸** |
+Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP.
 
 ---
 

@@ -142,7 +142,7 @@ y_{S,p} = \sum_{m=1}^M \vect{g}_{m,p}^H \mat{Z}_m \vect{g}_{m,p} + n_{S,p}
 其中，$\gamma_k$ 和 $\gamma_S^{\text{PoD}}$ 分别为通信用户 $k$ 的 SINR 门限与感知检测概率门限，$\Gamma_{\text{Track},p}$ 为目标 $p$ 的跟踪精度门限（FIM 迹约束），$N_{\text{req}}$ 为每个目标所需服务 AP 数，$P_{\max}$ 为单 AP 最大发射功率，$b_{mp} \in \{0,1\}$ 为 AP $m$ 是否服务目标 $p$ 的二进制指示变量。
 
 \begin{remark}
-Problem (P1) is a mixed-integer nonlinear programming (MINLP) problem. The non-convexity arises from: (i) the SINR constraints involving ratios of quadratic functions; (ii) the coupling between communication beamforming vectors $\vect{w}_{m,k}$ and sensing covariance matrices $\mat{Z}_m$ in the power constraints; (iii) the binary AP selection variables $b_{mp}$; and (iv) the rank-one constraint implicitly required for physical beamforming implementation. The following sections develop a systematic convexification procedure to address these challenges.
+Problem (P1) is a mixed-integer nonlinear programming (MINLP) problem. The SINR constraint is non-convex due to a fractional quadratic form with worst-case CSI uncertainty; the power, PCRB, and rank-one constraints induce variable-coupling non-convexity; and the AP-selection constraint is a binary discrete set. The following subsection develops a systematic convexification procedure to address these challenges.
 \end{remark}
 %==============================================================================
 \section{Problem Convexification and SDP Reformulation}
@@ -150,39 +150,7 @@ Problem (P1) is a mixed-integer nonlinear programming (MINLP) problem. The non-c
 
 \subsection{Non-Convexity Analysis}
 
-Problem (P1) is a mixed-integer nonlinear programming (MINLP) problem. The non-convexity arises from multiple sources: the SINR constraints involve ratios of quadratic functions (NC1), the worst-case CSI uncertainty makes the communication SINR constraint semi-infinite (NC2), the binary AP selection variables create a discrete feasible set (NC3), the rank-one constraint required for physical beamforming implementation defines a non-convex manifold (NC4), the coupling between communication beamforming vectors and sensing covariance matrices introduces bilinear terms (NC5), and the PCRB constraint involves a matrix inverse that depends nonlinearly on the optimization variables (NC6). Table \ref{tab:nonconvex} summarizes these non-convexity sources.
-
-\begin{table}[htbp]
-\centering
-\caption{Non-convexity source identification for problem (P1)}\label{tab:nonconvex}
-\begin{tabular}{clll}
-\toprule
-ID & Source & Affected constraints & Convexity violation \\
-\midrule
-NC1 & SINR fractional structure & (P1-C1), (P1-C2) & Ratio of quadratics \\
-NC2 & Worst-case CSI uncertainty & (P1-C1) & Semi-infinite constraint \\
-NC3 & Binary AP selection & (P1-C4), (P1-C7) & Discrete set $\{0,1\}$ \\
-NC4 & Rank-one requirement & (P1-C8) & Non-convex manifold \\
-NC5 & Variable coupling & (P1-C1)--(P1-C5) & Bilinear terms \\
-NC6 & Matrix inverse in PCRB & (P1-C3) & Nonlinear FIM dependence \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Covariance-Lifted Form (P2)}
-
-To set up the SDR in the next subsection, we first lift the per-AP beamforming vectors to their covariance form. Define $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$ where $\vect{w}_k = [\vect{w}_{1,k}^T, \ldots, \vect{w}_{M,k}^T]^T$, and aggregate the sensing covariances as $\mat{Z} = \sum_{m=1}^M \mat{Z}_m$. The lifted problem \textbf{(P2)} is:
-\begin{align}
-\min_{\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
-\text{s.t.} \quad & \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P2-C2} \\
-& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P2-C3} \\
-& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P2-C4} \\
-& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P2-C5} \\
-& \mat{Z} \succeq \mat{0} \tag{P2-C6} \\
-& \rank(\mat{W}_k) = 1, \quad \forall k \tag{P2-C7} \\
-& b_{mp} \in \{0,1\}, \quad \forall m, p \tag{P2-C8}
-\end{align}
-where $\mat{R}_X = \sum_k \mat{W}_k + \mat{Z}$ and the sensing SINR / PCRB / power constraints are already in lifted form (their derivations are deferred to Steps 2--5 for clarity). \textbf{(P1) $\Leftrightarrow$ (P2)} is a strict equivalence: the rank-one constraint (P2-C7) guarantees recoverability of $\vect{w}_k$ from $\mat{W}_k$, and all other constraints are rewritten via the identity $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$ with no relaxation.
+Problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following subsection, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP.
 
 \subsection{Convexification Procedure}
 
