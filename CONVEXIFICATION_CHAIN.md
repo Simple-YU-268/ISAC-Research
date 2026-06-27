@@ -80,13 +80,17 @@ $$
 $$
 
 **变换**:
-- 定义通信全局协方差矩阵 $\mathbf{W}_k \triangleq \mathbf{w}_k \mathbf{w}_k^H \in \mathbb{C}^{MN_t \times MN_t}$
+- 定义通信全局协方差矩阵 $\mathbf{W}_k \triangleq \mathbf{w}_k \mathbf{w}_k^H \in \mathbb{C}^{MN_t \times MN_t}$，其中 $\mathbf{w}_k = [\mathbf{w}_{1,k}^T, \ldots, \mathbf{w}_{M,k}^T]^T$ 为所有 AP 到用户 $k$ 的协作合并波束
 - 定义感知全局协方差 $\mathbf{Z} \triangleq \sum_p \mathbf{z}_p \mathbf{z}_p^H \in \mathbb{C}^{MN_t \times MN_t}$
+- 定义总发射协方差 $\mathbf{R}_X \triangleq \sum_{k=1}^K \mathbf{W}_k + \mathbf{Z}$
+- 定义每 AP 选择矩阵 $\mathbf{E}_m = \text{diag}(\underbrace{0,\ldots,0}_{(m-1)N_t}, \underbrace{1,\ldots,1}_{N_t}, \underbrace{0,\ldots,0}_{(M-m)N_t})$，使 $\mathbf{E}_m \mathbf{w}_k$ 提取 AP $m$ 分量、$\tr(\mathbf{E}_m \mathbf{R}_X) = \sum_k \|\mathbf{w}_{m,k}\|^2 + \tr(\mathbf{Z}_m)$ 为该 AP 总功率
 
 **变换后**:
 $$
 \mathbf{h}_k^H \mathbf{W}_k \mathbf{h}_k = \text{tr}(\mathbf{H}_k \mathbf{W}_k), \quad \mathbf{H}_k \triangleq \mathbf{h}_k \mathbf{h}_k^H \tag{S1.1}
 $$
+
+每 AP 功率：$\sum_k \|\mathbf{w}_{m,k}\|^2 + \text{tr}(\mathbf{Z}_m) = \text{tr}(\mathbf{E}_m \mathbf{R}_X)$
 
 **等价性证明**:
 
@@ -151,12 +155,14 @@ $$
 \min_{\|\Delta\mathbf{h}_k\| \leq \epsilon_h \|\hat{\mathbf{h}}_k\|} \frac{|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_k (\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)|}{\sum_{j\neq k}|(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)^H \mathbf{W}_j(\hat{\mathbf{h}}_k + \Delta\mathbf{h}_k)| + \sigma_c^2} \geq \gamma_k
 $$
 
-**变换**: 定义 $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j\neq k} \mathbf{W}_j$。由 S-Procedure，半无限约束等价于：
+**变换**: 定义 $\mathbf{A}_k = \frac{1}{\gamma_k} \mathbf{W}_k - \sum_{j\neq k} \mathbf{W}_j$。由 S-Procedure（球上二次约束充要条件，含 $\mu_k \geq 0$ 松弛变量），半无限约束等价于：
 
 **变换后**（LMI）：
 $$
-\exists \mu_k \geq 0 : \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\ \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mathbf{0} \tag{S3.1}
+\exists \mu_k \geq 0 : \begin{bmatrix} \mathbf{A}_k + \mu_k \mathbf{I} & \mathbf{A}_k \hat{\mathbf{h}}_k \\[1.2ex] \hat{\mathbf{h}}_k^H \mathbf{A}_k & \hat{\mathbf{h}}_k^H \mathbf{A}_k \hat{\mathbf{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \norm{\hat{\mathbf{h}}_k}^2 \end{bmatrix} \succeq \mathbf{0} \tag{S3.1}
 $$
+
+**详细推导**：将最坏 SINR 改写为关于 $\Delta\mathbf{h}_k$ 的二次不等式 $\tilde{f}_1(\Delta\mathbf{h}) = (\hat{\mathbf{h}}+\Delta\mathbf{h})^H \mathbf{A}_k(\hat{\mathbf{h}}+\Delta\mathbf{h}) - \sigma_c^2 \geq 0$，不确定集由 $\tilde{f}_2(\Delta\mathbf{h}) = \epsilon_h^2 \norm{\hat{\mathbf{h}}}^2 - \norm{\Delta\mathbf{h}}^2 \geq 0$ 描述。S-Procedure 给出："$\exists \mu_k \geq 0$ 使 $\tilde{f}_1 - \mu_k \tilde{f}_2 \geq 0, \forall \Delta\mathbf{h}$" $\Leftrightarrow$ 上述 LMI (S3.1)。充分性显然；必要性由 $\mathbf{A}_k + \mu_k \mathbf{I} \succeq \mathbf{0}$ 与 Lagrangian 对偶保证。
 
 **等价/上下界**: **精确等价**（S-Procedure 对范数球上单个二次约束是充要条件）。
 
@@ -179,9 +185,9 @@ $$
 
 **变换**: 分母假设 > 0（可行性必要条件），交叉相乘。
 
-**变换后**（线性矩阵不等式）：
+**变换后**（线性不等式）：
 $$
-\text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k \sum_{j\neq k} \text{tr}(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k \sigma_c^2 \tag{S4.1}
+\tr(\hat{\mathbf{H}}_k \mathbf{W}_k) - \gamma_k \sum_{j\neq k} \tr(\hat{\mathbf{H}}_k \mathbf{W}_j) \geq \gamma_k \sigma_c^2 \tag{S4.1}
 $$
 
 其中 $\hat{\mathbf{H}}_k = \hat{\mathbf{h}}_k \hat{\mathbf{h}}_k^H$，$\gamma_k$ 为原始 SINR 门限（S-Procedure 已精确处理鲁棒性，此处无需额外缩放）。
@@ -301,9 +307,9 @@ $$
 > 1. **外层**（离散）: 基于大尺度衰落 $\text{PL}(d_{m,p})$ 排序选择 top-$N_{\text{req}}$ AP，确定 $\mathcal{M}^{\text{all}}$
 > 2. **内层**（凸）: 在固定 AP 集合上求解凸 SDP (P3)
 >
-> 这不是全局最优，但**复杂度可控**且工程实践证明足够（详见 `ADVANCED_MATHEMATICAL_ANALYSIS.md §4` 的复杂度下界证明）。
+> 这不是全局最优（**无理论下界或上界保证**），但**复杂度可控**且工程实践证明足够（详见 `ADVANCED_MATHEMATICAL_ANALYSIS.md §4` 的复杂度下界证明）。
 
-**等价/上下界**: **启发式下界**（外层选择不一定最优，但内层 SDP 是凸紧的；最终目标值是原问题的下界）。
+**等价/上下界**: **工程启发式解**（外层选择**无理论最优性保证**——既不保证下界也不保证上界；内层 SDP 在固定 AP 集上凸紧）。
 
 ---
 
@@ -360,7 +366,7 @@ $$
 | 5a | PCRB 线性化（FIM 仿射） | NC6 | **严格等价**（Assumption 1） | 无损失 |
 | 5b | 感知 SINR 线性化（rank-1 MF 最优） | NC1（感知部分） | **严格等价** | 无损失 |
 | 6 | 功率约束（已凸） | — | **已是凸** | 无损失 |
-| 7 | AP 选择两步分解 | NC3 | **启发式下界** | 外层选择可能非最优 |
+| 7 | AP 选择两步分解 | NC3 | **工程启发式解** | 外层选择无理论最优性保证（非上界非下界） |
 
 **总结**: 通信-感知物理层的凸化（Step 1-6）**全部严格等价**（Step 3 采用 S-Procedure 精确 LMI，无保守近似），仅 Step 2 在 $K > 2$ 时为紧致松弛；AP 选择（Step 7）采用启发式以保证多项式复杂度。
 
@@ -371,8 +377,8 @@ $$
 | 问题 | 形式 | 求解器 | 复杂度 | $M=16, N_t=4, K=10$ 时求解时间 |
 |---|---|---|---|---|
 | (P1) | MINLP（混合整数非凸） | 无通用算法 | NP-hard | — |
-| (P3) | 凸 SDP | MOSEK / SeDuMi / SDPT3 | $O((MN_t)^{3.5})$ | 5-10 秒 |
-| (P3) + 内层固定 AP | 凸 SDP | 同上 | $O((MN_t^{\text{all}})^{3.5})$ | 5-10 秒 |
+| (P3) | 凸 SDP | MOSEK / SeDuMi / SDPT3 | $O((K+1)^3 (MN_t)^6 \cdot (K+P+M))$，简化量级 $O((K M N_t^2)^{3.5})$ | 5-10 秒 |
+| (P3) + 内层固定 AP | 凸 SDP | 同上 | $O((K+1)^3 (M N_t^{\text{all}})^6 \cdot (K+P+M))$ | 5-10 秒 |
 
 凸化将**NP-hard 问题**转化为**多项式时间可解的 SDP**，这是凸化方法的核心价值。
 
@@ -386,7 +392,7 @@ $$
 4. **命题 4（分式线性化等价性）**: $\frac{A}{B}\geq\gamma \iff A\geq\gamma B$（$B>0$）。
 5. **命题 5a（PCRB 线性化）**: $\text{tr}(\mathbf{J}_p^{\text{data}}) = \text{tr}(\mathbf{F}_p\mathbf{R}_X)$（Assumption 1）。
 6. **命题 5b（感知 SINR 线性化）**: $\frac{|\mathbf{g}_p^H \mathbf{Z} \mathbf{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}} \iff \text{tr}(\mathbf{G}_p \mathbf{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$（$\sigma_s^2 > 0$ 为常数）。
-7. **Remark 7.1（AP 选择启发式）**: 外层启发式 + 内层凸 SDP = 工程可处理下界。
+7. **Remark 7.1（AP 选择启发式）**: 外层启发式 + 内层凸 SDP = 工程可处理解（无理论最优性保证）。
 
 ---
 
@@ -405,11 +411,11 @@ $$
 > - Step 4：分式线性化（等价）
 > - Step 5a：PCRB 仿射展开（等价）
 > - Step 5b：感知 SINR 线性化（等价）
-> - Step 7：AP 选择两步分解（启发式下界）
+> - Step 7：AP 选择两步分解（工程启发式，无理论最优性保证）
 
 > **导师问题 3**: 凸化之后是什么公式？和之前的是否等价？还是 lower/upper bound？
 >
-> **答**: 最终凸形式为 §4 中的 (P3)，是标准 SDP。每步类型见 §5 总结表——5 步严格等价、1 步紧致松弛（$K\leq 2$ 等价）、1 步保守上界（1.75 dB 安全余量）、1 步启发式下界。
+> **答**: 最终凸形式为 §4 中的 (P3)，是标准 SDP。每步类型见 §5 总结表——5 步严格等价（Step 1, 3, 4, 5a, 5b）、1 步紧致松弛（$K\leq 2$ 等价，$K>2$ 下界）、1 步工程启发式（Step 7，无理论最优性保证）。
 
 > **导师问题 4**: 具体是哪一个怎么变，都要写清楚。
 >
