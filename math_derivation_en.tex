@@ -40,7 +40,7 @@
 \maketitle
 
 %==============================================================================
-\section{Original Problem}
+\section{Original Problem}\label{sec:p1}
 %==============================================================================
 
 The decision variables of the original problem (P1) are the per-AP beamforming vectors $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, the sensing covariance matrices $\mat{Z}_m \in \mathbb{H}_+^{N_t}$, and the AP selection indicators $b_{mp} \in \{0,1\}$:
@@ -131,6 +131,10 @@ The uncertainty set is described by the quadratic constraint $\tilde{f}_2(\Delta
 \end{equation}
 Sufficiency is immediate ($\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ directly yields $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ inside the ball); necessity follows from the condition $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ together with the Lagrangian dual. The new slack variable $\mu_k \geq 0$ is the S-Procedure multiplier.
 
+\begin{assumption}[Channel normalization]\label{ass:channel_norm}
+For all $k \in \mathcal{K}$, the channel estimate satisfies $\|\hat{\vect{h}}_k\|_2 = 1$. This normalization absorbs the $\mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2$ term in the (S3.1) LMI, so the final (P3-C1) form does not carry the $\|\hat{\vect{h}}_k\|^2$ factor. The equivalent un-normalized form is documented in MASTER\_CONSTRAINTS.md §6.
+\end{assumption}
+
 Next we address the sensing-side and tracking-accuracy constraints. The PCRB constraint (P2-C3) involves the trace of the Fisher information matrix---but the FIM itself is \textbf{affine} in $\mat{R}_X$, because $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ is determined by the target's predicted state in the current time slot and can be treated as a known constant. With $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$ ($D$ is the target state dimension), $\mat{J}_p^{\text{data}} \in \mathbb{C}^{D\times D}$, and its trace is converted into a linear function of $\mat{R}_X$ via the cyclic property $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$:
 \begin{align}
 \tr(\mat{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H\big) \Big\} \notag \\
@@ -169,13 +173,13 @@ Combining the six transformations from \S\ref{sec:convexification}, starting fro
 \min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad
 & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
 \text{s.t.} \quad
-& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \\
-& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \\
-& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \\
-& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \\
-& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \\
-& \mat{Z} \succeq \mat{0} \tag{P3-C6} \\
-& \mu_k \geq 0, \quad \forall k \tag{P3-C7}
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \label{eq:p3c1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \label{eq:p3c2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \label{eq:p3c3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \label{eq:p3c4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \label{eq:p3c5} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C6} \label{eq:p3c6} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C7} \label{eq:p3c7}
 \end{align}
 
 where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{F}_p$ is defined in Step 5a, and $\mat{E}_m$ is the AP selection matrix.

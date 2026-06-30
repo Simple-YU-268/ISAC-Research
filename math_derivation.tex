@@ -42,7 +42,7 @@
 \maketitle
 
 %==============================================================================
-\section{原始问题}
+\section{原始问题}\label{sec:p1}
 %==============================================================================
 
 原始 (P1) 问题的决策变量为 per-AP 波束 $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$、感知协方差 $\mat{Z}_m \in \mathbb{H}_+^{N_t}$、AP 选择指示 $b_{mp} \in \{0,1\}$：
@@ -133,6 +133,10 @@ $$
 \end{equation}
 充分性显然（$\tilde{f}_1 - \mu_k \tilde{f}_2 \succeq 0$ 直接给出 $\tilde{f}_1 \geq \mu_k \tilde{f}_2 \geq 0$ 在球内）；必要性由 $\mat{A}_k + \mu_k \mat{I} \succeq \mat{0}$ 与 Lagrangian 对偶保证。新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
 
+\begin{assumption}[信道归一化]\label{ass:channel_norm}
+对所有 $k \in \mathcal{K}$，信道估计满足 $\|\hat{\vect{h}}_k\|_2 = 1$。该归一化吸收进 LMI 矩阵 (S3.1) 右下角 $\mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2$ 项，使最终 (P3-C1) 公式不含 $\|\hat{\vect{h}}_k\|^2$。等价的未归一化形式见 MASTER\_CONSTRAINTS.md §6。
+\end{assumption}
+
 接下来处理感知侧与跟踪精度约束。PCRB 约束 (P2-C3) 涉及 Fisher 信息矩阵的迹——但 FIM 本身对 $\mat{R}_X$ 是\textbf{仿射}的，原因是 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p$ 在当前时隙由目标预测状态确定，可视为已知常数。在 $\nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times D}$（$D$ 为目标状态维度）下，$\mat{J}_p^{\text{data}} \in \mathbb{C}^{D\times D}$，其迹通过循环性质 $\tr(\mat{A}\mat{B}\mat{C}) = \tr(\mat{C}\mat{A}\mat{B})$ 化为对 $\mat{R}_X$ 的线性函数：
 \begin{align}
 \tr(\mat{J}_p^{\text{data}}) &= \frac{2}{\sigma_s^2} \Real\Big\{ \tr\big(\nabla_{\boldsymbol{\theta}_p}^H \vect{g}_p \cdot \mat{R}_X \cdot \nabla_{\boldsymbol{\theta}_p} \vect{g}_p^H\big) \Big\} \notag \\
@@ -172,13 +176,13 @@ per-AP 功率约束 (P2-C4) 在提升域下保持线性：利用 $\mat{E}_m$ 选
 \min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad 
 & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\
 \text{s.t.} \quad 
-& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \\
-& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \\
-& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \\
-& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \\
-& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \\
-& \mat{Z} \succeq \mat{0} \tag{P3-C6} \\
-& \mu_k \geq 0, \quad \forall k \tag{P3-C7}
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \label{eq:p3c1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \label{eq:p3c2} \\
+& \tr(\mat{F}_p \mat{R}_X) \geq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3} \label{eq:p3c3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4} \label{eq:p3c4} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C5} \label{eq:p3c5} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C6} \label{eq:p3c6} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C7} \label{eq:p3c7}
 \end{align}
 
 其中 $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$，$\mat{F}_p$ 在 Step 5a 中定义，$\mat{E}_m$ 为 AP 选择矩阵。
