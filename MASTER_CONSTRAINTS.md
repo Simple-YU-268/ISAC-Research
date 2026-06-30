@@ -191,9 +191,9 @@ Source: `math_derivation.tex` line 108–163 (逐步凸化) and line 193–200 (
 
 ## 8. Open issues (carried forward from 2026-06-30 audit)
 
-1. **Dead `??` cross-references in `convex_block_*.tex`**: After the `report*.tex` deletion, `convex_block_en.tex` and `convex_block_zh.tex` carry `\eqref{eq:lmi_comm}`, `\eqref{eq:sinr_sens_sdp}`, etc. that no longer resolve. pdflatex compile shows `??` for these. **Decision (2026-06-30)**: leave as `??`; this Markdown file is the human-readable substitute. The narrative prose and tables remain readable; only the displayed cross-reference numbers are lost. When the labels are reintroduced, the recommended naming is `eq:p3c1`–`eq:p3c7` (matches the inline `(P3-Cx)` tag and survives the en/zh translation boundary).
+1. **Dead `??` cross-references in `convex_block_*.tex`**: Resolved in commit `5c84426` (soft-reset in `19ff970`, then `convex_block_{en,zh}.tex` deleted in `19ff970`). The `eq:p3c1`–`eq:p3c7` labels are now defined in both `math_derivation{,_en}.tex` (§6) and in any future re-introduction of `convex_block_*` files. The recommended naming `eq:p3c1`–`eq:p3c7` (matches the inline `(P3-Cx)` tag) was applied.
 
-2. **`sec:problem` reference in `convex_block_*.tex` line 6**: References the section in the removed `report_en.tex`. Now dead. Fix candidate: change to `sec:p1` and define in `math_derivation_en.tex` near the §Original Problem section.
+2. **`sec:problem` reference in `convex_block_*.tex` line 6**: Resolved by the deletion of `convex_block_*.tex` in `19ff970`. The replacement anchor `sec:p1` is now defined in both `math_derivation{,_en}.tex` §1 and is the canonical anchor for "Original Problem" going forward.
 
 3. **`math_derivation_en.tex` self-reference `sec:convexification`**: Defined and used only within that file; works. No issue.
 
