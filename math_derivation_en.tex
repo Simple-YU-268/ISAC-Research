@@ -194,14 +194,26 @@ where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\
 (P1-C1) SINR & (P3-C1) LMI & Steps 1,2,3,4 & LMI (convex) \\
 (P1-C2) Sensing SINR & (P3-C2) Linear & Steps 1,2,5b & Linear (convex) \\
 (P1-C3) PCRB & (P3-C3) Linear & Steps 1,2,5a & Linear (convex) \\
-(P1-C4) AP selection & (P3-C4) Fixed set & Step 7 & Linear (convex) \\
-(P1-C5) Power & (P3-C4) Linear & Steps 1,6 & Linear (convex) \\
+(P1-C5) Per-AP power & (P3-C4) Linear & Steps 1,6 & Linear (convex) \\
 (P1-C6) PSD & (P3-C6) PSD & Unchanged & PSD cone (convex) \\
-(P1-C7) Binary & Eliminated & Step 7 & Heuristic \\
-(P1-C8) Rank-one & (P3-C5) PSD & Step 2 & PSD cone (convex) \\
+(P1-C8) Rank-one & (P3-C5) PSD & Step 2 & PSD cone (convex, **not tight**) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{On (P1-C4) / (P1-C7) AP selection:} These two (P1) constraints
+--- (P1-C4) $\sum_m b_{mp} = N_{\text{req}}$ and (P1-C7) $b_{mp} \in \{0,1\}$ ---
+do \textbf{not} enter the (P3) constraint block. They are preprocessed
+by the Step 7 heuristic \textbf{before} the (P3) SDP is solved: for
+each target $p$, rank APs by large-scale fading $\text{PL}(d_{m,p})$ and
+pick the top $N_{\text{req}}$ to determine the fixed service set
+$\mathcal{M}_p$. (P3) is then solved on the fixed $\mathcal{M}_p$. See
+\S\ref{sec:convexification} Step 7 for the full description. The
+heuristic \textbf{carries no theoretical optimality guarantee}---the
+outer AP selection may not be the true optimum (NP-hard). The
+correspondence table therefore omits (P1-C4)/(P1-C7): they are not
+mapped to any (P3-Cx). (P3-C4) is solely the lifted form of (P1-C5)
+per-AP power.
 
 \begin{theorem}[Convexity and Equivalence of the Problem]
 Problem (P3) is a standard convex SDP. All constraints are LMIs or linear inequalities, and the objective is linear. SDR is a lower bound on (P2): $P_{\text{P3}}^* \leq P_{\text{P2}}^* = P_{\text{P1}}^*$ (no universal tightness theorem applies---see the Step 1 remark in \S\ref{sec:convexification}). (P3) can be solved in polynomial time via interior-point methods, with complexity upper bound $O\big((K+1)^3 (MN_t)^6 \cdot (K+P+M)\big)$---the precise form follows from the (P3) decision-variable dimension $n = O(K (MN_t)^2)$ and the largest LMI constraint size $(MN_t+1)$; a simplified order is $O((K M N_t^2)^{3.5})$.

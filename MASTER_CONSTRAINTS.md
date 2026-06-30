@@ -89,11 +89,24 @@ Source: `math_derivation.tex` line 188–202 (the correspondence table at end of
 | (P1-C1) comm SINR | (P3-C1) LMI | Steps 1, 2, 3, 4 (lifting + SDR + S-Procedure + fraction linearization) | LMI (convex) |
 | (P1-C2) sensing SINR | (P3-C2) linear | Steps 1, 2, 5b | linear (convex) |
 | (P1-C3) PCRB | (P3-C3) linear | Steps 1, 2, 5a | linear (convex) |
-| (P1-C4) AP selection | (P3-C4) on fixed set | Step 7 | linear (convex) |
 | (P1-C5) per-AP power | (P3-C4) linear | Steps 1, 6 | linear (convex) |
 | (P1-C6) PSD | (P3-C6) PSD | identity | PSD cone (convex) |
-| (P1-C7) binary | dropped | Step 7 | heuristic |
 | (P1-C8) rank-1 | (P3-C5) PSD | Step 2 | PSD cone (convex, **not tight**) |
+
+**(P1-C4) AP count constraint and (P1-C7) binary indicator are
+omitted from the table on purpose:** they are not part of the (P3)
+constraint block. The Step 7 two-step decomposition preprocesses the
+AP selection by ranking APs per target $p$ by large-scale fading
+$\text{PL}(d_{m,p})$ and selecting the top $N_{\text{req}}$ APs to
+form a fixed service set $\mathcal{M}_p$. (P3) is then solved on the
+fixed $\mathcal{M}_p$. The heuristic **carries no theoretical
+optimality guarantee** (the underlying problem is NP-hard, a
+$K$-medoid variant); see `CONVEXIFICATION_CHAIN.md` §3.8 for the
+full description and the open problem of the approximation ratio.
+
+The table does **not** map (P1-C4) → (P3-C4) "fixed set": (P3-C4) is
+solely the lifted form of the per-AP power constraint (P1-C5), and
+"fixed set" is a precondition on the (P3) solver, not a constraint.
 
 > Note: the original numbering `(P1-C1) … (P1-C7)` in `math_derivation.tex` line 49–58 jumps from (P1-C2) sensing to (P1-C3) PCRB without an explicit (P1-C1) constraint in the equation block. (P1-C1) is defined separately at line 63 as the worst-case SINR. The correspondence table on line 188–202 adds an extra "(P1-C8) rank-1" entry to align with the lifted (P2) form. This is consistent within `math_derivation.tex`; the rank-1 is implicit in the lifting (P1 → P2), not stated as a separate constraint in (P1).
 
