@@ -99,13 +99,18 @@
 \section{非凸性分析}
 %==============================================================================
 
-Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP.
+Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP. The seven steps
+are numbered Step 1 (lifting) through Step 7 (AP-selection heuristic)
+and described in §逐步凸化 below. Of these, Steps 1--6 are
+mathematical transformations of the (P2) variables and constraints;
+Step 7 is a preprocessing heuristic on the AP service set and does
+not enter the (P3) SDP.
 
 %==============================================================================
 \section{逐步凸化}
 %==============================================================================
 
-我们对 (P2) 施以六步变换，逐步将每个非凸源转化为凸形式。整体思路是：先以 SDR 牺牲 rank-1 紧致性换取可行域的凸化，再以 S-Procedure 处理半无限鲁棒约束，最后对剩余 PCRB / 感知 SINR / 功率约束做线性化或保留。每步变换都尽量保持严格等价（仅 Step 1 在 $K>2$ 时为紧致松弛，Step 6 为工程启发式），并在文中即时注明等价性。
+我们对 (P2) 施以**七步变换**（编号 Step 1 至 Step 7，详见下文），逐步将每个非凸源转化为凸形式。前六步为对 (P2) 变量与约束的数学变换，第七步（Step 7）为 AP 服务集的预处理启发式。整体思路是：先以 SDR 牺牲 rank-1 紧致性换取可行域的凸化，再以 S-Procedure 处理半无限鲁棒约束，最后对剩余 PCRB / 感知 SINR / 功率约束做线性化或保留。每步变换都尽量保持严格等价（仅 Step 2 (SDR) 在 cell-free 鲁棒场景下**无通用紧致性定理**——见 §逐步凸化 Step 2 注释；Step 7 为工程启发式，**无理论最优性保证**），并在文中即时注明等价性。
 
 我们首先处理非凸性中最棘手的部分——rank-1 约束 (P2-C7)。尽管 (P1)↔(P2) 严格等价保留了 rank-1，但 rank-1 流形本身是非凸的。SDR 通过将 (P2-C7) 松弛为仅 $\mat{W}_k \succeq \mat{0}$ 来去除这一非凸性：
 \begin{equation}

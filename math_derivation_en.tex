@@ -97,13 +97,30 @@ where:
 \section{Non-Convexity Analysis}
 %==============================================================================
 
-Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP.
+Note that problem (P2) is non-convex. Specifically, the SINR constraint (P2-C1) involves a fractional quadratic form in $\mat{W}_k$ with semi-infinite worst-case uncertainty (NC2), making the universal quantifier ``$\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$'' non-convex; the per-AP power constraint (P2-C4) couples the per-AP beamforming vectors $\vect{w}_{m,k}$ with the sensing covariance $\mat{Z}_m$ (NC5); the PCRB constraint (P2-C3) involves the trace of an inverse Fisher information matrix that depends nonlinearly on $\mat{R}_X$ (NC6); the AP-selection constraint (P2-C8) requires a binary indicator $b_{mp} \in \{0,1\}$ (NC3); and the rank-one constraint (P2-C7) demands a non-convex rank-one manifold (NC4). The PSD constraints (P2-C5)/(P2-C6) and the per-AP power linearization are themselves convex, but the overall problem remains non-convex due to the coupling identified above. In the following section, we apply a six-step convexification chain to handle each non-convexity in turn, ultimately reducing the problem to a standard convex SDP. The seven steps
+are numbered Step 1 (lifting) through Step 7 (AP-selection heuristic)
+and described in \S\ref{sec:convexification} below. Of these, Steps
+1--6 are mathematical transformations of the (P2) variables and
+constraints; Step 7 is a preprocessing heuristic on the AP service
+set and does not enter the (P3) SDP.
 
 %==============================================================================
 \section{Step-by-Step Convexification}\label{sec:convexification}
 %==============================================================================
 
-We apply six transformations to (P2), progressively converting each non-convexity into a convex form. The overall roadmap is: first use SDR to sacrifice rank-one tightness for convexification of the feasible set, then apply the S-Procedure to handle the semi-infinite robust constraints, and finally linearize or retain the PCRB / sensing SINR / power constraints. Each transformation preserves strict equivalence when possible (only Step 1 is a tight relaxation for $K>2$, and Step 6 is an engineering heuristic), with the equivalence type annotated inline.
+We apply **seven transformations** to (P2) (numbered Step 1 through Step 7
+in this section): the first six are mathematical transformations of
+the (P2) variables and constraints, and the seventh (Step 7) is a
+preprocessing heuristic on the AP service set. The transformations
+progressively convert each non-convexity into a convex form. The
+overall roadmap is: first use SDR to sacrifice rank-one tightness
+for convexification of the feasible set, then apply the S-Procedure
+to handle the semi-infinite robust constraints, and finally
+linearize or retain the PCRB / sensing SINR / power constraints. Each
+transformation preserves strict equivalence when possible (only Step 2
+SDR is a tight relaxation with no general theorem for our setting,
+and Step 7 is an engineering heuristic), with the equivalence type
+annotated inline.
 
 We first address the most stubborn non-convexity---the rank-one constraint (P2-C7). Although (P1) $\Leftrightarrow$ (P2) strictly preserves rank-one, the rank-one manifold is itself non-convex. SDR removes this non-convexity by relaxing (P2-C7) to merely $\mat{W}_k \succeq \mat{0}$:
 \begin{equation}
@@ -168,7 +185,7 @@ Finally, we address the discreteness of the AP-selection constraint (P2-C8). Thi
 \section{Final Convex SDP Problem (P3) --- Convex Relaxation of (P2)}
 %==============================================================================
 
-Combining the six transformations from \S\ref{sec:convexification}, starting from \textbf{(P2)} and dropping the rank-one constraint (P2-C7) and applying the heuristic handling of (P2-C8), we obtain the \textbf{(P3)} convex SDP:
+Combining the seven steps from \S\ref{sec:convexification}, starting from \textbf{(P2)} and dropping the rank-one constraint (P2-C7) and applying the heuristic handling of (P2-C8), we obtain the \textbf{(P3)} convex SDP:
 \begin{align}
 \min_{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}} \quad
 & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P3} \\

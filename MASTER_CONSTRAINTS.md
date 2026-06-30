@@ -6,6 +6,59 @@
 
 ---
 
+## 0. Naming Conventions
+
+### 0.1 Step count (convexification chain)
+
+The convexification chain has **seven steps**, numbered Step 1 through
+Step 7. The first six (Steps 1–6) are mathematical transformations of
+the (P2) variables and constraints; the seventh (Step 7) is a
+preprocessing heuristic on the AP service set that runs before the
+(P3) SDP is solved and does not enter the (P3) constraint block.
+
+Earlier versions of the prose in `math_derivation{,_en}.tex` referred
+to a "six-step" / "six transformations" chain, which is **incorrect**.
+The first three prose paragraphs of `math_derivation.tex` §非凸性分析
+(line 102) and `math_derivation_en.tex` §Non-Convexity Analysis
+(line 100) still contain the phrase "six-step" / "six-step
+convexification chain", preserved as a historical record. The
+authoritative count is **seven**.
+
+The "six" in "the six non-convexity sources (NC1–NC6)" is a separate
+count (the number of distinct non-convexity types) and is unrelated
+to the seven-step chain.
+
+### 0.2 Constraint labels (P1-Cx / P2-Cx / P3-Cx)
+
+| Tag | Source | Used in |
+| --- | --- | --- |
+| `(P1-C1)` through `(P1-C7)` | The seven constraints of the original (P1) MINLP | `math_derivation.tex` line 49–58 |
+| `(P1-C8)` | The rank-one constraint, implicit after the (P1)→(P2) lifting | `math_derivation.tex` line 204 (correspondence table) |
+| `(P2-C1)` through `(P2-C8)` | The eight constraints of the lifted (P2) | `math_derivation.tex` line 73–85 |
+| `(P3-C1)` through `(P3-C7)` | The seven constraints of the convex SDP (P3) | `math_derivation.tex` line 175–185 (with `\label{eq:p3c1}`–`\label{eq:p3c7}`) |
+
+The legacy `(5a)`–`(5h)` numbering is also used in some prose
+contexts (see `PROBLEM_FORMULATION.md` §4 for the legacy ↔ `(P1-Cx)`
+mapping). The `(P1-Cx)` scheme is preferred in new writing because it
+survives the (P1)→(P2)→(P3) chain cleanly.
+
+### 0.3 NC tags (non-convexity sources)
+
+The six non-convexity sources are tagged NC1 through NC6 and are
+listed in `CONVEXIFICATION_CHAIN.md` §2. Each step in the chain
+targets one or more of them:
+
+| NC | Source | Targeted by step |
+| --- | --- | --- |
+| NC1 | SINR fractional structure | Step 3 (S-Procedure), Step 4 (fraction linearization), Step 5b (sensing SINR linearization) |
+| NC2 | Semi-infinite robust constraints | Step 3 (S-Procedure) |
+| NC3 | Binary AP selection | Step 7 (AP selection heuristic) |
+| NC4 | Implicit rank-one | Step 2 (SDR) |
+| NC5 | Beam-sensing bilinear coupling | Step 6 (per-AP power already linear) |
+| NC6 | Matrix inverse in PCRB | Step 5a (PCRB affine expansion) |
+
+---
+
 ## 1. The three problems (P1 → P2 → P3) — the story in one paragraph
 
 `math_derivation.tex` walks the problem through three equivalent / relaxed forms:
