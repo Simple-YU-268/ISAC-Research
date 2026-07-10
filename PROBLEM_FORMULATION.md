@@ -190,6 +190,25 @@ selection, NC4 rank-1 (after lifting), NC5 beam-sensing bilinear coupling,
 NC6 PCRB matrix inverse. See `CONVEXIFICATION_CHAIN.md` §2 for the
 non-convexity source identification and §3 for the 7-step chain.
 
+**Per-constraint convexity analysis (in the (P1) variable space).** The five
+non-convexity sources distribute across the (P1) constraints as follows
+(detailed analysis in `math_derivation{,_en}.tex` §1, immediately after the
+(P1) MINLP): the communication worst-case SINR (P1-C1) carries a fractional
+quadratic form in $\vect{w}_k$ on top of a semi-infinite worst-case
+quantifier $\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$
+(Boyd and Vandenberghe, 2004, §4.3.2; Luo et al., 2004); the position-PCRB
+(P1-C3) involves $\tr((\mat{J}_p^{\text{data}})^{-1})$ with $\mat{J}_p$ affine
+in $\mat{R}_X$, which is a non-convex function of $\mat{R}_X$; the AP
+selection indicators (P1-C7) and the cardinality equality (P1-C4) impose a
+discrete $\{0,1\}^{M \times P}$ constraint that is not closed under convex
+combinations; the per-AP power (P1-C5) couples the squared beamforming norm
+$\|\vect{w}_{m,k}\|^2$ with the sensing trace $\tr(\mat{Z}_m)$ on the
+right-hand side, and this bilinear coupling prevents the constraint from
+decomposing into two convex subconstraints. The PSD cone (P1-C6) and the
+linear sensing SINR (P1-C2) are themselves convex. The rank-one constraint
+(NC4) does not appear in (P1); it is introduced by the covariance lifting
+to (P2) and is removed there by Step 2 SDR.
+
 ---
 
 ## 5. The Lifted Form (P2) — Strictly Equivalent to (P1)
