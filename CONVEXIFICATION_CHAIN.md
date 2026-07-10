@@ -117,14 +117,18 @@ $$
 \end{bmatrix} \succeq \mat{0}
 $$
 
-**Equivalence.** **Conservative approximation** (a.k.a. sufficient
-condition, S-Procedure loss). Trades approximately 1.75 dB of power
-margin (for $\epsilon_h = 0.10$, $\eta_h \approx 0.669$) for a
-closed-form LMI. The slack $\mu_k$ is the S-Procedure multiplier; the
-true worst-case feasible set is a subset of the solved set.
+**Equivalence.** **Strictly equivalent** (the LMI holds if and only if
+the original worst-case quadratic inequality holds, by Lemma 1 in the
+source — the 2-quadratic S-Procedure on the ball $\{\Delta\vect{h} :
+\|\Delta\vect{h}\|_2 \leq \epsilon_h \|\hat{\vect{h}}_k\|_2\}$ requires
+no Slater-type additional assumption; the (S3.1) form above uses the
+ball-outside convention ($\|\Delta\vect{h}\|_2 \geq \epsilon_h \|\hat{\vect{h}}_k\|
+$ as the $f_1$ description), giving if-and-only-if via Boyd and
+Vandenberghe, 2004, §4.3, Theorem 4.1).
 
-**Source.** `math_derivation{,_en}.tex` §3 (Step 3 段, the (S3.1) block
-and its surrounding discussion).
+**Source.** `math_derivation.tex` §2-C, the (S3.1) block, Lemma 1,
+and the surrounding discussion of ball-outside vs. ball-inside
+convention.
 
 ### 3.4 Step 4 — Fraction linearization: cross-multiply the comm-SINR
 
