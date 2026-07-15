@@ -24,7 +24,11 @@ end
 c_mp = 1 - 2 * b_prev;
 
 cvx_begin quiet
-    cvx_solver SDPT3
+    if isfield(prm, 'solver') && strcmpi(prm.solver, 'mosek')
+        cvx_solver mosek
+    else
+        cvx_solver SDPT3
+    end
     cvx_precision default
     variable W_cvx(N,N,K) hermitian
     variable Z_cvx(N,N) hermitian

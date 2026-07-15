@@ -11,7 +11,7 @@ N = M * Nt;     % stacked dimension
 K = 3;          % UEs
 P = 3;          % targets
 N_req = 2;      % APs per target
-N_theta = 1;    % target parameter dimension (1 for scalar ranging, 2 for 2D position)
+N_theta = 2;    % target parameter dimension (1 scalar ranging, 2 2D position, 3 3D)
 
 % Target SNR at best AP = 20 dB (linear 100) so gamma=0 dB is feasible
 Pmax = 0.1;     % 20 dBm in linear
@@ -45,9 +45,25 @@ for p = 1:P
         gp((m-1)*Nt + 1 : m*Nt) = sqrt(pl/2) * (randn(Nt,1) + 1j*randn(Nt,1));
     end
     G(:, p) = gp;
-    
-    % Sensing derivative matrix D: for N_theta=1 use G itself; for N_theta>1 set later
-    D(:,:,p) = gp;
+
+    % Sensing derivative matrix D: for N_theta=1 use G itself; for N_theta>1
+    % generate N_theta orthogonal directions sharing the same spatial structure.
+    Dp = zeros(N, N_theta);
+    Dp(:, 1) = gp;
+    for n = 2:N_theta
+        % random vector with similar block structure, then orthogonalize w.r.t. previous columns
+        v = zeros(N, 1);
+        for m = 1:M
+            d = norm(Target_pos(p,:) - AP_pos(m,:)) + 20;
+            pl = 1 / d^2;
+            v((m-1)*Nt + 1 : m*Nt) = sqrt(pl/2) * (randn(Nt,1) + 1j*randn(Nt,1));
+        end
+        for nn = 1:n-1
+            v = v - (Dp(:, nn)' * v) / (Dp(:, nn)' * Dp(:, nn)) * Dp(:, nn);
+        end
+        Dp(:, n) = v;
+    end
+    D(:, :, p) = Dp;
 end
 
 % Per-UE / per-target scaling so that best-AP SNR = noise_snr_target
@@ -91,5 +107,6 @@ prm.P = P;
 % Default: all targets active
 prm.active_targets = 1:P;
 prm.use_s_procedure = true;  % robust S-Procedure for SINR (eps_h is relative to ||hk||)
+prm.solver = 'mosek';          % default solver for SCA subproblems
 
 end
