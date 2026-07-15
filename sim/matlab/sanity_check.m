@@ -16,6 +16,11 @@ end
 % Evaluate and validate
 [max_viol, viol] = validate_solution(prm, res.W, res.Z, res.mu, res.b, res.M_p, 1e-6);
 
+[sum_rate, sens_sinr_db, pcrb] = evaluate(res.W, res.Z, res.b, prm);
+res.sum_rate = sum_rate;
+res.sens_sinr_db = sens_sinr_db;
+res.pcrb = pcrb;
+
 fprintf('\n');
 fprintf('Status: %s\n', res.status);
 fprintf('Iterations: %d\n', res.iters);
@@ -45,6 +50,15 @@ end
 R = R + res.Z;
 for m = 1:M
     fprintf('  AP %d: %.4f (limit %.4f)\n', m, real(trace(E{m} * R)), prm.Pmax);
+end
+
+% Verify rank-1ness of extracted physical beams
+fprintf('\nRank-1 check (||W_k - w_k w_k''||_F / ||W_k||_F):\n');
+for k = 1:prm.K
+    approx = res.w_star{k} * res.w_star{k}';
+    Wk = res.W{k};
+    rel_err = norm(Wk - approx, 'fro') / (norm(Wk, 'fro') + 1e-30);
+    fprintf('  UE %d: %.2e\n', k, rel_err);
 end
 
 fprintf('\nAP-target assignment (relaxed b):\n');

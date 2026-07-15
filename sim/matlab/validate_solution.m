@@ -26,7 +26,7 @@ end
 R = R + Z;
 
 viol_report = struct();
-max_violation = 0;
+max_violation = -inf;
 
 % (C7) W_k PSD and (C8) Z PSD
 for k = 1:K
@@ -42,13 +42,25 @@ max_violation = max(max_violation, viol_report.Z_psd);
 % (C1) SINR
 for k = 1:K
     hk = prm.H(:, k);
-    sig = real(hk' * W{k} * hk);
-    interf = 0;
-    for j = setdiff(1:K, k)
-        interf = interf + real(hk' * W{j} * hk);
+    if prm.use_s_procedure
+        Ak = (1 / prm.gamma_k(k)) * W{k} - sum(cat(3, W{setdiff(1:K,k)}), 3);
+        top_left = Ak + mu(k) * eye(N);
+        top_right = Ak * hk;
+        bot_left = hk' * Ak;
+        hk_norm2 = real(hk' * hk);
+        bot_right = real(hk' * Ak * hk) - prm.sigma_c2 - mu(k) * prm.eps_h^2 * hk_norm2;
+        L = [top_left, top_right; bot_left, bot_right];
+        d = eig(L, 'vector');
+        viol = max(0, -min(real(d)));
+    else
+        sig = real(hk' * W{k} * hk);
+        interf = 0;
+        for j = setdiff(1:K, k)
+            interf = interf + real(hk' * W{j} * hk);
+        end
+        lhs = prm.gamma_k(k) * (interf + prm.sigma_c2);
+        viol = max(0, lhs - sig);
     end
-    lhs = prm.gamma_k(k) * (interf + prm.sigma_c2);
-    viol = max(0, lhs - sig);
     viol_report.sinr(k) = viol;
     max_violation = max(max_violation, viol);
 end
@@ -93,9 +105,13 @@ for m = 1:M
     max_violation = max(max_violation, viol);
 end
 
-% (C6) service count
+% (C6) service count: only active targets are constrained
 for p = 1:P
-    viol = abs(sum(b(:, p)) - prm.N_req);
+    if isfield(prm, 'active_targets') && ~ismember(p, prm.active_targets)
+        viol = 0;
+    else
+        viol = abs(sum(b(:, p)) - prm.N_req);
+    end
     viol_report.service_count(p) = viol;
     max_violation = max(max_violation, viol);
 end

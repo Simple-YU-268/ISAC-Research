@@ -47,7 +47,8 @@ cvx_begin quiet
             top_left = Ak + mu_cvx(k) * eye(N);
             top_right = Ak * hk;
             bot_left = hk' * Ak;
-            bot_right = real(hk' * Ak * hk) - prm.sigma_c2 - mu_cvx(k) * prm.eps_h^2;
+            hk_norm2 = real(hk' * hk);  % ||hat h_k||^2
+            bot_right = real(hk' * Ak * hk) - prm.sigma_c2 - mu_cvx(k) * prm.eps_h^2 * hk_norm2;
             [top_left, top_right; bot_left, bot_right] == hermitian_semidefinite(N+1);
         else
             sig = real(hk' * W_cvx(:,:,k) * hk);
@@ -87,10 +88,12 @@ cvx_begin quiet
     for m = 1:M
         real(trace(E{m} * R_X)) <= prm.Pmax;
     end
-    % (P3-C6) service count
-    % All targets active in our setting
+    % (P3-C6) service count: only active targets must be served by exactly N_req APs
     if isempty(b_fixed)
         for p = 1:P
+            if isfield(prm, 'active_targets') && ~ismember(p, prm.active_targets)
+                continue;  % inactive target: no service constraint
+            end
             sum(b_cvx(:, p)) == prm.N_req;
         end
     end
@@ -101,7 +104,6 @@ cvx_begin quiet
     end
     Z_cvx == hermitian_semidefinite(N);
 
-    % (P3-C10) box
     if isempty(b_fixed)
         b_cvx <= 1;
     end

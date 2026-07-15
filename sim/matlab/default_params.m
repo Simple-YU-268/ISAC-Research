@@ -88,6 +88,8 @@ prm.N = N;
 prm.M = M;
 prm.K = K;
 prm.P = P;
-prm.use_s_procedure = false;  % deterministic SINR for simplicity
+% Default: all targets active
+prm.active_targets = 1:P;
+prm.use_s_procedure = true;  % robust S-Procedure for SINR (eps_h is relative to ||hk||)
 
 end
