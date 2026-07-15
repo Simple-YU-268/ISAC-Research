@@ -95,13 +95,23 @@ if ~binary_converged
     last_status = [last_status, ' (binary_not_converged)'];
 end
 
-% Evaluate and validate
-[sum_rate, sens_sinr_db, pcrb] = evaluate(W_prev, Z_prev, b_prev, prm);
-[max_viol, ~] = validate_solution(prm, W_prev, Z_prev, mu_prev, b_prev, M_p_prev, 1e-6);
+% Physical rank-1 beam extraction: extract principal eigenvector of each W_k
+w_star = cell(K,1);
+W_phys = cell(K,1);
+for k = 1:K
+    [V, D] = eig(W_prev{k}, 'vector');
+    [max_eig, idx] = max(D);
+    w_star{k} = sqrt(max_eig) * V(:, idx);
+    W_phys{k} = w_star{k} * w_star{k}';
+end
+
+% Evaluate and validate using the physical rank-1 beams
+[sum_rate, sens_sinr_db, pcrb] = evaluate(W_phys, Z_prev, b_prev, prm);
+[max_viol, ~] = validate_solution(prm, W_phys, Z_prev, mu_prev, b_prev, M_p_prev, 1e-6);
 
 final_obj = 0;
 for k = 1:K
-    final_obj = final_obj + real(trace(W_prev{k}));
+    final_obj = final_obj + real(trace(W_phys{k}));
 end
 final_obj = final_obj + real(trace(Z_prev));
 
@@ -113,7 +123,8 @@ res.final_obj = final_obj;
 res.sum_rate = sum_rate;
 res.sens_sinr_db = sens_sinr_db;
 res.pcrb = pcrb;
-res.W = W_prev;
+res.W = W_phys;      % physical rank-1 covariance matrices
+res.w_star = w_star; % physical beam vectors
 res.Z = Z_prev;
 res.b = b_prev;
 res.mu = mu_prev;
@@ -150,12 +161,20 @@ end
 
 pcrb = zeros(P, 1);
 for p = 1:P
-    gp = prm.G(:, p);
-    Jp = real(gp' * R * gp) / prm.sigma_s2;
-    if Jp > 1e-9
-        pcrb(p) = 1 / Jp;
+    Dp = prm.D(:,:,p);
+    Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+    if prm.N_theta == 1
+        if Jp > 1e-9
+            pcrb(p) = 1 / Jp;
+        else
+            pcrb(p) = inf;
+        end
     else
-        pcrb(p) = inf;
+        if min(eig(Jp)) > 1e-9
+            pcrb(p) = trace(inv(Jp));
+        else
+            pcrb(p) = inf;
+        end
     end
 end
 end

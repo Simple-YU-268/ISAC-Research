@@ -8,6 +8,7 @@ if nargin < 6 || isempty(b_fixed)
 end
 
 K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
+N_theta = prm.N_theta;
 E = build_E_m(M, Nt);
 
 % Eigenvectors for DC rank-1 linearization
@@ -23,6 +24,7 @@ end
 c_mp = 1 - 2 * b_prev;
 
 cvx_begin quiet
+    cvx_solver SDPT3
     cvx_precision default
     variable W_cvx(N,N,K) hermitian
     variable Z_cvx(N,N) hermitian
@@ -63,13 +65,18 @@ cvx_begin quiet
         real(gp' * Z_cvx * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
     end
 
-    % (P3-C3)(C4) PCRB scalar: M_p >= 1 / J_p, M_p <= Gamma_track
+    % (C3)(C4) PCRB: multi-dimensional Schur LMI (N_theta >= 2) or scalar inv_pos (N_theta=1)
     for p = 1:P
-        gp = prm.G(:, p);
-        J_p = real(gp' * R_X * gp) / prm.sigma_s2;
-        % inv_pos in CVX is convex; constraint inv_pos(J_p) <= M_p is DCP
-        inv_pos(J_p) <= M_p_cvx(p);
-        M_p_cvx(p) <= prm.Gamma_track(p);
+        Dp = prm.D(:,:,p);
+        if prm.N_theta == 1
+            J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
+            inv_pos(J_p) <= M_p_cvx(p);
+        else
+            J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
+            [M_p_cvx(p) * eye(N_theta), eye(N_theta); ...
+             eye(N_theta),              J_p      ] == hermitian_semidefinite(2 * N_theta);
+        end
+        M_p_cvx(p) * prm.N_theta <= prm.Gamma_track(p);
     end
 
     % (P3-C5a) per-AP power with AP-target gate

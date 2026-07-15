@@ -11,6 +11,7 @@ N = M * Nt;     % stacked dimension
 K = 3;          % UEs
 P = 3;          % targets
 N_req = 2;      % APs per target
+N_theta = 1;    % target parameter dimension (1 for scalar ranging, 2 for 2D position)
 
 % Target SNR at best AP = 20 dB (linear 100) so gamma=0 dB is feasible
 Pmax = 0.1;     % 20 dBm in linear
@@ -23,8 +24,9 @@ AP_pos = 1000 * rand(M, 2);
 UE_pos = 1000 * rand(K, 2);
 Target_pos = 1000 * rand(P, 2);
 
-H = zeros(N, K);   % stacked comm channel
-G = zeros(N, P);   % stacked sensing channel
+H = zeros(N, K);     % stacked comm channel
+G = zeros(N, P);     % stacked sensing steering matrix
+D = zeros(N, N_theta, P);  % sensing derivative matrix
 
 for k = 1:K
     for m = 1:M
@@ -35,11 +37,17 @@ for k = 1:K
 end
 
 for p = 1:P
+    gp = zeros(N, 1);
     for m = 1:M
-        d = norm(Target_pos(p,:) - AP_pos(m,:)) + 20;
+        d_vec = Target_pos(p,:) - AP_pos(m,:);
+        d = norm(d_vec) + 20;
         pl = 1 / d^2;
-        G((m-1)*Nt + 1 : m*Nt, p) = sqrt(pl/2) * (randn(Nt,1) + 1j*randn(Nt,1));
+        gp((m-1)*Nt + 1 : m*Nt) = sqrt(pl/2) * (randn(Nt,1) + 1j*randn(Nt,1));
     end
+    G(:, p) = gp;
+    
+    % Sensing derivative matrix D: for N_theta=1 use G itself; for N_theta>1 set later
+    D(:,:,p) = gp;
 end
 
 % Per-UE / per-target scaling so that best-AP SNR = noise_snr_target
@@ -61,10 +69,13 @@ for p = 1:P
     end
     scale = sqrt(noise_snr_target * sigma_s2 / Pmax / max(block_norms));
     G(:, p) = G(:, p) * scale;
+    D(:,:,p) = D(:,:,p) * scale;
 end
 
 prm.H = H;
-prm.G = G;
+prm.D = D;       % N x N_theta x P sensing derivative matrix
+prm.G = G;       % kept for compatibility (sensing SINR)
+prm.N_theta = N_theta;
 prm.eps_h = 0.01;
 prm.gamma_k = ones(K, 1);       % 0 dB
 prm.gamma_PoD = ones(P, 1);     % 0 dB

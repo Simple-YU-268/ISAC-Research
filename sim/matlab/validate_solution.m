@@ -17,6 +17,7 @@ function [max_violation, viol_report] = validate_solution(prm, W, Z, mu, b, M_p,
 if nargin < 7, tol = 1e-6; end
 
 K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
+N_theta = prm.N_theta;
 E = build_E_m(M, Nt);
 R = zeros(N, N);
 for k = 1:K
@@ -62,16 +63,21 @@ for p = 1:P
     max_violation = max(max_violation, viol);
 end
 
-% (C3)(C4) PCRB
+% (C3)(C4) PCRB: multi-dimensional Schur LMI (N_theta >= 2) or scalar inv_pos (N_theta=1)
 for p = 1:P
-    gp = prm.G(:, p);
-    Jp = real(gp' * R * gp) / prm.sigma_s2;
-    % M_p >= 1/J_p
-    viol = max(0, 1/Jp - M_p(p));
+    Dp = prm.D(:,:,p);
+    if prm.N_theta == 1
+        Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+        viol = max(0, 1/Jp - M_p(p));
+    else
+        Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+        Schur = [M_p(p) * eye(N_theta), eye(N_theta); eye(N_theta), Jp];
+        d = eig(Schur, 'vector');
+        viol = max(0, -min(d));
+    end
     viol_report.pcrb_lower(p) = viol;
     max_violation = max(max_violation, viol);
-    % M_p <= Gamma_track
-    viol = max(0, M_p(p) - prm.Gamma_track(p));
+    viol = max(0, M_p(p) * prm.N_theta - prm.Gamma_track(p));
     viol_report.pcrb_upper(p) = viol;
     max_violation = max(max_violation, viol);
 end

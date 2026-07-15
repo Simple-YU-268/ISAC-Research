@@ -8,6 +8,11 @@ prm = default_params();
 fprintf('Running Algorithm 2 (double-DC SCA) in MATLAB...\n');
 res = baseline_alg2(prm, 80, 1e-5, 1.0, 1.0, 1.3, true);
 
+if ~isfield(res, 'W')
+    fprintf('Algorithm failed to produce a solution: %s\n', res.status);
+    return;
+end
+
 % Evaluate and validate
 [max_viol, viol] = validate_solution(prm, res.W, res.Z, res.mu, res.b, res.M_p, 1e-6);
 

@@ -28,13 +28,21 @@ end
 
 pcrb = zeros(P, 1);
 for p = 1:P
-    gp = prm.G(:, p);
-    Jp = real(gp' * R * gp) / prm.sigma_s2;
-    if Jp > 1e-9
-        pcrb(p) = 1 / Jp;
+    Dp = prm.D(:,:,p);
+    Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+    if prm.N_theta == 1
+        if Jp > 1e-9
+            pcrb(p) = 1 / Jp;
+        else
+            pcrb(p) = inf;
+        end
     else
-        pcrb(p) = inf;
+        if min(eig(Jp)) > 1e-9
+            pcrb(p) = trace(inv(Jp));
+        else
+            pcrb(p) = inf;
+        end
     end
 end
-
 end
+
