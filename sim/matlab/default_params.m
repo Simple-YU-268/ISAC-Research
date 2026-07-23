@@ -108,5 +108,13 @@ prm.P = P;
 prm.active_targets = 1:P;
 prm.use_s_procedure = true;  % robust S-Procedure for SINR (eps_h is relative to ||hk||)
 prm.solver = 'mosek';          % default solver for SCA subproblems
+prm.mosek_tol_rel_gap = 1e-8;
+prm.mosek_tol_pfeas = 1e-9;
+prm.seed = 0;  % default_params has no randomness
+
+% Compatibility with generate_scenario-based plotting / baselines
+prm.AP_pos = AP_pos;
+prm.UE_pos = UE_pos;
+prm.Target_pos = Target_pos;
 
 end

@@ -7,7 +7,7 @@ which is more stable for the double-DC SCA iterations.
 ## Files
 
 - `default_params.m` — generates a small feasible scenario (M=6 APs, Nt=4, K=3 UEs, P=3 targets).
-- `solve_p3_sca_t.m` — single (P3-SCA-t) subproblem (CVX).
+- `solve_p3_sca_t.m` — single (P3-SCA-t) subproblem (CVX). The PCRB constraint uses the exact matrix Schur LMI from §II-D: `M_p` is now an `N_theta x N_theta x P` Hermitian matrix and `trace(M_p(:,:,p)) <= Gamma_track(p)`.
 - `baseline_alg2.m` — Algorithm 2 warm start + SCA loop + binary rounding + fixed-b re-solve + physical beam extraction.
 - `sanity_check.m` — runs one instance and prints metrics.
 - `validate_solution.m` — standalone feasibility checker (S-Procedure-aware).
@@ -44,8 +44,8 @@ sanity_check
 ## Notes
 
 - `default_params.m` now sets `N_theta = 2` (2D target position) by default.
-  For `N_theta = 1`, the scalar PCRB constraint `inv_pos(J_p) <= M_p` is used.
-  For `N_theta >= 2`, the full Schur LMI `[M_p*I I; I J_p] >= 0` is used; **MOSEK is required** for stable convergence.
+  For `N_theta = 1`, `M_p` is stored as a `1 x 1 x P` array for a uniform interface.
+  For `N_theta >= 2`, the exact Schur LMI `[M_p(:,:,p) I; I J_p] >= 0` with `trace(M_p(:,:,p)) <= Gamma_track(p)` is used; **MOSEK is required** for stable convergence.
 - The robust S-Procedure is enabled by default (`use_s_procedure = true`).
   The LMI lower-right entry uses `eps_h^2 * ||hk||^2` so that the uncertainty-ball radius is correctly scaled for non-normalized channels.
 - Physical beams are extracted via the principal eigenvector of each converged `W_k` and the SINR/PCRB metrics are evaluated using the rank-1 vectors.

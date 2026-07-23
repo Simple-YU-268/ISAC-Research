@@ -11,7 +11,7 @@ M = 8; Nt = 4; K = 4; P = 2; N_theta = 2;          % small-scale smoke test
 Pmax_dBm = 20;                                      % per-AP power (dBm)
 Gamma_track = 10;                                    % PCRB trace threshold
 N_mc = 3;                                            % MC trials for quick smoke test (increase for final)
-N_workers = 0;                                       % 0=sequential; set >0 for parfor
+N_workers = 6;                                       % number of parallel workers (parfor)
 
 save_tag = sprintf('M%d_Nt%d_K%d_P%d_Nth%d_mc%d', M, Nt, K, P, N_theta, N_mc);
 out_dir = fullfile(pwd, 'figures');

@@ -26,6 +26,12 @@ c_mp = 1 - 2 * b_prev;
 cvx_begin quiet
     if isfield(prm, 'solver') && strcmpi(prm.solver, 'mosek')
         cvx_solver mosek
+        if isfield(prm, 'mosek_tol_rel_gap')
+            cvx_solver_settings('MSK_DPAR_INTPNT_TOL_REL_GAP', prm.mosek_tol_rel_gap);
+        end
+        if isfield(prm, 'mosek_tol_pfeas')
+            cvx_solver_settings('MSK_DPAR_INTPNT_TOL_PFEAS', prm.mosek_tol_pfeas);
+        end
     else
         cvx_solver SDPT3
     end
@@ -33,7 +39,7 @@ cvx_begin quiet
     variable W_cvx(N,N,K) hermitian
     variable Z_cvx(N,N) hermitian
     variable mu_cvx(K) nonnegative
-    variable M_p_cvx(P) nonnegative
+    variable M_p_cvx(N_theta, N_theta, P) hermitian
     if isempty(b_fixed)
         variable b_cvx(M,P) nonnegative
     else
@@ -70,18 +76,17 @@ cvx_begin quiet
         real(gp' * Z_cvx * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
     end
 
-    % (C3)(C4) PCRB: multi-dimensional Schur LMI (N_theta >= 2) or scalar inv_pos (N_theta=1)
+    % (C3)(C4) PCRB: exact trace-of-inverse Schur LMI per manuscript §II-D
     for p = 1:P
         Dp = prm.D(:,:,p);
+        J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
         if prm.N_theta == 1
-            J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
-            inv_pos(J_p) <= M_p_cvx(p);
+            inv_pos(J_p) <= M_p_cvx(1,1,p);
         else
-            J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
-            [M_p_cvx(p) * eye(N_theta), eye(N_theta); ...
+            [M_p_cvx(:,:,p), eye(N_theta); ...
              eye(N_theta),              J_p      ] == hermitian_semidefinite(2 * N_theta);
         end
-        M_p_cvx(p) * prm.N_theta <= prm.Gamma_track(p);
+        real(trace(M_p_cvx(:,:,p))) <= prm.Gamma_track(p);
     end
 
     % (P3-C5a) per-AP power with AP-target gate
@@ -143,7 +148,11 @@ end
 Z = full(Z_cvx);
 mu = full(mu_cvx);
 b = full(b_cvx);
-M_p = full(M_p_cvx);
+    M_p = full(M_p_cvx);
+    if N_theta == 1
+        % Preserve consistent 3-D shape for downstream callers
+        M_p = reshape(M_p, 1, 1, P);
+    end
 
 end
 

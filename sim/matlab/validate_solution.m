@@ -7,7 +7,7 @@ function [max_violation, viol_report] = validate_solution(prm, W, Z, mu, b, M_p,
 %     Z    : N x N Hermitian PSD
 %     mu   : (K x 1) S-Procedure multipliers (or empty if unused)
 %     b    : (M x P) assignment matrix
-%     M_p  : (P x 1) PCRB auxiliaries
+%     M_p  : (N_theta x N_theta x P) or (1 x 1 x P) PCRB auxiliary matrices
 %     tol  : tolerance for feasibility (default 1e-6)
 %
 %   Outputs:
@@ -76,23 +76,22 @@ for p = 1:P
 end
 
 % (C3)(C4) PCRB: multi-dimensional Schur LMI (N_theta >= 2) or scalar inv_pos (N_theta=1)
-for p = 1:P
-    Dp = prm.D(:,:,p);
-    if prm.N_theta == 1
+    for p = 1:P
+        Dp = prm.D(:,:,p);
         Jp = real(Dp' * R * Dp) / prm.sigma_s2;
-        viol = max(0, 1/Jp - M_p(p));
-    else
-        Jp = real(Dp' * R * Dp) / prm.sigma_s2;
-        Schur = [M_p(p) * eye(N_theta), eye(N_theta); eye(N_theta), Jp];
-        d = eig(Schur, 'vector');
-        viol = max(0, -min(d));
+        if prm.N_theta == 1
+            viol = max(0, 1/Jp - M_p(1,1,p));
+        else
+            Schur = [M_p(:,:,p), eye(N_theta); eye(N_theta), Jp];
+            d = eig(Schur, 'vector');
+            viol = max(0, -min(real(d)));
+        end
+        viol_report.pcrb_lower(p) = viol;
+        max_violation = max(max_violation, viol);
+        viol = max(0, real(trace(M_p(:,:,p))) - prm.Gamma_track(p));
+        viol_report.pcrb_upper(p) = viol;
+        max_violation = max(max_violation, viol);
     end
-    viol_report.pcrb_lower(p) = viol;
-    max_violation = max(max_violation, viol);
-    viol = max(0, M_p(p) * prm.N_theta - prm.Gamma_track(p));
-    viol_report.pcrb_upper(p) = viol;
-    max_violation = max(max_violation, viol);
-end
 
 % (C5'a)(C5'b) per-AP power
 for m = 1:M
