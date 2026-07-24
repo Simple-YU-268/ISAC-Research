@@ -1,8 +1,9 @@
 function res = baseline_alg2(prm, T_max, eps, eta_rank, eta_b, eta_growth, verbose)
 %BASELINE_ALG2  Fast DC-SCA with communication-aware binary recovery.
-%   A short double-DC phase generates candidate associations. The association
-%   is also a network-wide AP activation gate, so recovery includes a
-%   UE-aware candidate in addition to derivative-aware DC rounding. Every
+%   A short double-DC phase generates candidate sensing associations. The
+%   association gates only dedicated sensing covariance, while communication
+%   beamforming remains globally cooperative. Recovery includes a UE-aware
+%   diversity candidate in addition to derivative-aware DC rounding. Every
 %   candidate satisfies sum_m b_mp=N_req exactly and is accepted only after
 %   fixed-b re-optimization and rank-one physical feasibility validation.
 
@@ -24,7 +25,7 @@ if ~contains(status0, 'Solved')
     % Fast gatekeeper: continuous relaxation infeasible => integer problem infeasible
     res = struct('status', 'infeasible_relaxed_gatekeeper', ...
                  'final_obj', NaN, 'sum_rate', NaN, 'max_violation', inf, ...
-                 'W', [], 'Z', [], 'b', [], 'mu', [], 'M_p', [], ...
+                 'W', [], 'Z', [], 'S_p', [], 'b', [], 'mu', [], 'M_p', [], ...
                  'iters', 0, 'obj_trace', [], 'binary_converged', false, ...
                  'init_label', 'gatekeeper', 'rounding_label', '');
     return;
@@ -71,7 +72,7 @@ for init_idx = 1:numel(b_inits)
 
     % Each candidate is M-by-P binary with exactly N_req selected APs per
     % target. Do not use top-(N_req+1): it violates C6. The UE-aware choices
-    % reflect that b also gates communication transmission, not only sensing.
+    % promote spatial diversity but do not restrict communication transmission.
     candidates = {round_assignment(b_prev, prm), b_ue_fwd, b_ue_rev, b_heur};
     cand_labels = {'dc_topN', 'ue_aware_fwd', 'ue_aware_rev', 'distance_heur'};
     for c = 1:numel(candidates)
@@ -79,7 +80,7 @@ for init_idx = 1:numel(b_inits)
         if is_duplicate_assignment(b_fixed, seen_candidates), continue; end
         seen_candidates{end+1,1} = b_fixed;
         fixed_res = solve_p3_with_fixed_b(prm, b_fixed, ...
-            1, eps, 0, 0, eta_growth);
+            min(T_max, 10), eps, eta_rank, 0, eta_growth);
         if isfield(fixed_res,'is_physical_feasible') && fixed_res.is_physical_feasible
             fixed_res.obj_trace_dc = obj_trace;
             fixed_res.binary_converged = true;
@@ -127,11 +128,12 @@ end
 end
 
 function b = ue_aware_assignment(prm, target_order)
-%UE_AWARE_ASSIGNMENT  Joint sensing/UE coverage candidate under the b gate.
-%   Each selected AP is activated for all downlink streams. The score combines
-%   target derivative information, sensing steering strength, UE coverage, and
-%   a novelty reward that discourages different targets from selecting the
-%   same AP set. It is only a binary-recovery heuristic; C6 remains exact.
+%UE_AWARE_ASSIGNMENT  Sensing/leakage-aware candidate under the b gate.
+%   Since dedicated sensing waveforms are interference at UEs by default,
+%   the score rewards target derivative and steering gains while penalizing
+%   the AP's aggregate downlink leakage potential. A novelty reward avoids
+%   repeatedly selecting the same AP set. It is only a binary-recovery
+%   heuristic; C6 remains exact.
 M = prm.M;
 Nt = prm.N / prm.M;
 b = zeros(M, prm.P);
@@ -139,20 +141,21 @@ active = false(M,1);
 for p = target_order
     sensing_score = zeros(M,1);
     steering_score = zeros(M,1);
-    ue_score = zeros(M,1);
+    leakage_score = zeros(M,1);
     for m = 1:M
         block = (m-1)*Nt + (1:Nt);
         sensing_score(m) = norm(prm.D(block,:,p), 'fro')^2;
         steering_score(m) = norm(prm.G(block,p))^2;
-        per_ue_gain = sum(abs(prm.H(block,:)).^2, 1);
-        ue_score(m) = mean(per_ue_gain ./ max(max(abs(prm.H).^2, [], 1), eps));
+        % Without UE-side cancellation, a strong AP-to-UE channel raises the
+        % potential leakage of its dedicated sensing waveform.
+        leakage_score(m) = norm(prm.H(block,:), 'fro')^2;
     end
     sensing_score = normalized_score(sensing_score);
     steering_score = normalized_score(steering_score);
-    ue_score = normalized_score(ue_score);
+    leakage_score = normalized_score(leakage_score);
     novelty = double(~active);
-    score = 0.55 * sensing_score + 0.15 * steering_score + ...
-        0.20 * ue_score + 0.10 * novelty;
+    score = 0.65 * sensing_score + 0.20 * steering_score + ...
+        0.15 * novelty - 0.20 * leakage_score;
     [~, order] = sort(score, 'descend');
     chosen = order(1:prm.N_req);
     b(chosen,p) = 1;

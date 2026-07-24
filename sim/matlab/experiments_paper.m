@@ -1,10 +1,11 @@
 function experiments_paper(varargin)
 %EXPERIMENTS_PAPER  Feasibility-aware Monte Carlo study for Cell-Free ISAC.
-%   The binary AP-target association controls a network-wide AP activation
-%   gate.  Consequently an infeasible topology is a physical outcome, not a
-%   missing power sample.  This script therefore reports feasibility first and
-%   reports power, communication, sensing, and activation cost only
-%   conditionally on feasible binary solutions.
+%   The binary AP-target association determines the dedicated sensing waveform
+%   resources, while communication transmission remains globally cooperative.
+%   Consequently an infeasible sensing topology is a physical outcome, not a
+%   missing power sample. This script reports feasibility first and reports
+%   power, communication, sensing, and cluster cost conditionally on feasible
+%   binary solutions.
 %
 %   Examples:
 %     experiments_paper('Quick', true)       % 3 paired seeds, smoke study
@@ -26,10 +27,10 @@ if opt.Quick, opt.N_mc = 3; end
 cfg.M = 8; cfg.Nt = 4; cfg.K = 4; cfg.P = 2; cfg.N_theta = 2;
 cfg.Pmax_dBm = 20;
 cfg.AreaSize = 400;
-cfg.eps_h = 0.00;              % topology scan: remove robust interference to see pure trade-off
-cfg.Gamma_track = 30;          % relaxed PCRB threshold so N_req=1 has a chance
-cfg.N_req_main = 2;            % sweet-spot representative point
-cfg.N_req_list = 1:4;          % explore left-to-right extremes
+cfg.eps_h = 0.05;
+cfg.Gamma_track = 'auto';      % per-target physical isotropic-reference calibration
+cfg.N_req_main = 3;            % representative sensing-cluster size
+cfg.N_req_list = 1:4;
 cfg.T_max = 30;
 cfg.eps = 1e-5;
 cfg.eta_rank = 1.0;
@@ -229,7 +230,7 @@ rec.sum_rate = res.sum_rate;
 rec.pcrb = res.pcrb;
 rec.sens_sinr_db = res.sens_sinr_db;
 rec.active_aps = sum(any(res.b > 0.5, 2));
-rec.outage = evaluate_outage(res.W, prm, eval_eps, 200);
+rec.outage = evaluate_outage(res.W, res.S_p, prm, eval_eps, 200);
 end
 
 function prm = make_scenario(cfg, nreq, eps_h, seed)
@@ -238,7 +239,7 @@ prm = generate_scenario(cfg.M, cfg.Nt, cfg.K, cfg.P, cfg.N_theta, ...
     'N_req', nreq, 'eps_h', eps_h, 'seed', seed);
 end
 
-function outage = evaluate_outage(W, prm, eps_h, n_samples)
+function outage = evaluate_outage(W, S_p, prm, eps_h, n_samples)
 if eps_h == 0
     outage = 0;
     return;
@@ -257,6 +258,10 @@ for k = 1:prm.K
         interference = 0;
         for j = 1:prm.K
             if j ~= k, interference = interference + real(h' * W{j} * h); end
+        end
+        if ~isfield(prm, 'sensing_waveform_cancelled_at_ue') || ...
+                ~prm.sensing_waveform_cancelled_at_ue
+            interference = interference + real(h' * sum(S_p, 3) * h);
         end
         outages = outages + (signal / (interference + prm.sigma_c2) < prm.gamma_k(k));
         total = total + 1;

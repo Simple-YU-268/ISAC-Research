@@ -18,8 +18,12 @@ which is more stable for the double-DC SCA iterations.
 
 - MATLAB (R2020b or later recommended)
 - CVX 2.2 or later: http://cvxr.com/cvx/
-- **MOSEK** 11.2+ (strongly recommended for `N_theta >= 2`)
-- SDPT3 or SeDuMi as fallback for `N_theta = 1`
+- **SDPT3** (bundled with CVX) — the portable default; `default_params.m` and
+  `generate_scenario.m` both ship with `prm.solver = 'sdpt3'`.
+- **MOSEK** 11.2+ (optional accelerator). Recommended when `N_theta >= 2` if
+  SDPT3 shows slow or unstable convergence on the exact Schur PCRB LMI.
+  Enable it explicitly after `cvx_setup` lists MOSEK:
+  `prm.solver = 'mosek';`
 
 ## Installing MOSEK for CVX
 
@@ -45,7 +49,7 @@ sanity_check
 
 - `default_params.m` now sets `N_theta = 2` (2D target position) by default.
   For `N_theta = 1`, `M_p` is stored as a `1 x 1 x P` array for a uniform interface.
-  For `N_theta >= 2`, the exact Schur LMI `[M_p(:,:,p) I; I J_p] >= 0` with `trace(M_p(:,:,p)) <= Gamma_track(p)` is used; **MOSEK is required** for stable convergence.
+  For `N_theta >= 2`, the exact Schur LMI `[M_p(:,:,p) I; I J_p] >= 0` with `trace(M_p(:,:,p)) <= Gamma_track(p)` is used; **MOSEK is recommended** for stable convergence (SDPT3 remains the portable default).
 - The robust S-Procedure is enabled by default (`use_s_procedure = true`).
   The LMI lower-right entry uses `eps_h^2 * ||hk||^2` so that the uncertainty-ball radius is correctly scaled for non-normalized channels.
 - Physical beams are extracted via the principal eigenvector of each converged `W_k` and the SINR/PCRB metrics are evaluated using the rank-1 vectors.

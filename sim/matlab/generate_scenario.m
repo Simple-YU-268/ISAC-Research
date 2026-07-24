@@ -23,6 +23,8 @@ function prm = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, Gamma_track, va
 %       'gamma_PoD_dB'  - sensing SINR target in dB (default: 0)
 %       'RicianK_dB'    - sensing Rician K-factor in dB (default: Inf = pure LoS)
 %       'seed'          - RNG seed (default: 0, uses clock if negative)
+%       'fim_rcond_min' - minimum reciprocal condition number accepted by
+%                          the automatic PCRB calibration (default: 1e-10)
 %
 %   The channel model follows the paper: UE channels use Rayleigh fading with
 %   3GPP-like pathloss; target channels use LoS/Rician steering with derivative
@@ -41,8 +43,12 @@ addParameter(p, 'RicianK_dB', Inf, @isnumeric);
 addParameter(p, 'seed', 0, @isnumeric);
 addParameter(p, 'noise_snr_target', 1e4, @isnumeric);  % target best-AP SNR
 addParameter(p, 'Gamma_alpha', 3, @isnumeric);  % safety factor for 'auto' Gamma_track
+addParameter(p, 'fim_rcond_min', 1e-10, @isnumeric);
 parse(p, varargin{:});
 opt = p.Results;
+
+assert(opt.N_req <= M, 'generate_scenario:NreqTooLarge', ...
+    'N_req (%d) must not exceed M (%d).', opt.N_req, M);
 
 if ~ismember(N_theta, [1, 2])
     error('generate_scenario:UnsupportedNTheta', ...
@@ -195,20 +201,30 @@ prm.eps_h = opt.eps_h;
 prm.gamma_k = 10^(opt.gamma_k_dB/10) * ones(K,1);
 prm.gamma_PoD = 10^(opt.gamma_PoD_dB/10) * ones(P,1);
 % PCRB trace threshold: scalar (broadcast to all targets), P-vector, or 'auto'.
-% 'auto' calibrates per-target thresholds from an all-AP isotropic full-power
-% reference: Gamma_p = Gamma_alpha * trace(inv(Jp_ref)).  This reference is
+% 'auto' calibrates per-target thresholds from an all-AP isotropic reference
+% for dedicated sensing waveforms: Gamma_p = Gamma_alpha * trace(inv(Jp_ref)).
+% Each target receives an equal Pmax/P share of each AP's budget, so all target
+% reference covariances together respect tr(E_m R_X) <= Pmax. This reference is
 % neither a PCRB bound nor an optimum: directional covariance design can yield
-% a different (and often smaller) PCRB trace. Each AP block is
-% (Pmax/Nt)*I so that tr(E_m R) = Pmax respects the per-AP power constraint.
+% a different (and often smaller) PCRB trace.
 gamma_track_auto = (ischar(Gamma_track) || isstring(Gamma_track)) && strcmpi(Gamma_track, 'auto');
 if gamma_track_auto
     R_ref = zeros(N);
     for m = 1:M
-        R_ref((m-1)*Nt+1:m*Nt, (m-1)*Nt+1:m*Nt) = (Pmax / Nt) * eye(Nt);
+        R_ref((m-1)*Nt+1:m*Nt, (m-1)*Nt+1:m*Nt) = (Pmax / (P * Nt)) * eye(Nt);
     end
     Gamma_track = zeros(P, 1);
     for p = 1:P
         Jp_ref = 2 * real(prm.D(:,:,p)' * R_ref * prm.D(:,:,p)) / opt.sigma_s2;
+        Jp_ref = (Jp_ref + Jp_ref') / 2;
+        rcond_ref = rcond(Jp_ref);
+        if ~isfinite(rcond_ref) || rcond_ref < opt.fim_rcond_min
+            error('generate_scenario:UnobservableReferenceTarget', ...
+                ['Target %d has an ill-conditioned isotropic-reference FIM ' ...
+                 '(rcond %.3e). The reference geometry is unobservable; use ' ...
+                 'a different geometry or specify Gamma_track explicitly.'], ...
+                p, rcond_ref);
+        end
         Gamma_track(p) = opt.Gamma_alpha * trace(inv(Jp_ref));
     end
 elseif isscalar(Gamma_track)
@@ -220,10 +236,12 @@ prm.gamma_track_auto = gamma_track_auto;
 prm.use_s_procedure = true;
 prm.enable_sensing_sinr = true;
 prm.enable_pcrb = true;
-% Use CVX's bundled SDPT3 by default.  `which('mosekopt')` is not a
-% reliability test: it can find a MEX file whose dependent DLLs are absent.
-% Set prm.solver = 'mosek' explicitly only after cvx_setup reports MOSEK ready.
-prm.solver = 'mosek';
+% Dedicated sensing waveforms are treated as interference at UEs unless an
+% explicit receiver-side cancellation assumption is enabled by the caller.
+prm.sensing_waveform_cancelled_at_ue = false;
+% Use CVX's bundled SDPT3 by default. Set prm.solver = 'mosek' explicitly
+% only after cvx_setup reports MOSEK ready.
+prm.solver = 'sdpt3';
 prm.active_targets = 1:P;
 
 prm.mosek_tol_rel_gap = 1e-8;

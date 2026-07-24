@@ -1,7 +1,9 @@
-function [W, Z, mu, b, M_p, status] = solve_p3_sca_t(prm, W_prev, b_prev, eta_rank, eta_b, b_fixed)
+function [W, Z, mu, b, M_p, status, S_p] = solve_p3_sca_t(prm, W_prev, b_prev, eta_rank, eta_b, b_fixed)
 %SOLVE_P3_SCA_T  Solve (P3-SCA-t) via CVX/SDPT3 or MOSEK
 %
 %   Optional: b_fixed (M x P) forces b to be constant (used for final re-solve).
+%   Z is the aggregate sensing covariance sum_p S_p(:,:,p), retained for
+%   compatibility; the seventh output is the target-specific covariance tensor.
 
 if nargin < 6 || isempty(b_fixed)
     b_fixed = [];
@@ -37,7 +39,7 @@ cvx_begin quiet
     end
     cvx_precision default
     variable W_cvx(N,N,K) hermitian
-    variable Z_cvx(N,N) hermitian
+    variable S_p_cvx(N,N,P) hermitian
     variable mu_cvx(K) nonnegative
     variable M_p_cvx(N_theta, N_theta, P) hermitian
     if isempty(b_fixed)
@@ -47,7 +49,8 @@ cvx_begin quiet
     end
 
     % ---------- constraints ----------
-    R_X = sum(W_cvx, 3) + Z_cvx;
+    S_total = sum(S_p_cvx, 3);
+    R_X = sum(W_cvx, 3) + S_total;
 
     % (P3-C1) SINR
     for k = 1:K
@@ -56,6 +59,10 @@ cvx_begin quiet
             Ak = (1 / prm.gamma_k(k)) * W_cvx(:,:,k);
             for j = setdiff(1:K, k)
                 Ak = Ak - W_cvx(:,:,j);
+            end
+            if ~isfield(prm, 'sensing_waveform_cancelled_at_ue') || ...
+                    ~prm.sensing_waveform_cancelled_at_ue
+                Ak = Ak - S_total;
             end
             top_left = Ak + mu_cvx(k) * eye(N);
             top_right = Ak * hk;
@@ -69,6 +76,10 @@ cvx_begin quiet
             for j = setdiff(1:K,k)
                 interf = interf + real(hk' * W_cvx(:,:,j) * hk);
             end
+            if ~isfield(prm, 'sensing_waveform_cancelled_at_ue') || ...
+                    ~prm.sensing_waveform_cancelled_at_ue
+                interf = interf + real(hk' * S_total * hk);
+            end
             prm.gamma_k(k) * (interf + prm.sigma_c2) <= sig;
         end
     end
@@ -77,7 +88,7 @@ cvx_begin quiet
     if ~isfield(prm, 'enable_sensing_sinr') || prm.enable_sensing_sinr
         for p = 1:P
             gp = prm.G(:, p);
-            real(gp' * Z_cvx * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
+            real(gp' * S_p_cvx(:,:,p) * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
         end
     end
 
@@ -85,7 +96,9 @@ cvx_begin quiet
     if ~isfield(prm, 'enable_pcrb') || prm.enable_pcrb
         for p = 1:P
             Dp = prm.D(:,:,p);
-            J_p = 2 * real(Dp' * R_X * Dp) / prm.sigma_s2;
+            % Dedicated, known sensing waveform for target p. Communication
+            % covariances do not receive PCRB credit in this architecture.
+            J_p = 2 * real(Dp' * S_p_cvx(:,:,p) * Dp) / prm.sigma_s2;
             if N_theta == 1
                 inv_pos(J_p) <= M_p_cvx(1,1,p);
             else
@@ -96,10 +109,17 @@ cvx_begin quiet
         end
     end
 
-    % (P3-C5) per-AP power ceiling (uniform, AP-target gate removed to avoid
-    % coupling communication power with sensing topology)
+    % (P3-C5) total per-AP transmit-hardware power ceiling.
     for m = 1:M
         real(trace(E{m} * R_X)) <= prm.Pmax;
+    end
+
+    % (P3-C5b) AP-target dedicated sensing association. b gates only the
+    % sensing covariance for target p, never communication transmission.
+    for p = 1:P
+        for m = 1:M
+            real(trace(E{m} * S_p_cvx(:,:,p))) <= prm.Pmax * b_cvx(m,p);
+        end
     end
 
     % (P3-C6) service count: only active targets must be served by exactly N_req APs
@@ -116,7 +136,9 @@ cvx_begin quiet
     for k = 1:K
         W_cvx(:,:,k) == hermitian_semidefinite(N);
     end
-    Z_cvx == hermitian_semidefinite(N);
+    for p = 1:P
+        S_p_cvx(:,:,p) == hermitian_semidefinite(N);
+    end
 
     if isempty(b_fixed)
         b_cvx <= 1;
@@ -128,7 +150,9 @@ cvx_begin quiet
     for k = 1:K
         main_obj = main_obj + (1 + eta_rank) * real(trace(W_cvx(:,:,k)));
     end
-    main_obj = main_obj + real(trace(Z_cvx));
+    for p = 1:P
+        main_obj = main_obj + real(trace(S_p_cvx(:,:,p)));
+    end
 
     rank_pen = 0;
     for k = 1:K
@@ -150,7 +174,8 @@ W = cell(K,1);
 for k = 1:K
     W{k} = full(W_cvx(:,:,k));
 end
-Z = full(Z_cvx);
+S_p = full(S_p_cvx);
+Z = sum(S_p, 3);
 mu = full(mu_cvx);
 b = full(b_cvx);
     M_p = full(M_p_cvx);

@@ -14,9 +14,9 @@ if ~isfield(res, 'W')
 end
 
 % Evaluate and validate
-[max_viol, viol] = validate_solution(prm, res.W, res.Z, res.mu, res.b, res.M_p, 1e-6);
+[max_viol, viol] = validate_solution(prm, res.W, res.S_p, res.mu, res.b, res.M_p, 1e-6);
 
-[sum_rate, sens_sinr_db, pcrb] = evaluate(res.W, res.Z, res.b, prm);
+[sum_rate, sens_sinr_db, pcrb] = evaluate(res.W, res.S_p, res.b, prm);
 res.sum_rate = sum_rate;
 res.sens_sinr_db = sens_sinr_db;
 res.pcrb = pcrb;

@@ -2,7 +2,8 @@ function prm = default_params()
 %DEFAULT_PARAMS  Generate a simple test scenario with feasible channels
 %   Returns a struct with all fields needed by solve_p3_sca_t.
 
-rng(42);
+scenario_seed = 42;
+rng(scenario_seed);
 
 % Network
 M = 6;          % APs
@@ -11,6 +12,7 @@ N = M * Nt;     % stacked dimension
 K = 3;          % UEs
 P = 3;          % targets
 N_req = 2;      % APs per target
+assert(N_req <= M, 'default_params:NreqTooLarge', 'N_req (%d) must not exceed M (%d).', N_req, M);
 N_theta = 2;    % target parameter dimension (1 scalar ranging, 2 2D position, 3 3D)
 
 % Target SNR at best AP = 20 dB (linear 100) so gamma=0 dB is feasible
@@ -109,10 +111,11 @@ prm.active_targets = 1:P;
 prm.use_s_procedure = true;  % robust S-Procedure for SINR (eps_h is relative to ||hk||)
 prm.enable_sensing_sinr = true;
 prm.enable_pcrb = true;
-prm.solver = 'mosek';          % use SDPT3 only when MOSEK is unavailable
+prm.sensing_waveform_cancelled_at_ue = false;
+prm.solver = 'sdpt3';          % portable default; enable MOSEK explicitly
 prm.mosek_tol_rel_gap = 1e-8;
 prm.mosek_tol_pfeas = 1e-9;
-prm.seed = 0;  % default_params has no randomness
+prm.seed = scenario_seed;
 
 % Compatibility with generate_scenario-based plotting / baselines
 prm.AP_pos = AP_pos;
