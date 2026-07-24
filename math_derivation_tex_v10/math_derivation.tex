@@ -47,7 +47,22 @@
 \section{问题建模}\label{sec:formulation}
 %==============================================================================
 
-本章数学推导的原始 (P1) 问题决策变量为 per-AP 波束 $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$、感知协方差 $\mat{Z}_m \in \mathbb{H}_+^{N_t}$、AP-target 软分配权重 $b_{mp} \in [0,1]$（$b_{mp}=1$ 表示 AP $m$ 全力服务 target $p$，$b_{mp}=0$ 表示 AP $m$ 不参与对 target $p$ 的 sensing；与原文献的 $\{0,1\}$ 二元指示等价）。具体形式为
+\paragraph{以目标为中心的感知集群。}
+二元变量 $b_{mp}\in\{0,1\}$ 表示 AP $m$ 是否属于目标 $p$ 的感知集群。当 $b_{mp}=1$ 时，AP $m$ 获取的目标 $p$ 回波观测被传送至中央处理器，并纳入目标 $p$ 的联合参数估计。当 $b_{mp}=0$ 时，该观测不参与估计。该指示变量不控制 AP $m$ 的发射功率；通信波束成形保持全网协同。每个 AP 的发射硬件约束为
+\begin{equation}
+    \tr(\mat{E}_m\mat{R}_X)\leq P_{\max},\qquad \forall m\in\mathcal{M}.
+\end{equation}
+约束 $\sum_m b_{mp}=N_{\mathrm{req}}$ 给出目标 $p$ 的固定感知集群规模，进而限定接收、前传和处理资源。若 $N_{\mathrm{req}}$ 表示上限而非固定预算，应使用 $\leq N_{\mathrm{req}}$，并显式引入前传或处理代价。
+
+在该定义下，Fisher 信息必须按照接收 AP 分解。令 $\mat{D}_{mp}$ 表示 AP $m$ 获取的目标 $p$ 回波观测关于目标状态的导数，则集群 FIM 定义为
+\begin{equation}\label{eq:clustered-fim}
+ \mat{J}_p^{\mathrm{data}}(\mat{R}_X,\boldsymbol b_p)
+ = \sum_{m=1}^{M} b_{mp}\,\mat{J}_{mp}(\mat{R}_X),\qquad
+ \mat{J}_{mp}(\mat{R}_X)=\frac{2}{\sigma_s^2}\Real\!\left\{\mat{D}_{mp}^{H}\mat{R}_X\mat{D}_{mp}\right\}.
+\end{equation}
+因此，全体 AP 均可照射目标，而只有被选中的接收 AP 向该目标的 PCRB 提供信息。项 $b_{mp}\mat{J}_{mp}(\mat{R}_X)$ 耦合二元变量与发射协方差，必须采用专门的混合整数优化或逐次凸近似方法处理。基于 Sum Big-M 功率门控的表述，以及将 $\mat{J}_p^{\mathrm{data}}$ 仅视为 $\mat{R}_X$ 仿射函数的推导，对应于不同的建模假设；在完成上述重构之前，它们不能用于证明 \eqref{eq:clustered-fim} 的精确求解。
+
+本章数学推导的原始 (P1) 问题决策变量为 per-AP 波束 $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$、感知协方差 $\mat{Z}_m \in \mathbb{H}_+^{N_t}$、AP-target 软分配权重 $b_{mp} \in [0,1]$，其为上述感知集群二元变量的连续松弛。具体形式为
 \begin{align}
 \min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad
 & \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\

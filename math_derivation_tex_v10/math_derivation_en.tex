@@ -45,7 +45,22 @@
 \section{Problem Formulation}\label{sec:formulation}
 %==============================================================================
 
-The decision variables of the original problem (P1) are the per-AP beamforming vectors $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, the sensing covariance matrices $\mat{Z}_m \in \mathbb{H}_+^{N_t}$, and the AP--target soft-assignment weights $b_{mp} \in [0,1]$ ($b_{mp}=1$ means AP $m$ fully serves target $p$, $b_{mp}=0$ means AP $m$ does not participate in sensing for target $p$; equivalent to the original $\{0,1\}$ binary indicator after the DC relaxation in \S\ref{sec:relaxation}-E):
+\paragraph{Target-Centric Sensing Clusters.}
+The binary variable $b_{mp}\in\{0,1\}$ denotes whether AP $m$ belongs to the sensing cluster associated with target $p$. When $b_{mp}=1$, the echo observation collected by AP $m$ is forwarded to the central processor and included in the joint estimation of target $p$. When $b_{mp}=0$, this observation is excluded from the estimator. The indicator does not control the transmit power of AP $m$; communication beamforming remains globally cooperative. The per-AP transmit-hardware constraint is
+\begin{equation}
+    \tr(\mat{E}_m\mat{R}_X)\leq P_{\max},\qquad \forall m\in\mathcal{M}.
+\end{equation}
+The cardinality constraint $\sum_m b_{mp}=N_{\mathrm{req}}$ specifies a fixed sensing-cluster size and, consequently, a fixed reception, fronthaul, and processing budget for target $p$. If $N_{\mathrm{req}}$ is intended as an upper bound rather than a fixed budget, the equality should be replaced by $\leq N_{\mathrm{req}}$ and accompanied by an explicit fronthaul or processing cost.
+
+Under this interpretation, the Fisher information must be decomposed according to the receiving AP. Let $\mat{D}_{mp}$ denote the derivative of the echo observation for target $p$ collected by AP $m$. The clustered FIM is defined as
+\begin{equation}\label{eq:clustered-fim}
+ \mat{J}_p^{\mathrm{data}}(\mat{R}_X,\boldsymbol b_p)
+ = \sum_{m=1}^{M} b_{mp}\,\mat{J}_{mp}(\mat{R}_X),\qquad
+ \mat{J}_{mp}(\mat{R}_X)=\frac{2}{\sigma_s^2}\Real\!\left\{\mat{D}_{mp}^{H}\mat{R}_X\mat{D}_{mp}\right\}.
+\end{equation}
+Accordingly, all APs may illuminate a target, whereas only the selected receiving APs contribute information to its PCRB. The product $b_{mp}\mat{J}_{mp}(\mat{R}_X)$ couples a binary variable with a transmit covariance and therefore requires a dedicated mixed-integer or successive-convex-approximation reformulation. The Sum Big-M power-gating formulation and derivations based on an FIM that is affine solely in $\mat{R}_X$ correspond to a different model. They cannot establish an exact solution for \eqref{eq:clustered-fim} without the required reformulation.
+
+The decision variables of the original problem (P1) are the per-AP beamforming vectors $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, the sensing covariance matrices $\mat{Z}_m \in \mathbb{H}_+^{N_t}$, and the AP--target soft-assignment weights $b_{mp} \in [0,1]$, which are a continuous relaxation of the sensing-cluster indicator described above:
 \begin{align}
 \min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad
 & \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\
