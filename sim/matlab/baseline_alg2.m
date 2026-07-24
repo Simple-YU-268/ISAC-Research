@@ -13,7 +13,7 @@ if nargin < 5, eta_b = 1.0; end
 if nargin < 6, eta_growth = 1.3; end
 if nargin < 7, verbose = false; end
 
-K = prm.K; P = prm.P; N = prm.N; M = prm.M;
+K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
 W_init = cell(K,1);
 for k = 1:K
     W_init{k} = eye(N) * (prm.Pmax / prm.K / prm.M);
@@ -21,7 +21,12 @@ end
 b0 = ones(M,P) * (prm.N_req / M);
 [W_sdr, ~, ~, b_sdr, ~, status0] = solve_p3_sca_t(prm, W_init, b0, 0, 0);
 if ~contains(status0, 'Solved')
-    res = struct('status', 'initial_infeasible');
+    % Fast gatekeeper: continuous relaxation infeasible => integer problem infeasible
+    res = struct('status', 'infeasible_relaxed_gatekeeper', ...
+                 'final_obj', NaN, 'sum_rate', NaN, 'max_violation', inf, ...
+                 'W', [], 'Z', [], 'b', [], 'mu', [], 'M_p', [], ...
+                 'iters', 0, 'obj_trace', [], 'binary_converged', false, ...
+                 'init_label', 'gatekeeper', 'rounding_label', '');
     return;
 end
 
@@ -74,7 +79,7 @@ for init_idx = 1:numel(b_inits)
         if is_duplicate_assignment(b_fixed, seen_candidates), continue; end
         seen_candidates{end+1,1} = b_fixed;
         fixed_res = solve_p3_with_fixed_b(prm, b_fixed, ...
-            min(T_max, 10), eps, eta_rank, 0, eta_growth);
+            1, eps, 0, 0, eta_growth);
         if isfield(fixed_res,'is_physical_feasible') && fixed_res.is_physical_feasible
             fixed_res.obj_trace_dc = obj_trace;
             fixed_res.binary_converged = true;
@@ -128,6 +133,7 @@ function b = ue_aware_assignment(prm, target_order)
 %   a novelty reward that discourages different targets from selecting the
 %   same AP set. It is only a binary-recovery heuristic; C6 remains exact.
 M = prm.M;
+Nt = prm.N / prm.M;
 b = zeros(M, prm.P);
 active = false(M,1);
 for p = target_order
@@ -135,7 +141,7 @@ for p = target_order
     steering_score = zeros(M,1);
     ue_score = zeros(M,1);
     for m = 1:M
-        block = (m-1)*prm.Nt + (1:prm.Nt);
+        block = (m-1)*Nt + (1:Nt);
         sensing_score(m) = norm(prm.D(block,:,p), 'fro')^2;
         steering_score(m) = norm(prm.G(block,p))^2;
         per_ue_gain = sum(abs(prm.H(block,:)).^2, 1);

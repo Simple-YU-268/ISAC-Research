@@ -100,14 +100,11 @@ if ~isfield(prm, 'enable_pcrb') || prm.enable_pcrb
     end
 end
 
-% (C5'a)(C5'b) per-AP power
+% (C5) per-AP power ceiling (uniform)
 for m = 1:M
     pwr = real(trace(E{m} * R));
-    viol = max(0, pwr - prm.Pmax * sum(b(m, :)));
-    viol_report.power_gate(m) = viol;
-    max_violation = max(max_violation, viol);
     viol = max(0, pwr - prm.Pmax);
-    viol_report.power_hard(m) = viol;
+    viol_report.power(m) = viol;
     max_violation = max(max_violation, viol);
 end
 

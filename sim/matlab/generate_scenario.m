@@ -35,7 +35,7 @@ addParameter(p, 'fc', 2.8e9, @isnumeric);
 addParameter(p, 'sigma_c2', 1.0, @isnumeric);  % normalized to 1 for solver numerical stability
 addParameter(p, 'sigma_s2', 1.0, @isnumeric);
 addParameter(p, 'eps_h', 0.05, @isnumeric);
-addParameter(p, 'gamma_k_dB', 10, @isnumeric);  % raised from 0 dB to avoid degenerate near-zero rate
+addParameter(p, 'gamma_k_dB', 0, @isnumeric);  % 0 dB SINR target for feasibility headroom
 addParameter(p, 'gamma_PoD_dB', 0, @isnumeric);
 addParameter(p, 'RicianK_dB', Inf, @isnumeric);
 addParameter(p, 'seed', 0, @isnumeric);
@@ -223,7 +223,7 @@ prm.enable_pcrb = true;
 % Use CVX's bundled SDPT3 by default.  `which('mosekopt')` is not a
 % reliability test: it can find a MEX file whose dependent DLLs are absent.
 % Set prm.solver = 'mosek' explicitly only after cvx_setup reports MOSEK ready.
-prm.solver = 'sdpt3';
+prm.solver = 'mosek';
 prm.active_targets = 1:P;
 
 prm.mosek_tol_rel_gap = 1e-8;

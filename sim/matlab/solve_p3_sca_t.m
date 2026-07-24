@@ -96,14 +96,12 @@ cvx_begin quiet
         end
     end
 
-    % (P3-C5a) per-AP power with AP-target gate
-    for m = 1:M
-        real(trace(E{m} * R_X)) <= prm.Pmax * sum(b_cvx(m, :));
-    end
-    % (P3-C5b) hard ceiling
+    % (P3-C5) per-AP power ceiling (uniform, AP-target gate removed to avoid
+    % coupling communication power with sensing topology)
     for m = 1:M
         real(trace(E{m} * R_X)) <= prm.Pmax;
     end
+
     % (P3-C6) service count: only active targets must be served by exactly N_req APs
     if isempty(b_fixed)
         for p = 1:P

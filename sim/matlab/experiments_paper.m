@@ -26,10 +26,10 @@ if opt.Quick, opt.N_mc = 3; end
 cfg.M = 8; cfg.Nt = 4; cfg.K = 4; cfg.P = 2; cfg.N_theta = 2;
 cfg.Pmax_dBm = 20;
 cfg.AreaSize = 400;
-cfg.eps_h = 0.05;
-cfg.Gamma_track = 'auto';
-cfg.N_req_main = 3;                 % validated representative operating point
-cfg.N_req_list = 2:min(5, cfg.M);  % study the physical feasibility boundary
+cfg.eps_h = 0.00;              % topology scan: remove robust interference to see pure trade-off
+cfg.Gamma_track = 30;          % relaxed PCRB threshold so N_req=1 has a chance
+cfg.N_req_main = 2;            % sweet-spot representative point
+cfg.N_req_list = 1:4;          % explore left-to-right extremes
 cfg.T_max = 30;
 cfg.eps = 1e-5;
 cfg.eta_rank = 1.0;
