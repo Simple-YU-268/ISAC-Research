@@ -7,11 +7,11 @@ function experiments_paper()
 %   on a single core. Increase N_workers and N_mc for final paper figures.
 
 %% 0. Common settings ------------------------------------------------------
-M = 8; Nt = 4; K = 4; P = 2; N_theta = 2;          % small-scale smoke test
+M = 12; Nt = 4; K = 4; P = 2; N_theta = 2;          % memory-safe large scale (16 GB M4)
 Pmax_dBm = 20;                                      % per-AP power (dBm)
 Gamma_track = 10;                                    % PCRB trace threshold
-N_mc = 3;                                            % MC trials for quick smoke test (increase for final)
-N_workers = 6;                                       % number of parallel workers (parfor)
+N_mc = 100;                                          % large-scale Monte Carlo trials
+N_workers = 2;                                       % conservative parallel workers to avoid OOM
 
 save_tag = sprintf('M%d_Nt%d_K%d_P%d_Nth%d_mc%d', M, Nt, K, P, N_theta, N_mc);
 out_dir = fullfile(pwd, 'figures');
