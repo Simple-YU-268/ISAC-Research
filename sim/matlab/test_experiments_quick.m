@@ -4,11 +4,11 @@ function test_experiments_quick()
 %   non-robust baseline + comm-only + sensing-only in a few minutes.
 
 M = 8; Nt = 4; K = 4; P = 2; N_theta = 2;
-Pmax_dBm = 20; Gamma_track = 'auto';  % calibrate from physical FIM bound
+Pmax_dBm = 20; Gamma_track = 'auto';  % physical isotropic-reference calibration
 
 fprintf('=== Generate scenario ===\n');
 prm = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, Gamma_track, ...
-    'AreaSize', 400, 'N_req', 2, 'eps_h', 0.05, 'seed', 1, 'noise_snr_target', 1e4);
+    'AreaSize', 400, 'N_req', 3, 'eps_h', 0.05, 'seed', 1, 'noise_snr_target', 1e4);
 fprintf('AP positions: %d x %d\n', size(prm.AP_pos,1), size(prm.AP_pos,2));
 fprintf('H: %d x %d\n', size(prm.H,1), size(prm.H,2));
 fprintf('G: %d x %d\n', size(prm.G,1), size(prm.G,2));
