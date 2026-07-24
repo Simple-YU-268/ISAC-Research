@@ -9,7 +9,7 @@ function experiments_paper()
 %% 0. Common settings ------------------------------------------------------
 M = 12; Nt = 4; K = 4; P = 2; N_theta = 2;          % memory-safe large scale (16 GB M4)
 Pmax_dBm = 20;                                      % per-AP power (dBm)
-Gamma_track = 10;                                    % PCRB trace threshold
+Gamma_track = 'auto';                                % physical, per-target PCRB reference
 N_mc = 100;                                          % large-scale Monte Carlo trials
 N_workers = 2;                                       % conservative parallel workers to avoid OOM
 
@@ -33,12 +33,16 @@ saveas(gcf, fullfile(out_dir, [save_tag, '_fig1_convergence.png']));
 
 %% 2. Figure 2: Pareto frontier (sum rate vs total power for varying Gamma_track)
 fprintf('=== Figure 2: Pareto Frontier ===\n');
-Gamma_list = [1, 2, 5, 10, 20, 50];
+Gamma_scale_list = [1, 1.25, 1.5, 2, 3, 5];
+prm_ref = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, 'auto', ...
+    'AreaSize', 400, 'N_req', 2, 'eps_h', 0.05, 'seed', 2026);
+Gamma_list = Gamma_scale_list;  % multipliers of the physical reference threshold
 pareto_power = nan(length(Gamma_list), 1);
 pareto_rate  = nan(length(Gamma_list), 1);
 for i = 1:length(Gamma_list)
-    fprintf('  Gamma = %.1f ...\n', Gamma_list(i));
-    prm = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, Gamma_list(i), ...
+    fprintf('  Gamma scale = %.2f ...\n', Gamma_scale_list(i));
+    prm = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, ...
+        Gamma_scale_list(i) * prm_ref.Gamma_track, ...
         'AreaSize', 400, 'N_req', 2, 'eps_h', 0.05, 'seed', 2026);
     res = baseline_alg2(prm, 30, 1e-5, 1.0, 1.0, 1.3, false);
     if contains(res.status, 'Solved')
@@ -71,7 +75,7 @@ for i = 1:N_eps
         'AreaSize', 400, 'N_req', 2, 'eps_h', eps_list(i), 'seed', 2026);
 
     [rob_power(i), rob_power_std(i), rob_outage(i)] = ...
-        mc_run(prm_nom, N_mc, N_workers, 'proposed');
+        mc_run(prm_nom, N_mc, N_workers, 'proposed', 'eval_eps', eps_list(i));
 
     % Non-robust baseline: design with eps=0, evaluate with true random errors
     prm_nonrob = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, Gamma_track, ...
@@ -138,7 +142,7 @@ end
 function [avg_power, std_power, outage] = mc_run(prm, N_mc, N_workers, mode, varargin)
 %MC_RUN  Monte Carlo wrapper for a given mode
 %   mode: 'proposed', 'heuristic_b', 'nonrobust', 'comm_only', 'sensing_only'
-%   For 'nonrobust', optional 'eval_eps' gives the true CSI error for evaluation.
+%   Optional 'eval_eps' gives the true CSI error used to evaluate every design.
 
 p = inputParser;
 addParameter(p, 'eval_eps', 0, @isnumeric);
@@ -180,7 +184,7 @@ seed = prm0.seed + n;
 
 % Re-draw scenario with same structural parameters but different random seed
 prm = generate_scenario(prm0.M, prm0.Nt, prm0.K, prm0.P, prm0.N_theta, ...
-    10*log10(prm0.Pmax), prm0.Gamma_track(1), ...
+    10*log10(prm0.Pmax) + 30, gamma_input(prm0), ...
     'AreaSize', 400, 'N_req', prm0.N_req, 'eps_h', prm0.eps_h, ...
     'sigma_c2', prm0.sigma_c2, 'sigma_s2', prm0.sigma_s2, 'seed', seed);
 
@@ -200,7 +204,8 @@ switch mode
 
     case 'comm_only'
         prm.Gamma_track = 1e6 * ones(prm.P, 1);
-        prm.gamma_PoD = -30 * ones(prm.P, 1);
+        prm.enable_sensing_sinr = false;
+        prm.enable_pcrb = false;
         b = heuristic_b(prm);
         res = solve_p3_with_fixed_b(prm, b, 30, 1e-5, 1.0, 1.0, 1.3);
 
@@ -219,8 +224,9 @@ end
 
 rec.power = res.final_obj;
 
-% Evaluate outage with true random channel error if requested
-if strcmp(mode, 'nonrobust') && eval_eps > 0
+% Evaluate every design under the same true random channel error model.
+% This is necessary for a meaningful robust-vs-non-robust outage comparison.
+if eval_eps > 0
     N_err_samples = 1000;  % per-UE samples for outage probability
     outage_count = 0;
     total_count = 0;
@@ -252,6 +258,14 @@ if strcmp(mode, 'nonrobust') && eval_eps > 0
     rec.outage = outage_count / total_count;
 else
     rec.outage = 0;
+end
+end
+
+function gamma = gamma_input(prm)
+if isfield(prm, 'gamma_track_auto') && prm.gamma_track_auto
+    gamma = 'auto';
+else
+    gamma = prm.Gamma_track;
 end
 end
 

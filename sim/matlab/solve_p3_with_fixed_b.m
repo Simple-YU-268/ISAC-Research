@@ -14,10 +14,10 @@ K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
 % Warm start
 W0 = cell(K,1);
 for k = 1:K
-    W0{k} = eye(N) * (prm.Pmax / prm.K / prm.M);
+    W0{k} = eye(N) * (prm.Pmax / prm.K / Nt);
 end
 
-% b_fixed must be passed into solve_p3_sca_t as the third argument
+% b_fixed is passed as the optional sixth argument to solve_p3_sca_t.
 [sol0.W, sol0.Z, sol0.mu, sol0.b, sol0.M_p, sol0.status] = ...
     solve_p3_sca_t(prm, W0, b_fixed, 0.0, 0.0, b_fixed);
 
@@ -85,7 +85,8 @@ for k = 1:K
 end
 
 [sum_rate, sens_sinr_db, pcrb] = evaluate(W_phys, Z_prev, b_prev, prm);
-[max_viol, ~] = validate_solution(prm, W_phys, Z_prev, mu_prev, b_prev, M_p_prev, 1e-6);
+feas_tol = 1e-5;
+[max_viol, viol_report] = validate_solution(prm, W_phys, Z_prev, mu_prev, b_prev, M_p_prev, feas_tol);
 
 final_obj = 0;
 for k = 1:K
@@ -93,7 +94,13 @@ for k = 1:K
 end
 final_obj = final_obj + real(trace(Z_prev));
 
-res.status = last_status;
+res.is_physical_feasible = max_viol <= feas_tol;
+res.solver_status = last_status;
+if res.is_physical_feasible
+    res.status = last_status;
+else
+    res.status = sprintf('physical_solution_infeasible (max violation: %.3e)', max_viol);
+end
 res.iters = length(obj_trace);
 res.obj_trace = obj_trace;
 res.binary_converged = binary_converged;
@@ -108,5 +115,6 @@ res.b = b_prev;
 res.mu = mu_prev;
 res.M_p = M_p_prev;
 res.max_violation = max_viol;
+res.violation_report = viol_report;
 
 end

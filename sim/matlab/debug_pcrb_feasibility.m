@@ -39,7 +39,7 @@ end
 % Check PCRB Schur eigenvalues
 for p = 1:P
     Dp = prm.D(:,:,p);
-    Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+    Jp = 2 * real(Dp' * R * Dp) / prm.sigma_s2;
     fprintf('Target %d Jp eigenvalues: %.4e %.4e\n', p, eig(Jp));
     M_block = prm.Gamma_track(p) / N_theta * eye(N_theta);
     Schur = [M_block, eye(N_theta); eye(N_theta), Jp];

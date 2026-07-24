@@ -29,7 +29,7 @@ end
 pcrb = zeros(P, 1);
 for p = 1:P
     Dp = prm.D(:,:,p);
-    Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+    Jp = 2 * real(Dp' * R * Dp) / prm.sigma_s2;
     if prm.N_theta == 1
         if Jp > 1e-9
             pcrb(p) = 1 / Jp;

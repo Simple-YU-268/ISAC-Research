@@ -43,7 +43,10 @@ max_violation = max(max_violation, viol_report.Z_psd);
 for k = 1:K
     hk = prm.H(:, k);
     if prm.use_s_procedure
-        Ak = (1 / prm.gamma_k(k)) * W{k} - sum(cat(3, W{setdiff(1:K,k)}), 3);
+        Ak = (1 / prm.gamma_k(k)) * W{k};
+        for j = setdiff(1:K, k)
+            Ak = Ak - W{j};
+        end
         top_left = Ak + mu(k) * eye(N);
         top_right = Ak * hk;
         bot_left = hk' * Ak;
@@ -66,19 +69,22 @@ for k = 1:K
 end
 
 % (C2) Sensing SINR
-for p = 1:P
-    gp = prm.G(:, p);
-    lhs = prm.gamma_PoD(p) * prm.sigma_s2;
-    val = real(gp' * Z * gp);
-    viol = max(0, lhs - val);
-    viol_report.sensing_sinr(p) = viol;
-    max_violation = max(max_violation, viol);
+if ~isfield(prm, 'enable_sensing_sinr') || prm.enable_sensing_sinr
+    for p = 1:P
+        gp = prm.G(:, p);
+        lhs = prm.gamma_PoD(p) * prm.sigma_s2;
+        val = real(gp' * Z * gp);
+        viol = max(0, lhs - val);
+        viol_report.sensing_sinr(p) = viol;
+        max_violation = max(max_violation, viol);
+    end
 end
 
-% (C3)(C4) PCRB: multi-dimensional Schur LMI (N_theta >= 2) or scalar inv_pos (N_theta=1)
+% (C3)(C4) Exact trace-of-inverse PCRB Schur LMI.
+if ~isfield(prm, 'enable_pcrb') || prm.enable_pcrb
     for p = 1:P
         Dp = prm.D(:,:,p);
-        Jp = real(Dp' * R * Dp) / prm.sigma_s2;
+        Jp = 2 * real(Dp' * R * Dp) / prm.sigma_s2;
         if prm.N_theta == 1
             viol = max(0, 1/Jp - M_p(1,1,p));
         else
@@ -92,6 +98,7 @@ end
         viol_report.pcrb_upper(p) = viol;
         max_violation = max(max_violation, viol);
     end
+end
 
 % (C5'a)(C5'b) per-AP power
 for m = 1:M
@@ -118,5 +125,7 @@ end
 % (C10) box
 viol_report.b_box = max([0, max(-b(:)), max(b(:) - 1)]);
 max_violation = max(max_violation, viol_report.b_box);
+viol_report.tolerance = tol;
+viol_report.is_feasible = max_violation <= tol;
 
 end

@@ -53,7 +53,10 @@ cvx_begin quiet
     for k = 1:K
         hk = prm.H(:, k);
         if prm.use_s_procedure
-            Ak = (1 / prm.gamma_k(k)) * W_cvx(:,:,k) - sum(W_cvx(:,:,setdiff(1:K,k)), 3);
+            Ak = (1 / prm.gamma_k(k)) * W_cvx(:,:,k);
+            for j = setdiff(1:K, k)
+                Ak = Ak - W_cvx(:,:,j);
+            end
             top_left = Ak + mu_cvx(k) * eye(N);
             top_right = Ak * hk;
             bot_left = hk' * Ak;
@@ -70,23 +73,27 @@ cvx_begin quiet
         end
     end
 
-    % (P3-C2) sensing SINR
-    for p = 1:P
-        gp = prm.G(:, p);
-        real(gp' * Z_cvx * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
+    % (P3-C2) sensing SINR (can be disabled for the communication-only baseline)
+    if ~isfield(prm, 'enable_sensing_sinr') || prm.enable_sensing_sinr
+        for p = 1:P
+            gp = prm.G(:, p);
+            real(gp' * Z_cvx * gp) >= prm.gamma_PoD(p) * prm.sigma_s2;
+        end
     end
 
-    % (C3)(C4) PCRB: exact trace-of-inverse Schur LMI per manuscript §II-D
-    for p = 1:P
-        Dp = prm.D(:,:,p);
-        J_p = real(Dp' * R_X * Dp) / prm.sigma_s2;
-        if prm.N_theta == 1
-            inv_pos(J_p) <= M_p_cvx(1,1,p);
-        else
-            [M_p_cvx(:,:,p), eye(N_theta); ...
-             eye(N_theta),              J_p      ] == hermitian_semidefinite(2 * N_theta);
+    % (C3)(C4) Exact trace-of-inverse PCRB Schur LMI.
+    if ~isfield(prm, 'enable_pcrb') || prm.enable_pcrb
+        for p = 1:P
+            Dp = prm.D(:,:,p);
+            J_p = 2 * real(Dp' * R_X * Dp) / prm.sigma_s2;
+            if N_theta == 1
+                inv_pos(J_p) <= M_p_cvx(1,1,p);
+            else
+                [M_p_cvx(:,:,p), eye(N_theta); ...
+                 eye(N_theta),              J_p      ] == hermitian_semidefinite(2 * N_theta);
+            end
+            real(trace(M_p_cvx(:,:,p))) <= prm.Gamma_track(p);
         end
-        real(trace(M_p_cvx(:,:,p))) <= prm.Gamma_track(p);
     end
 
     % (P3-C5a) per-AP power with AP-target gate

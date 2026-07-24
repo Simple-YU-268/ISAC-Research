@@ -107,7 +107,9 @@ prm.P = P;
 % Default: all targets active
 prm.active_targets = 1:P;
 prm.use_s_procedure = true;  % robust S-Procedure for SINR (eps_h is relative to ||hk||)
-prm.solver = 'mosek';          % default solver for SCA subproblems
+prm.enable_sensing_sinr = true;
+prm.enable_pcrb = true;
+prm.solver = 'mosek';          % use SDPT3 only when MOSEK is unavailable
 prm.mosek_tol_rel_gap = 1e-8;
 prm.mosek_tol_pfeas = 1e-9;
 prm.seed = 0;  % default_params has no randomness

@@ -9,7 +9,9 @@ function prm = generate_scenario(M, Nt, K, P, N_theta, Pmax_dBm, Gamma_track, va
 %       P           - number of sensing targets
 %       N_theta     - target parameter dimension (1: scalar, 2: 2D position, 3: 3D)
 %       Pmax_dBm    - per-AP maximum transmit power in dBm
-%       Gamma_track - PCRB trace threshold (scalar, applied to all targets)
+%       Gamma_track - PCRB trace threshold: scalar (broadcast), P-vector, or
+%                     'auto' (calibrated from the physical FIM upper bound,
+%                     scaled by the 'Gamma_alpha' factor, default 3)
 %   Optional name-value pairs:
 %       'AreaSize'      - square area side length in meters (default: 400)
 %       'N_req'         - required APs per target (default: 3)
@@ -38,8 +40,14 @@ addParameter(p, 'gamma_PoD_dB', 0, @isnumeric);
 addParameter(p, 'RicianK_dB', Inf, @isnumeric);
 addParameter(p, 'seed', 0, @isnumeric);
 addParameter(p, 'noise_snr_target', 1e4, @isnumeric);  % target best-AP SNR
+addParameter(p, 'Gamma_alpha', 3, @isnumeric);  % safety factor for 'auto' Gamma_track
 parse(p, varargin{:});
 opt = p.Results;
+
+if ~ismember(N_theta, [1, 2])
+    error('generate_scenario:UnsupportedNTheta', ...
+        'Only N_theta = 1 or 2 is supported by the current 2D geometry model.');
+end
 
 if opt.seed >= 0
     rng(opt.seed);
@@ -49,7 +57,7 @@ end
 
 % System dimensions
 N = M * Nt;
-Pmax = 10^(Pmax_dBm / 10);  % linear power
+Pmax = 10^((Pmax_dBm - 30) / 10);  % W
 
 % Network geometry
 AreaSize = opt.AreaSize;
@@ -139,12 +147,8 @@ for p = 1:P
     end
 end
 
-% Normalize D to have comparable block norms to G (so that Jp is well-scaled)
-for p = 1:P
-    % QR-orthogonalize derivative columns to avoid numerical ill-conditioning
-    [Q, ~] = qr(D(:,:,p), 0);
-    D(:,:,p) = Q * (norm(G(:,p)) / sqrt(N_theta));
-end
+% Keep the physical coordinate derivatives.  Do not QR-normalize these
+% columns: their relative magnitude carries the geometry-dependent FIM.
 
 % Scale H and G so that the best AP has a target receive SNR of
 % noise_snr_target (linear) at Pmax. This mirrors the scaling in default_params.
@@ -190,27 +194,40 @@ prm.sigma_s2 = opt.sigma_s2;
 prm.eps_h = opt.eps_h;
 prm.gamma_k = 10^(opt.gamma_k_dB/10) * ones(K,1);
 prm.gamma_PoD = 10^(opt.gamma_PoD_dB/10) * ones(P,1);
-prm.Gamma_track = Gamma_track * ones(P,1);
+% PCRB trace threshold: scalar (broadcast to all targets), P-vector, or 'auto'.
+% 'auto' calibrates per-target thresholds from an all-AP isotropic full-power
+% reference: Gamma_p = Gamma_alpha * trace(inv(Jp_ref)).  This reference is
+% neither a PCRB bound nor an optimum: directional covariance design can yield
+% a different (and often smaller) PCRB trace. Each AP block is
+% (Pmax/Nt)*I so that tr(E_m R) = Pmax respects the per-AP power constraint.
+gamma_track_auto = (ischar(Gamma_track) || isstring(Gamma_track)) && strcmpi(Gamma_track, 'auto');
+if gamma_track_auto
+    R_ref = zeros(N);
+    for m = 1:M
+        R_ref((m-1)*Nt+1:m*Nt, (m-1)*Nt+1:m*Nt) = (Pmax / Nt) * eye(Nt);
+    end
+    Gamma_track = zeros(P, 1);
+    for p = 1:P
+        Jp_ref = 2 * real(prm.D(:,:,p)' * R_ref * prm.D(:,:,p)) / opt.sigma_s2;
+        Gamma_track(p) = opt.Gamma_alpha * trace(inv(Jp_ref));
+    end
+elseif isscalar(Gamma_track)
+    Gamma_track = Gamma_track * ones(P, 1);
+end
+prm.Gamma_track = Gamma_track(:);
+prm.gamma_track_auto = gamma_track_auto;
 
 prm.use_s_procedure = true;
-prm.solver = 'mosek';
+prm.enable_sensing_sinr = true;
+prm.enable_pcrb = true;
+% Use CVX's bundled SDPT3 by default.  `which('mosekopt')` is not a
+% reliability test: it can find a MEX file whose dependent DLLs are absent.
+% Set prm.solver = 'mosek' explicitly only after cvx_setup reports MOSEK ready.
+prm.solver = 'sdpt3';
 prm.active_targets = 1:P;
 
 prm.mosek_tol_rel_gap = 1e-8;
 prm.mosek_tol_pfeas = 1e-9;
 prm.seed = opt.seed;
-
-% Ensure PCRB is reachable: with all APs at Pmax/2 equally split, trace(inv(Jp)) <= Gamma/2.
-for p = 1:P
-    R_test = zeros(N, N);
-    for m = 1:M
-        R_test((m-1)*Nt+1:m*Nt, (m-1)*Nt+1:m*Nt) = (Pmax / 2 / M) * eye(Nt);
-    end
-    Jp = real(prm.D(:,:,p)' * R_test * prm.D(:,:,p)) / opt.sigma_s2;
-    if min(eig(Jp)) > 1e-9 && trace(inv(Jp)) > Gamma_track / 2
-        boost = sqrt(2 * trace(inv(Jp)) / Gamma_track);
-        prm.D(:,:,p) = prm.D(:,:,p) * boost;
-    end
-end
 
 end
