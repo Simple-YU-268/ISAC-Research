@@ -1,4 +1,4 @@
-function experiments_paper(varargin)
+function [nreq_result, robust, cfg] = experiments_paper(varargin)
 %EXPERIMENTS_PAPER  Feasibility-aware Monte Carlo study for Cell-Free ISAC.
 %   The binary AP-target association determines the dedicated sensing waveform
 %   resources, while communication transmission remains globally cooperative.
@@ -10,6 +10,7 @@ function experiments_paper(varargin)
 %   Examples:
 %     experiments_paper('Quick', true)       % 3 paired seeds, smoke study
 %     experiments_paper('N_mc', 100)         % final Monte Carlo campaign
+%     experiments_paper('N_req_list', 1:6, 'Run_robustness', false)
 %
 %   All N_req values share the same seed set, channel model, power budget, and
 %   auto-calibrated Gamma reference.  The latter is independent of N_req.
@@ -19,6 +20,10 @@ addParameter(p, 'Quick', false, @islogical);
 addParameter(p, 'N_mc', 30, @(x) isnumeric(x) && isscalar(x) && x > 0);
 addParameter(p, 'N_workers', 0, @(x) isnumeric(x) && isscalar(x) && x >= 0);
 addParameter(p, 'Base_seed', 2026, @(x) isnumeric(x) && isscalar(x));
+addParameter(p, 'N_req_list', [], @(x) isnumeric(x) && isvector(x));
+addParameter(p, 'Run_robustness', true, @islogical);
+addParameter(p, 'Output_dir', '', @(x) ischar(x) || isstring(x));
+addParameter(p, 'Output_tag', '', @(x) ischar(x) || isstring(x));
 parse(p, varargin{:});
 opt = p.Results;
 if opt.Quick, opt.N_mc = 3; end
@@ -30,7 +35,7 @@ cfg.AreaSize = 400;
 cfg.eps_h = 0.05;
 cfg.Gamma_track = 'auto';      % per-target physical isotropic-reference calibration
 cfg.N_req_main = 3;            % representative sensing-cluster size
-cfg.N_req_list = 1:4;
+cfg.N_req_list = 1:cfg.M;
 cfg.T_max = 30;
 cfg.eps = 1e-5;
 cfg.eta_rank = 1.0;
@@ -39,10 +44,30 @@ cfg.eta_growth = 1.3;
 cfg.N_mc = opt.N_mc;
 cfg.N_workers = opt.N_workers;
 cfg.Base_seed = opt.Base_seed;
+cfg.sensing_power_threshold = 1e-8;  % W: realized AP-target sensing activity
+cfg.outage_samples = 200;
+if opt.Quick
+    cfg.N_req_list = 1:min(4, cfg.M);
+    cfg.outage_samples = 40;
+end
+if ~isempty(opt.N_req_list)
+    cfg.N_req_list = unique(opt.N_req_list(:).');
+    assert(all(cfg.N_req_list >= 1 & cfg.N_req_list <= cfg.M & ...
+        cfg.N_req_list == round(cfg.N_req_list)), ...
+        'N_req_list must contain integer values in 1:M.');
+end
+cfg.run_robustness = opt.Run_robustness;
 
-out_dir = fullfile(pwd, 'figures');
+if strlength(string(opt.Output_dir)) == 0
+    out_dir = fullfile(pwd, 'figures');
+else
+    out_dir = char(opt.Output_dir);
+end
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 save_tag = sprintf('feasibility_M%d_K%d_P%d_mc%d', cfg.M, cfg.K, cfg.P, cfg.N_mc);
+if strlength(string(opt.Output_tag)) > 0
+    save_tag = [save_tag, '_', char(opt.Output_tag)];
+end
 
 %% Figure 1: representative convergence at a feasible operating point -----
 fprintf('=== Figure 1: representative convergence (N_req=%d) ===\n', cfg.N_req_main);
@@ -70,6 +95,8 @@ for i = 1:numel(cfg.N_req_list)
     nreq_result.proposed(i) = mc_run(cfg, nreq, 'proposed', cfg.eps_h, cfg.eps_h);
     fprintf('  N_req=%d: nearest-AP baseline ...\n', nreq);
     nreq_result.nearest(i) = mc_run(cfg, nreq, 'nearest', cfg.eps_h, cfg.eps_h);
+    nreq_result.paired(i) = paired_stats(nreq_result.proposed(i), ...
+        nreq_result.nearest(i));
 end
 
 prop_feas = [nreq_result.proposed.feasibility];
@@ -118,37 +145,65 @@ plot(cfg.N_req_list, [nreq_result.nearest.conditional_sensing_sinr_db], 'r--s', 
 grid on; xlabel('N_{req}'); ylabel('Mean sensing SINR [dB] | feasible');
 
 subplot(2,2,4);
-plot(cfg.N_req_list, [nreq_result.proposed.conditional_active_aps], 'b-o', 'LineWidth', 1.5); hold on;
-plot(cfg.N_req_list, [nreq_result.nearest.conditional_active_aps], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Activated APs | feasible');
+plot(cfg.N_req_list, [nreq_result.proposed.conditional_realized_network_aps], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.nearest.conditional_realized_network_aps], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('APs with nonzero sensing power | feasible');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig4_conditional_performance_vs_nreq.png']));
 
-%% Figure 5: robustness at the selected feasible operating point -----------
-fprintf('=== Figure 5: robustness at N_req=%d ===\n', cfg.N_req_main);
-eps_list = [0, 0.02, 0.05, 0.08];
+% Direct algorithm comparison must use only paired realizations where both
+% methods return a binary physical solution.
+figure('Name', 'Fig5_PairedPerformanceVsNreq');
+subplot(2,2,1);
+plot(cfg.N_req_list, [nreq_result.paired.proposed_rate], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.paired.nearest_rate], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('Sum rate [bit/s/Hz] | jointly feasible');
+legend('Proposed', 'Nearest-AP', 'Location', 'best');
+
+subplot(2,2,2);
+plot(cfg.N_req_list, [nreq_result.paired.proposed_pcrb_ratio], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.paired.nearest_pcrb_ratio], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('Mean PCRB / threshold | jointly feasible');
+
+subplot(2,2,3);
+plot(cfg.N_req_list, [nreq_result.paired.proposed_power], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.paired.nearest_power], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('Transmit power [W] | jointly feasible');
+
+subplot(2,2,4);
+plot(cfg.N_req_list, [nreq_result.paired.proposed_realized_per_target], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.paired.nearest_realized_per_target], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('Realized sensing APs per target | jointly feasible');
+saveas(gcf, fullfile(out_dir, [save_tag, '_fig5_paired_performance_vs_nreq.png']));
+
+%% Figure 6: robustness at the selected feasible operating point -----------
+eps_list = [];
 robust = struct();
-for i = 1:numel(eps_list)
-    fprintf('  design/evaluation eps_h=%.2f: robust ...\n', eps_list(i));
-    robust.proposed(i) = mc_run(cfg, cfg.N_req_main, 'proposed', eps_list(i), eps_list(i));
-    fprintf('  design eps_h=0, evaluation eps_h=%.2f: non-robust ...\n', eps_list(i));
-    robust.nonrobust(i) = mc_run(cfg, cfg.N_req_main, 'nonrobust', 0, eps_list(i));
+if cfg.run_robustness
+    fprintf('=== Figure 6: robustness at N_req=%d ===\n', cfg.N_req_main);
+    eps_list = [0, 0.02, 0.05, 0.08];
+    for i = 1:numel(eps_list)
+        fprintf('  design/evaluation eps_h=%.2f: robust ...\n', eps_list(i));
+        robust.proposed(i) = mc_run(cfg, cfg.N_req_main, 'proposed', eps_list(i), eps_list(i));
+        fprintf('  design eps_h=0, evaluation eps_h=%.2f: non-robust ...\n', eps_list(i));
+        robust.nonrobust(i) = mc_run(cfg, cfg.N_req_main, 'nonrobust', 0, eps_list(i));
+    end
+
+    figure('Name', 'Fig6_Robustness');
+    subplot(1,2,1);
+    plot(eps_list, [robust.proposed.feasibility], 'b-o', 'LineWidth', 1.5); hold on;
+    plot(eps_list, [robust.nonrobust.feasibility], 'r--s', 'LineWidth', 1.5);
+    grid on; ylim([0 1]);
+    xlabel('CSI uncertainty radius \epsilon_h'); ylabel('Design feasibility rate');
+    legend('Robust design', 'Non-robust design', 'Location', 'southwest');
+
+    subplot(1,2,2);
+    plot(eps_list, [robust.proposed.conditional_outage], 'b-o', 'LineWidth', 1.5); hold on;
+    plot(eps_list, [robust.nonrobust.conditional_outage], 'r--s', 'LineWidth', 1.5);
+    grid on;
+    xlabel('True CSI uncertainty radius \epsilon_h'); ylabel('Outage probability | feasible');
+    legend('Robust design', 'Non-robust design', 'Location', 'northwest');
+    saveas(gcf, fullfile(out_dir, [save_tag, '_fig6_robustness.png']));
 end
-
-figure('Name', 'Fig5_Robustness');
-subplot(1,2,1);
-plot(eps_list, [robust.proposed.feasibility], 'b-o', 'LineWidth', 1.5); hold on;
-plot(eps_list, [robust.nonrobust.feasibility], 'r--s', 'LineWidth', 1.5);
-grid on; ylim([0 1]);
-xlabel('CSI uncertainty radius \epsilon_h'); ylabel('Design feasibility rate');
-legend('Robust design', 'Non-robust design', 'Location', 'southwest');
-
-subplot(1,2,2);
-plot(eps_list, [robust.proposed.conditional_outage], 'b-o', 'LineWidth', 1.5); hold on;
-plot(eps_list, [robust.nonrobust.conditional_outage], 'r--s', 'LineWidth', 1.5);
-grid on;
-xlabel('True CSI uncertainty radius \epsilon_h'); ylabel('Outage probability | feasible');
-legend('Robust design', 'Non-robust design', 'Location', 'northwest');
-saveas(gcf, fullfile(out_dir, [save_tag, '_fig5_robustness.png']));
 
 %% Save all statistics, including denominators and infeasible trials -------
 save(fullfile(out_dir, [save_tag, '_results.mat']), 'cfg', 'nreq_result', 'robust', 'eps_list');
@@ -177,6 +232,12 @@ stats.N_mc = cfg.N_mc;
 stats.n_feasible = sum(is_feasible);
 stats.feasibility = mean(is_feasible);
 stats.records = records;
+status = cellfun(@(r) r.status, records, 'UniformOutput', false);
+stats.n_relaxed_infeasible = sum(contains(status, 'infeasible_relaxed'));
+stats.n_binary_infeasible = sum(contains(status, 'infeasible_after_rounding') | ...
+    contains(status, 'initial_infeasible') | contains(status, 'physical_solution_infeasible'));
+stats.n_other_failure = cfg.N_mc - stats.n_feasible - stats.n_relaxed_infeasible - ...
+    stats.n_binary_infeasible;
 if ~any(is_feasible)
     stats.conditional_power = NaN;
     stats.conditional_power_std = NaN;
@@ -185,6 +246,10 @@ if ~any(is_feasible)
     stats.conditional_sensing_sinr_db = NaN;
     stats.conditional_outage = NaN;
     stats.conditional_active_aps = NaN;
+    stats.conditional_realized_per_target = NaN;
+    stats.conditional_realized_network_aps = NaN;
+    stats.conditional_sensing_power = NaN;
+    stats.conditional_communication_power = NaN;
     return;
 end
 valid = records(is_feasible);
@@ -195,6 +260,10 @@ stats.conditional_pcrb = mean(cellfun(@(r) mean(r.pcrb), valid));
 stats.conditional_sensing_sinr_db = mean(cellfun(@(r) mean(r.sens_sinr_db), valid));
 stats.conditional_outage = mean(cellfun(@(r) r.outage, valid));
 stats.conditional_active_aps = mean(cellfun(@(r) r.active_aps, valid));
+stats.conditional_realized_per_target = mean(cellfun(@(r) mean(r.realized_per_target), valid));
+stats.conditional_realized_network_aps = mean(cellfun(@(r) r.realized_network_aps, valid));
+stats.conditional_sensing_power = mean(cellfun(@(r) r.sensing_power, valid));
+stats.conditional_communication_power = mean(cellfun(@(r) r.communication_power, valid));
 end
 
 function rec = run_trial(cfg, nreq, mode, design_eps, eval_eps, index)
@@ -203,6 +272,8 @@ rec.feasible = false;
 rec.status = '';
 rec.power = NaN; rec.sum_rate = NaN; rec.pcrb = NaN; rec.sens_sinr_db = NaN;
 rec.outage = NaN; rec.active_aps = NaN;
+rec.sensing_power = NaN; rec.communication_power = NaN;
+rec.realized_per_target = NaN; rec.realized_network_aps = NaN;
 
 switch mode
     case 'proposed'
@@ -229,8 +300,15 @@ rec.power = res.final_obj;
 rec.sum_rate = res.sum_rate;
 rec.pcrb = res.pcrb;
 rec.sens_sinr_db = res.sens_sinr_db;
+rec.gamma_track = prm.Gamma_track;
 rec.active_aps = sum(any(res.b > 0.5, 2));
-rec.outage = evaluate_outage(res.W, res.S_p, prm, eval_eps, 200);
+rec.sensing_power = sum(arrayfun(@(p) real(trace(res.S_p(:,:,p))), 1:prm.P));
+rec.communication_power = res.final_obj - rec.sensing_power;
+[rec.realized_per_target, rec.realized_network_aps] = ...
+    realized_sensing_activity(res.S_p, prm, cfg.sensing_power_threshold);
+eval_seed = cfg.Base_seed + 100000*nreq + 1000*index + round(1e4*eval_eps);
+rec.outage = evaluate_outage(res.W, res.S_p, prm, eval_eps, ...
+    cfg.outage_samples, eval_seed);
 end
 
 function prm = make_scenario(cfg, nreq, eps_h, seed)
@@ -239,11 +317,14 @@ prm = generate_scenario(cfg.M, cfg.Nt, cfg.K, cfg.P, cfg.N_theta, ...
     'N_req', nreq, 'eps_h', eps_h, 'seed', seed);
 end
 
-function outage = evaluate_outage(W, S_p, prm, eps_h, n_samples)
+function outage = evaluate_outage(W, S_p, prm, eps_h, n_samples, rng_seed)
 if eps_h == 0
     outage = 0;
     return;
 end
+prior_rng = rng;
+rng(rng_seed, 'twister');
+cleanup_rng = onCleanup(@() rng(prior_rng));
 outages = 0;
 total = 0;
 for k = 1:prm.K
@@ -270,6 +351,48 @@ end
 outage = outages / total;
 end
 
+function [per_target, network_aps] = realized_sensing_activity(S_p, prm, threshold)
+M = prm.M; P = prm.P; Nt = prm.N / prm.M;
+active = false(M, P);
+for p = 1:P
+    for m = 1:M
+        block = (m-1)*Nt + (1:Nt);
+        active(m,p) = real(trace(S_p(block,block,p))) > threshold;
+    end
+end
+per_target = sum(active, 1);
+network_aps = sum(any(active, 2));
+end
+
+function stats = paired_stats(proposed, nearest)
+mask = cellfun(@(rp,rn) rp.feasible && rn.feasible, ...
+    proposed.records, nearest.records);
+stats.n_joint_feasible = sum(mask);
+stats.joint_feasibility = mean(mask);
+if ~any(mask)
+    stats.proposed_rate = NaN; stats.nearest_rate = NaN;
+    stats.proposed_pcrb_ratio = NaN; stats.nearest_pcrb_ratio = NaN;
+    stats.proposed_power = NaN; stats.nearest_power = NaN;
+    stats.proposed_realized_per_target = NaN;
+    stats.nearest_realized_per_target = NaN;
+    return;
+end
+rp = proposed.records(mask);
+rn = nearest.records(mask);
+stats.proposed_rate = mean(cellfun(@(r) r.sum_rate, rp));
+stats.nearest_rate = mean(cellfun(@(r) r.sum_rate, rn));
+stats.proposed_pcrb_ratio = mean(cellfun(@(r) mean(r.pcrb ./ ...
+    r.gamma_track), rp));
+stats.nearest_pcrb_ratio = mean(cellfun(@(r) mean(r.pcrb ./ ...
+    r.gamma_track), rn));
+stats.proposed_power = mean(cellfun(@(r) r.power, rp));
+stats.nearest_power = mean(cellfun(@(r) r.power, rn));
+stats.proposed_realized_per_target = mean(cellfun(@(r) ...
+    mean(r.realized_per_target), rp));
+stats.nearest_realized_per_target = mean(cellfun(@(r) ...
+    mean(r.realized_per_target), rn));
+end
+
 function b = nearest_assignment(prm)
 b = zeros(prm.M, prm.P);
 for p = prm.active_targets
@@ -287,12 +410,17 @@ summary = table(nreq_list(:), [result.proposed.feasibility]', ...
     [result.nearest.conditional_rate]', [result.proposed.conditional_pcrb]', ...
     [result.nearest.conditional_pcrb]', [result.proposed.conditional_sensing_sinr_db]', ...
     [result.nearest.conditional_sensing_sinr_db]', [result.proposed.conditional_outage]', ...
-    [result.nearest.conditional_outage]', ...
+    [result.nearest.conditional_outage]', [result.proposed.conditional_realized_per_target]', ...
+    [result.nearest.conditional_realized_per_target]', [result.paired.joint_feasibility]', ...
+    [result.paired.proposed_power]', [result.paired.nearest_power]', ...
     'VariableNames', {'N_req', 'proposed_feasibility', 'nearest_feasibility', ...
     'proposed_power_given_feasible_W', 'nearest_power_given_feasible_W', ...
     'proposed_active_APs_given_feasible', 'nearest_active_APs_given_feasible', ...
     'proposed_rate_given_feasible', 'nearest_rate_given_feasible', ...
     'proposed_mean_PCRB_given_feasible', 'nearest_mean_PCRB_given_feasible', ...
     'proposed_sensing_SINR_dB_given_feasible', 'nearest_sensing_SINR_dB_given_feasible', ...
-    'proposed_outage_given_feasible', 'nearest_outage_given_feasible'});
+    'proposed_outage_given_feasible', 'nearest_outage_given_feasible', ...
+    'proposed_realized_sensing_APs_per_target', 'nearest_realized_sensing_APs_per_target', ...
+    'joint_feasibility', 'proposed_power_jointly_feasible_W', ...
+    'nearest_power_jointly_feasible_W'});
 end
