@@ -30,7 +30,7 @@ host only.
 ```matlab
 addpath('sim/matlab');
 run_mac_mini_main(2052, 2076, ...
-    'N_req_list', 1:6, 'Run_robustness', false);
+    'N_req_list', 1:6, 'Run_robustness', false, 'N_workers', 2);
 ```
 
 The raw records are saved under `mc_shards/macmini_seed2052_2076/` in
@@ -42,5 +42,5 @@ For a five-seed preflight:
 
 ```matlab
 run_mac_mini_main(2052, 2056, ...
-    'N_req_list', 1:4, 'Run_robustness', false);
+    'N_req_list', 1:4, 'Run_robustness', false, 'N_workers', 2);
 ```
