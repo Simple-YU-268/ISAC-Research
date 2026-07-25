@@ -1,5 +1,5 @@
 function res = solve_p3_with_fixed_b(prm, b_fixed, T_max, eps, eta_rank, eta_b, eta_growth)
-%SOLVE_P3_WITH_FIXED_B  Run double-DC SCA while keeping b_fixed constant
+%SOLVE_P3_WITH_FIXED_B  Fixed-assignment recovery with a fixed rank penalty.
 %   This implements Baseline 1 (heuristic AP selection): b is fixed and only
 %   the communication covariances W, target-specific sensing covariances S_p,
 %   S-Procedure multipliers, and PCRB auxiliary matrices are optimized.
@@ -8,7 +8,7 @@ if nargin < 3, T_max = 80; end
 if nargin < 4, eps = 1e-5; end
 if nargin < 5, eta_rank = 1.0; end
 if nargin < 6, eta_b = 1.0; end
-if nargin < 7, eta_growth = 1.3; end
+if nargin < 7, eta_growth = 1.0; end %#ok<NASGU>
 
 K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
 assert(isequal(size(b_fixed), [M, P]), 'b_fixed must be M-by-P.');
@@ -38,13 +38,13 @@ mu_prev = sol0.mu;
 M_p_prev = sol0.M_p;
 last_status = sol0.status;
 
-cur_eta_rank = eta_rank;
-obj_trace = [];
+true_obj_trace = [];
+rank_residual_trace = [];
 binary_converged = true;  % b is fixed, so binary convergence is trivial
 
 for t = 1:T_max
     [W_new, ~, mu_new, b_new, M_p_new, status, S_new] = ...
-        solve_p3_sca_t(prm, W_prev, b_fixed, cur_eta_rank, eta_b, b_fixed);
+        solve_p3_sca_t(prm, W_prev, b_fixed, eta_rank, eta_b, b_fixed);
     
     if ~contains(status, 'Solved')
         last_status = status;
@@ -52,12 +52,11 @@ for t = 1:T_max
     end
     last_status = status;
     
-    true_obj = 0;
+    base_power = 0;
     for k = 1:K
-        true_obj = true_obj + real(trace(W_new{k}));
+        base_power = base_power + real(trace(W_new{k}));
     end
-    true_obj = true_obj + real(trace(sum(S_new, 3)));
-    obj_trace = [obj_trace, true_obj];
+    base_power = base_power + real(trace(sum(S_new, 3)));
     
     rank_def = zeros(K,1);
     for k = 1:K
@@ -65,18 +64,21 @@ for t = 1:T_max
         rank_def(k) = real(trace(W_new{k})) - max(d);
     end
     
+    rank_residual = sum(rank_def);
+    true_obj_trace(end+1) = base_power + eta_rank * rank_residual;
+    rank_residual_trace(end+1) = rank_residual;
     W_prev = W_new;
     S_prev = S_new;
     mu_prev = mu_new;
     M_p_prev = M_p_new;
     
-    rank_ok = max(rank_def) < eps;
-    obj_ok = (length(obj_trace) > 1) && abs(obj_trace(end)-obj_trace(end-1)) < eps;
+    rank_ok = rank_residual < eps;
+    obj_ok = numel(true_obj_trace) > 1 && ...
+        abs(true_obj_trace(end)-true_obj_trace(end-1)) < eps;
     if rank_ok && obj_ok
         break;
     end
     
-    cur_eta_rank = min(cur_eta_rank * eta_growth, 5.0);
 end
 
 % Extract rank-1 physical beams
@@ -108,8 +110,10 @@ if res.is_physical_feasible
 else
     res.status = sprintf('physical_solution_infeasible (max violation: %.3e)', max_viol);
 end
-res.iters = length(obj_trace);
-res.obj_trace = obj_trace;
+res.iters = numel(true_obj_trace);
+res.obj_trace = true_obj_trace;
+res.true_obj_trace = true_obj_trace;
+res.rank_residual_trace = rank_residual_trace;
 res.binary_converged = binary_converged;
 res.final_obj = final_obj;
 res.sum_rate = sum_rate;

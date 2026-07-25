@@ -1,18 +1,19 @@
-function res = baseline_alg2(prm, T_max, eps, eta_rank, eta_b, eta_growth, verbose)
-%BASELINE_ALG2  Fast DC-SCA with communication-aware binary recovery.
-%   A short double-DC phase generates candidate sensing associations. The
-%   association gates only dedicated sensing covariance, while communication
-%   beamforming remains globally cooperative. Recovery includes a UE-aware
-%   diversity candidate in addition to derivative-aware DC rounding. Every
-%   candidate satisfies sum_m b_mp=N_req exactly and is accepted only after
-%   fixed-b re-optimization and rank-one physical feasibility validation.
+function res = baseline_alg2(prm, T_max, eps, eta_rank, eta_b, eta_growth, verbose, T_dc_max)
+%BASELINE_ALG2  Paper-consistent fixed-penalty DC-SCA and verified recovery.
+%   The main loop keeps eta_rank and eta_b fixed, records the true DCP
+%   objective and summed rank/binary residuals, then projects each target's
+%   relaxed assignment onto exactly N_req APs. If that projection is
+%   infeasible, a deterministic, bounded one-AP-swap repair set is tried;
+%   every candidate is re-solved with b fixed and physically verified.
+%   eta_growth is retained only for backwards-compatible call signatures.
 
 if nargin < 2, T_max = 80; end
 if nargin < 3, eps = 1e-5; end
 if nargin < 4, eta_rank = 1.0; end
 if nargin < 5, eta_b = 1.0; end
-if nargin < 6, eta_growth = 1.3; end
+if nargin < 6, eta_growth = 1.0; end %#ok<NASGU>
 if nargin < 7, verbose = false; end
+if nargin < 8 || isempty(T_dc_max), T_dc_max = T_max; end
 
 K = prm.K; P = prm.P; N = prm.N; M = prm.M; Nt = prm.N / prm.M;
 W_init = cell(K,1);
@@ -31,92 +32,75 @@ if ~contains(status0, 'Solved')
     return;
 end
 
-b_heur = nearest_assignment(prm);
-b_ue_fwd = ue_aware_assignment(prm, prm.active_targets);
-b_ue_rev = ue_aware_assignment(prm, fliplr(prm.active_targets));
-b_inits = {b_sdr, b_heur};
-labels = {'relaxed', 'distance_heur'};
-fast_max_iter = min(T_max, 5);
-best_res = [];
-best_obj = inf;
-failed_candidates = {};
-seen_candidates = {};
-
-for init_idx = 1:numel(b_inits)
-    W_prev = W_sdr;
-    b_prev = b_inits{init_idx};
-    cur_eta_rank = eta_rank;
-    cur_eta_b = eta_b;
-    obj_trace = [];
-
-    for t = 1:fast_max_iter
-        [W_new, Z_new, ~, b_new, ~, status] = ...
-            solve_p3_sca_t(prm, W_prev, b_prev, cur_eta_rank, cur_eta_b);
-        if ~contains(status, 'Solved'), break; end
-        obj_trace(end+1,1) = sum(cellfun(@(W) real(trace(W)), W_new)) + real(trace(Z_new));
-        rank_def = max(cellfun(@(W) real(trace(W)) - max(eig(W,'vector')), W_new));
-        bin_dist = max(min(b_new(:), 1-b_new(:)));
-        if verbose
-            fprintf('  %s %d: obj=%.4f, rank=%.2e, bin=%.2e\n', ...
-                labels{init_idx}, t, obj_trace(end), rank_def, bin_dist);
-        end
-        W_prev = W_new;
-        b_prev = b_new;
-        if rank_def < eps && bin_dist < eps && numel(obj_trace)>1 ...
-                && abs(obj_trace(end)-obj_trace(end-1)) < eps
-            break;
-        end
-        cur_eta_rank = min(cur_eta_rank * eta_growth, 5);
-        cur_eta_b = min(cur_eta_b * eta_growth, 1000);
+W_prev = W_sdr;
+b_prev = b_sdr;
+fast_max_iter = min(T_max, T_dc_max);
+true_obj_trace = zeros(fast_max_iter,1);
+rank_trace = zeros(fast_max_iter,1);
+binary_trace = zeros(fast_max_iter,1);
+dc_converged = false;
+last_status = status0;
+for t = 1:fast_max_iter
+    [W_new, Z_new, ~, b_new, ~, status] = ...
+        solve_p3_sca_t(prm, W_prev, b_prev, eta_rank, eta_b);
+    if ~contains(status, 'Solved'), break; end
+    last_status = status;
+    rank_trace(t) = sum(cellfun(@(W) max(0, real(trace(W)) - max(real(eig(W,'vector')))), W_new));
+    binary_trace(t) = sum(b_new(:) .* (1 - b_new(:)));
+    base_power = sum(cellfun(@(W) real(trace(W)), W_new)) + real(trace(Z_new));
+    true_obj_trace(t) = base_power + eta_rank * rank_trace(t) + eta_b * binary_trace(t);
+    if verbose
+        fprintf('  fixed-DCP %d: F=%.6f, power=%.6f, rank=%.2e, bin=%.2e\n', ...
+            t, true_obj_trace(t), base_power, rank_trace(t), binary_trace(t));
     end
+    W_prev = W_new;
+    b_prev = b_new;
+    if t > 1 && rank_trace(t) <= eps && binary_trace(t) <= eps && ...
+            abs(true_obj_trace(t)-true_obj_trace(t-1)) <= eps
+        dc_converged = true;
+        break;
+    end
+end
+iters = find(true_obj_trace ~= 0, 1, 'last');
+if isempty(iters)
+    res = struct('status', last_status, 'dc_converged', false, 'dc_iterations', 0);
+    return;
+end
+true_obj_trace = true_obj_trace(1:iters);
+rank_trace = rank_trace(1:iters);
+binary_trace = binary_trace(1:iters);
 
-    % Each candidate is M-by-P binary with exactly N_req selected APs per
-    % target. Do not use top-(N_req+1): it violates C6. The UE-aware choices
-    % promote spatial diversity but do not restrict communication transmission.
-    candidates = {round_assignment(b_prev, prm), b_ue_fwd, b_ue_rev, b_heur};
-    cand_labels = {'dc_topN', 'ue_aware_fwd', 'ue_aware_rev', 'distance_heur'};
-    for c = 1:numel(candidates)
-        b_fixed = candidates{c};
-        if is_duplicate_assignment(b_fixed, seen_candidates), continue; end
-        seen_candidates{end+1,1} = b_fixed;
-        fixed_res = solve_p3_with_fixed_b(prm, b_fixed, ...
-            min(T_max, 10), eps, eta_rank, 0, eta_growth);
-        if isfield(fixed_res,'is_physical_feasible') && fixed_res.is_physical_feasible
-            fixed_res.obj_trace_dc = obj_trace;
-            fixed_res.binary_converged = true;
-            fixed_res.init_label = labels{init_idx};
-            fixed_res.rounding_label = cand_labels{c};
-            if fixed_res.final_obj < best_obj
-                best_res = fixed_res;
-                best_obj = fixed_res.final_obj;
-            end
-        else
-            diag.b = b_fixed;
-            diag.init_label = labels{init_idx};
-            diag.rounding_label = cand_labels{c};
-            diag.full_status = fixed_res.status;
-            diag.pcrb_only = check_fixed_b_pcrb(prm, b_fixed, false);
-            diag.pcrb_sensing = check_fixed_b_pcrb(prm, b_fixed, true);
-            failed_candidates{end+1,1} = diag;
+% Cardinality-preserving projection followed by deterministic local repair.
+% Candidates differ only by a single selected/unselected AP swap and are
+% ordered by their loss in the relaxed b score.  This is a recovery stage,
+% not an additional random or nearest-AP baseline.
+candidates = recovery_assignments(b_prev, prm, 21);
+res = [];
+for c = 1:numel(candidates)
+    candidate_res = solve_p3_with_fixed_b(prm, candidates{c}, ...
+        T_max, eps, eta_rank, 0, 1.0);
+    if isfield(candidate_res, 'is_physical_feasible') && ...
+            candidate_res.is_physical_feasible
+        if isempty(res) || candidate_res.final_obj < res.final_obj
+            res = candidate_res;
+            res.recovery_candidate_index = c;
         end
     end
 end
-
-if isempty(best_res)
-    res = struct('status','infeasible_after_rounding', ...
-        'failed_candidates',{failed_candidates});
-else
-    res = best_res;
+if isempty(res)
+    res = struct('status', 'infeasible_after_recovery', ...
+        'is_physical_feasible', false, 'b', candidates{1});
 end
-end
-
-function b = nearest_assignment(prm)
-b = zeros(prm.M, prm.P);
-for p = prm.active_targets
-    d = sqrt(sum((prm.AP_pos-prm.Target_pos(p,:)).^2,2));
-    [~,idx] = sort(d,'ascend');
-    b(idx(1:prm.N_req),p) = 1;
-end
+res.true_obj_trace = true_obj_trace;
+res.rank_residual_trace = rank_trace;
+res.binary_residual_trace = binary_trace;
+res.obj_trace_dc = true_obj_trace; % legacy plotting name
+res.dc_converged = dc_converged;
+res.dc_iterations = iters;
+res.dc_rank_deficiency = rank_trace(end);
+res.dc_binary_distance = binary_trace(end);
+res.init_label = 'unpenalized_sdr';
+res.rounding_label = 'topN_local_swap_fixed_b_recovery';
 end
 
 function b = round_assignment(b_relaxed, prm)
@@ -127,51 +111,58 @@ for p = prm.active_targets
 end
 end
 
-function b = ue_aware_assignment(prm, target_order)
-%UE_AWARE_ASSIGNMENT  Sensing/leakage-aware candidate under the b gate.
-%   Since dedicated sensing waveforms are interference at UEs by default,
-%   the score rewards target derivative and steering gains while penalizing
-%   the AP's aggregate downlink leakage potential. A novelty reward avoids
-%   repeatedly selecting the same AP set. It is only a binary-recovery
-%   heuristic; C6 remains exact.
-M = prm.M;
-Nt = prm.N / prm.M;
-b = zeros(M, prm.P);
-active = false(M,1);
-for p = target_order
-    sensing_score = zeros(M,1);
-    steering_score = zeros(M,1);
-    leakage_score = zeros(M,1);
-    for m = 1:M
-        block = (m-1)*Nt + (1:Nt);
-        sensing_score(m) = norm(prm.D(block,:,p), 'fro')^2;
-        steering_score(m) = norm(prm.G(block,p))^2;
-        % Without UE-side cancellation, a strong AP-to-UE channel raises the
-        % potential leakage of its dedicated sensing waveform.
-        leakage_score(m) = norm(prm.H(block,:), 'fro')^2;
+function candidates = recovery_assignments(b_relaxed, prm, max_candidates)
+base = round_assignment(b_relaxed, prm);
+candidates = {base};
+swaps = struct('leave', {}, 'enter', {}, 'target', {}, 'loss', {});
+for p = prm.active_targets
+    selected = find(base(:,p) > 0.5);
+    unselected = find(base(:,p) < 0.5);
+    for leave = selected(:).'
+        for enter = unselected(:).'
+            swaps(end+1) = struct('leave', leave, 'enter', enter, ...
+                'target', p, 'loss', b_relaxed(leave,p)-b_relaxed(enter,p)); %#ok<AGROW>
+        end
     end
-    sensing_score = normalized_score(sensing_score);
-    steering_score = normalized_score(steering_score);
-    leakage_score = normalized_score(leakage_score);
-    novelty = double(~active);
-    score = 0.65 * sensing_score + 0.20 * steering_score + ...
-        0.15 * novelty - 0.20 * leakage_score;
-    [~, order] = sort(score, 'descend');
-    chosen = order(1:prm.N_req);
-    b(chosen,p) = 1;
-    active(chosen) = true;
+end
+[~, order] = sort([swaps.loss], 'ascend');
+single_limit = min(8, numel(order));
+for q = 1:single_limit
+    candidates = append_unique_candidate(candidates, apply_swaps(base, swaps(order(q))));
+end
+
+% A one-step projection can be trapped in a poor local association.  Add a
+% bounded deterministic two-swap beam; this remains a post-SCA recovery
+% search because all candidates preserve the exact per-target cardinality.
+pair_list = {};
+pair_loss = [];
+for a = 1:single_limit
+    for b = a+1:single_limit
+        candidate = apply_swaps(base, [swaps(order(a)), swaps(order(b))]);
+        if all(sum(candidate(:,prm.active_targets), 1) == prm.N_req)
+            pair_list{end+1,1} = candidate; %#ok<AGROW>
+            pair_loss(end+1,1) = swaps(order(a)).loss + swaps(order(b)).loss; %#ok<AGROW>
+        end
+    end
+end
+[~, pair_order] = sort(pair_loss, 'ascend');
+for q = 1:numel(pair_order)
+    candidates = append_unique_candidate(candidates, pair_list{pair_order(q)});
+    if numel(candidates) >= max_candidates, break; end
 end
 end
 
-function score = normalized_score(score)
-peak = max(score);
-if peak > 0
-    score = score / peak;
-else
-    score = zeros(size(score));
+function candidate = apply_swaps(base, swaps)
+candidate = base;
+for q = 1:numel(swaps)
+    p = swaps(q).target;
+    candidate(swaps(q).leave,p) = 0;
+    candidate(swaps(q).enter,p) = 1;
 end
 end
 
-function duplicate = is_duplicate_assignment(b, assignments)
-duplicate = any(cellfun(@(candidate) isequal(candidate, b), assignments));
+function candidates = append_unique_candidate(candidates, candidate)
+if ~any(cellfun(@(existing) isequal(existing, candidate), candidates))
+    candidates{end+1,1} = candidate;
+end
 end

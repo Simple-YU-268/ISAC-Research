@@ -22,6 +22,8 @@ addParameter(p, 'N_workers', 0, @(x) isnumeric(x) && isscalar(x) && x >= 0);
 addParameter(p, 'Base_seed', 2026, @(x) isnumeric(x) && isscalar(x));
 addParameter(p, 'N_req_list', [], @(x) isnumeric(x) && isvector(x));
 addParameter(p, 'Run_robustness', true, @islogical);
+addParameter(p, 'T_max', 30, @(x) isnumeric(x) && isscalar(x) && x >= 1 && x == round(x));
+addParameter(p, 'Solver', 'mosek', @(x) ischar(x) || isstring(x));
 addParameter(p, 'Output_dir', '', @(x) ischar(x) || isstring(x));
 addParameter(p, 'Output_tag', '', @(x) ischar(x) || isstring(x));
 parse(p, varargin{:});
@@ -36,11 +38,11 @@ cfg.eps_h = 0.05;
 cfg.Gamma_track = 'auto';      % per-target physical isotropic-reference calibration
 cfg.N_req_main = 3;            % representative sensing-cluster size
 cfg.N_req_list = 1:cfg.M;
-cfg.T_max = 30;
+cfg.T_max = opt.T_max;
 cfg.eps = 1e-5;
 cfg.eta_rank = 1.0;
 cfg.eta_b = 1.0;
-cfg.eta_growth = 1.3;
+cfg.eta_growth = 1.0;  % retained in calls; paper algorithm uses fixed penalties
 cfg.N_mc = opt.N_mc;
 cfg.N_workers = opt.N_workers;
 cfg.Base_seed = opt.Base_seed;
@@ -57,6 +59,7 @@ if ~isempty(opt.N_req_list)
         'N_req_list must contain integer values in 1:M.');
 end
 cfg.run_robustness = opt.Run_robustness;
+cfg.solver = char(opt.Solver);
 
 if strlength(string(opt.Output_dir)) == 0
     out_dir = fullfile(pwd, 'figures');
@@ -74,15 +77,22 @@ fprintf('=== Figure 1: representative convergence (N_req=%d) ===\n', cfg.N_req_m
 prm = make_scenario(cfg, cfg.N_req_main, cfg.eps_h, cfg.Base_seed);
 res = baseline_alg2(prm, cfg.T_max, cfg.eps, cfg.eta_rank, ...
     cfg.eta_b, cfg.eta_growth, true);
-if contains(res.status, 'Solved') && isfield(res, 'obj_trace_dc')
+if isfield(res, 'true_obj_trace') && ~isempty(res.true_obj_trace)
     figure('Name', 'Fig1_Convergence');
-    plot(1:numel(res.obj_trace_dc), res.obj_trace_dc, 'b-o', 'LineWidth', 1.5);
-    grid on;
-    xlabel('DC-SCA iteration'); ylabel('Total transmit power [W]');
-    title(sprintf('Representative convergence (N_{req}=%d)', cfg.N_req_main));
+    tiledlayout(2,1, 'TileSpacing', 'compact');
+    nexttile;
+    plot(1:numel(res.true_obj_trace), res.true_obj_trace, 'b-o', 'LineWidth', 1.5);
+    grid on; ylabel('True fixed-penalty objective');
+    title(sprintf('Representative fixed-penalty DC-SCA (N_{req}=%d)', cfg.N_req_main));
+    nexttile;
+    semilogy(1:numel(res.rank_residual_trace), max(res.rank_residual_trace, eps), ...
+        'r-o', 1:numel(res.binary_residual_trace), max(res.binary_residual_trace, eps), ...
+        'k-s', 'LineWidth', 1.5);
+    grid on; xlabel('DC-SCA iteration'); ylabel('Summed residual');
+    legend('rank residual', 'binary residual', 'Location', 'best');
     saveas(gcf, fullfile(out_dir, [save_tag, '_fig1_convergence.png']));
 else
-    warning('Representative N_req=%d realization was infeasible; no convergence plot.', ...
+    warning('Representative N_req=%d realization did not complete a DCP iteration; no convergence plot.', ...
         cfg.N_req_main);
 end
 
@@ -95,33 +105,42 @@ for i = 1:numel(cfg.N_req_list)
     nreq_result.proposed(i) = mc_run(cfg, nreq, 'proposed', cfg.eps_h, cfg.eps_h);
     fprintf('  N_req=%d: nearest-AP baseline ...\n', nreq);
     nreq_result.nearest(i) = mc_run(cfg, nreq, 'nearest', cfg.eps_h, cfg.eps_h);
+    fprintf('  N_req=%d: random-assignment baseline ...\n', nreq);
+    nreq_result.random(i) = mc_run(cfg, nreq, 'random', cfg.eps_h, cfg.eps_h);
     nreq_result.paired(i) = paired_stats(nreq_result.proposed(i), ...
         nreq_result.nearest(i));
+    nreq_result.paired_random(i) = paired_stats(nreq_result.proposed(i), ...
+        nreq_result.random(i));
 end
 
 prop_feas = [nreq_result.proposed.feasibility];
 near_feas = [nreq_result.nearest.feasibility];
+rand_feas = [nreq_result.random.feasibility];
 prop_power = [nreq_result.proposed.conditional_power];
 near_power = [nreq_result.nearest.conditional_power];
+rand_power = [nreq_result.random.conditional_power];
 prop_std = [nreq_result.proposed.conditional_power_std];
 near_std = [nreq_result.nearest.conditional_power_std];
+rand_std = [nreq_result.random.conditional_power_std];
 
 figure('Name', 'Fig2_FeasibilityVsNreq');
 plot(cfg.N_req_list, prop_feas, 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, near_feas, 'r--s', 'LineWidth', 1.5);
-grid on; ylim([0 1]);
+plot(cfg.N_req_list, rand_feas, 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); ylim([0 1]);
 xlabel('Required APs per target N_{req}'); ylabel('Binary physical feasibility rate');
-legend('DC-SCA + UE-aware fixed-b recovery', 'Nearest-AP fixed-b', 'Location', 'southeast');
+legend('Optimized association + recovery', 'Nearest-AP fixed-b', 'Random fixed-b', 'Location', 'southeast');
 title('Feasibility versus AP-association cardinality');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig2_feasibility_vs_nreq.png']));
 
 figure('Name', 'Fig3_ConditionalPowerVsNreq');
 errorbar(cfg.N_req_list, prop_power, prop_std, 'b-o', 'LineWidth', 1.5); hold on;
 errorbar(cfg.N_req_list, near_power, near_std, 'r--s', 'LineWidth', 1.5);
-grid on;
+errorbar(cfg.N_req_list, rand_power, rand_std, 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]);
 xlabel('Required APs per target N_{req}');
 ylabel('Transmit power [W] | feasible');
-legend('DC-SCA + UE-aware fixed-b recovery', 'Nearest-AP fixed-b', 'Location', 'best');
+legend('Optimized association + recovery', 'Nearest-AP fixed-b', 'Random fixed-b', 'Location', 'best');
 title('Conditional power: infeasible trials are excluded explicitly');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig3_conditional_power_vs_nreq.png']));
 
@@ -131,23 +150,27 @@ figure('Name', 'Fig4_ConditionalPerformanceVsNreq');
 subplot(2,2,1);
 plot(cfg.N_req_list, [nreq_result.proposed.conditional_rate], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.nearest.conditional_rate], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Sum rate [bit/s/Hz] | feasible');
-legend('UE-aware recovery', 'Nearest-AP', 'Location', 'best');
+plot(cfg.N_req_list, [nreq_result.random.conditional_rate], 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Sum rate [bit/s/Hz] | feasible');
+legend('Optimized association', 'Nearest-AP', 'Random assignment', 'Location', 'best');
 
 subplot(2,2,2);
 plot(cfg.N_req_list, [nreq_result.proposed.conditional_pcrb], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.nearest.conditional_pcrb], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Mean PCRB trace | feasible');
+plot(cfg.N_req_list, [nreq_result.random.conditional_pcrb], 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Mean PCRB trace | feasible');
 
 subplot(2,2,3);
 plot(cfg.N_req_list, [nreq_result.proposed.conditional_sensing_sinr_db], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.nearest.conditional_sensing_sinr_db], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Mean sensing SINR [dB] | feasible');
+plot(cfg.N_req_list, [nreq_result.random.conditional_sensing_sinr_db], 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Mean sensing SINR [dB] | feasible');
 
 subplot(2,2,4);
 plot(cfg.N_req_list, [nreq_result.proposed.conditional_realized_network_aps], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.nearest.conditional_realized_network_aps], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('APs with nonzero sensing power | feasible');
+plot(cfg.N_req_list, [nreq_result.random.conditional_realized_network_aps], 'k:^', 'LineWidth', 1.5);
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('APs with nonzero sensing power | feasible');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig4_conditional_performance_vs_nreq.png']));
 
 % Direct algorithm comparison must use only paired realizations where both
@@ -156,23 +179,23 @@ figure('Name', 'Fig5_PairedPerformanceVsNreq');
 subplot(2,2,1);
 plot(cfg.N_req_list, [nreq_result.paired.proposed_rate], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.paired.nearest_rate], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Sum rate [bit/s/Hz] | jointly feasible');
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Sum rate [bit/s/Hz] | jointly feasible');
 legend('Proposed', 'Nearest-AP', 'Location', 'best');
 
 subplot(2,2,2);
 plot(cfg.N_req_list, [nreq_result.paired.proposed_pcrb_ratio], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.paired.nearest_pcrb_ratio], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Mean PCRB / threshold | jointly feasible');
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Mean PCRB / threshold | jointly feasible');
 
 subplot(2,2,3);
 plot(cfg.N_req_list, [nreq_result.paired.proposed_power], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.paired.nearest_power], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Transmit power [W] | jointly feasible');
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Transmit power [W] | jointly feasible');
 
 subplot(2,2,4);
 plot(cfg.N_req_list, [nreq_result.paired.proposed_realized_per_target], 'b-o', 'LineWidth', 1.5); hold on;
 plot(cfg.N_req_list, [nreq_result.paired.nearest_realized_per_target], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Realized sensing APs per target | jointly feasible');
+grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); xlabel('N_{req}'); ylabel('Realized sensing APs per target | jointly feasible');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig5_paired_performance_vs_nreq.png']));
 
 %% Figure 6: robustness at the selected feasible operating point -----------
@@ -282,6 +305,12 @@ switch mode
     case 'nearest'
         res = solve_p3_with_fixed_b(prm, nearest_assignment(prm), ...
             cfg.T_max, cfg.eps, cfg.eta_rank, cfg.eta_b, cfg.eta_growth);
+    case 'random'
+        % Same cardinality and continuous recovery as the optimized method;
+        % only the AP--target sensing assignment is random.
+        assignment_seed = cfg.Base_seed + 700000*nreq + 1000*index;
+        res = solve_p3_with_fixed_b(prm, random_assignment(prm, assignment_seed), ...
+            cfg.T_max, cfg.eps, cfg.eta_rank, cfg.eta_b, cfg.eta_growth);
     case 'nonrobust'
         % design_eps is zero for this mode; evaluation still uses eval_eps.
         res = baseline_alg2(prm, cfg.T_max, cfg.eps, cfg.eta_rank, ...
@@ -315,6 +344,7 @@ function prm = make_scenario(cfg, nreq, eps_h, seed)
 prm = generate_scenario(cfg.M, cfg.Nt, cfg.K, cfg.P, cfg.N_theta, ...
     cfg.Pmax_dBm, cfg.Gamma_track, 'AreaSize', cfg.AreaSize, ...
     'N_req', nreq, 'eps_h', eps_h, 'seed', seed);
+prm.solver = cfg.solver;
 end
 
 function outage = evaluate_outage(W, S_p, prm, eps_h, n_samples, rng_seed)
@@ -402,10 +432,22 @@ for p = prm.active_targets
 end
 end
 
+function b = random_assignment(prm, assignment_seed)
+%RANDOM_ASSIGNMENT  Fair random baseline with exactly N_req APs per target.
+prior_rng = rng;
+cleanup_rng = onCleanup(@() rng(prior_rng));
+rng(assignment_seed, 'twister');
+b = zeros(prm.M, prm.P);
+for p = prm.active_targets
+    order = randperm(prm.M, prm.N_req);
+    b(order,p) = 1;
+end
+end
+
 function summary = make_summary_table(nreq_list, result)
 summary = table(nreq_list(:), [result.proposed.feasibility]', ...
-    [result.nearest.feasibility]', [result.proposed.conditional_power]', ...
-    [result.nearest.conditional_power]', [result.proposed.conditional_active_aps]', ...
+    [result.nearest.feasibility]', [result.random.feasibility]', [result.proposed.conditional_power]', ...
+    [result.nearest.conditional_power]', [result.random.conditional_power]', [result.proposed.conditional_active_aps]', ...
     [result.nearest.conditional_active_aps]', [result.proposed.conditional_rate]', ...
     [result.nearest.conditional_rate]', [result.proposed.conditional_pcrb]', ...
     [result.nearest.conditional_pcrb]', [result.proposed.conditional_sensing_sinr_db]', ...
@@ -413,8 +455,8 @@ summary = table(nreq_list(:), [result.proposed.feasibility]', ...
     [result.nearest.conditional_outage]', [result.proposed.conditional_realized_per_target]', ...
     [result.nearest.conditional_realized_per_target]', [result.paired.joint_feasibility]', ...
     [result.paired.proposed_power]', [result.paired.nearest_power]', ...
-    'VariableNames', {'N_req', 'proposed_feasibility', 'nearest_feasibility', ...
-    'proposed_power_given_feasible_W', 'nearest_power_given_feasible_W', ...
+    'VariableNames', {'N_req', 'proposed_feasibility', 'nearest_feasibility', 'random_feasibility', ...
+    'proposed_power_given_feasible_W', 'nearest_power_given_feasible_W', 'random_power_given_feasible_W', ...
     'proposed_active_APs_given_feasible', 'nearest_active_APs_given_feasible', ...
     'proposed_rate_given_feasible', 'nearest_rate_given_feasible', ...
     'proposed_mean_PCRB_given_feasible', 'nearest_mean_PCRB_given_feasible', ...
