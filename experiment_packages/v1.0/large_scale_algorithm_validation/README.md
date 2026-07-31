@@ -40,10 +40,13 @@ when the exact target position is unavailable.
 ```matlab
 addpath('sim/matlab');
 run_large_scale_algorithm_validation('Seeds',1:50, ...
-    'Tradeoff_seeds',1:10,'T_max',3,'Mosek_max_time',15,'Resume',true);
+    'Tradeoff_seeds',1:10,'T_max',3,'Mosek_max_time',15, ...
+    'N_workers',4,'Resume',true);
 ```
 
 The campaign is restartable. Each scale configuration is written separately
 under `experiment_packages/v1.0/results/large_scale_algorithm_validation`.
+With four workers, the three scale configurations and the combined
+convergence/trade-off task run concurrently and write to disjoint directories.
 Use paired statistics on common feasible seeds; never pool conditional means
 from different feasibility sets.

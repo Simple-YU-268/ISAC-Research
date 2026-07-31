@@ -198,7 +198,7 @@ PCRB 约束 (P1-C3) 在 lifted 域中保持为
 \begin{equation}
 \min \quad \underbrace{\sum_{k=1}^K \tr(\mat{W}_k) + \sum_{p=1}^P \tr(\mat{S}_p)}_{\text{原目标}} \; + \; \eta_b \underbrace{\sum_{m \in \mathcal{M}, p \in \mathcal{P}} g(b_{mp})}_{= \sum_{m,p} (b_{mp} - b_{mp}^2)} \quad \text{s.t. (P2-C1)} \sim \text{(P2-C9)} \setminus \{\text{(P2-C9)}\}, \tag{P2-DCP}
 \end{equation}
-其中 $\eta_b \geq 0$ 为惩罚因子；目标函数呈现"凸函数 $+$ 凹函数 × $\eta_b$"的 DC 结构，约束 (P2-C9) 仅保留 box 形式（box 集是凸的），但目标中 $-\eta_b b_{mp}^2$ 项在 $b_{mp}$ 上是凹函数，故 (P2-DCP) 不是凸优化问题，该非凸性将在 \S3 中与 rank-1 约束一起、由双 DC 惩罚 SCA 联合处理。$b_{mp} \in \{0,1\}$ 时 $g(b_{mp}) = 0$、惩罚项对二元解无任何代价，$b_{mp} \in (0,1)$ 时 $g(b_{mp}) > 0$、惩罚项随 $\eta_b$ 增大而增大；只要 $\eta_b$ 足够大，(P2-DCP) 的任何有限目标值都强制 $g(b_{mp}) \to 0$，从而 $b_{mp}^\star \in \{0,1\}$（详见 \S3 Theorem~2）。引入 $\eta_b$ 凹惩罚后 (P2-DCP) 与 \S3-A 中 rank-1 凹惩罚 $\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k)$ 在数学结构上完全对偶——两者都是"凸函数 $-$ 凸函数"的 DC 形式，\S3 设计的 SCA 框架可同时承载两套惩罚：同一次 SCA 迭代内对 $\mat{W}_k$ 做特征分解、对 $b_{mp}$ 做一阶 Taylor 展开，得到关于 $(\{\mat{W}_k\}, \{b_{mp}\}, \{\mat{S}_p\}, \{\mu_k\}, \{\mat{M}_p\})$ 的统一凸 SDP 子问题。(P2-DCP) 的 box 约束 $0 \leq b_{mp} \leq 1$ 决定 SCA 冷启动不能任意；工程上可采用 \emph{大尺度衰落启发式} 生成初始点——对每个 target $p$ 按 $\text{PL}(d_{m,p})$ 升序选 top-$N_{\text{req}}$ 个 AP 置 $b_{mp}^{(0)} = 1$，其余置 $0$，该值自动满足 box 约束与 (P2-C5') 等式且距 $\{0,1\}$ 边界最远不超过一步；需强调 \emph{该启发式仅作为 SCA 冷启动辅助、不再是最终求解策略}——最终解由双 DC 惩罚的迭代极限决定，理论上与初始点选择无关（仅影响收敛速度）。
+其中 $\eta_b \geq 0$ 为惩罚因子；目标函数呈现"凸函数 $+$ 凹函数 × $\eta_b$"的 DC 结构，约束 (P2-C9) 仅保留 box 形式（box 集是凸的），但目标中 $-\eta_b b_{mp}^2$ 项在 $b_{mp}$ 上是凹函数，故 (P2-DCP) 不是凸优化问题，该非凸性将在 \S3 中与 rank-1 约束一起、由双 DC 惩罚 SCA 联合处理。$b_{mp} \in \{0,1\}$ 时 $g(b_{mp}) = 0$、惩罚项对二元解无任何代价，$b_{mp} \in (0,1)$ 时 $g(b_{mp}) > 0$、惩罚项随 $\eta_b$ 增大而增大；但有限惩罚仅压低而不必然消除该残差，精确恢复须由 \S3 的残差检验与固定分配恢复步骤确认。引入 $\eta_b$ 凹惩罚后 (P2-DCP) 与 \S3-A 中 rank-1 凹惩罚 $\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k)$ 在数学结构上完全对偶——两者都是"凸函数 $-$ 凸函数"的 DC 形式，\S3 设计的 SCA 框架可同时承载两套惩罚：同一次 SCA 迭代内对 $\mat{W}_k$ 做特征分解、对 $b_{mp}$ 做一阶 Taylor 展开，得到关于 $(\{\mat{W}_k\}, \{b_{mp}\}, \{\mat{S}_p\}, \{\mu_k\}, \{\mat{M}_p\})$ 的统一凸 SDP 子问题。大尺度衰落启发式可用作 warm start，但对非凸 SCA 而言初始点可能影响收敛速度及到达的稳定点，不能据此声称最终解与初值无关。
 
 \subsection*{F. 整理 (P3)：含双 DC 惩罚的最终形式}
 
@@ -237,9 +237,9 @@ PCRB 约束 (P1-C3) 在 lifted 域中保持为
 
 \subsection*{A. 双 DC 惩罚的统一表征}
 
-对任意半正定矩阵 $\mat{W}_k \succeq \mat{0}$，其秩为 1 的充要条件是它的迹等于最大特征值：
+对任意半正定矩阵 $\mat{W}_k \succeq \mat{0}$，其迹等于最大特征值当且仅当秩至多为 1；若 $\mat{W}_k\neq0$（例如正 SINR 目标下的 active user），这才等价于秩为 1：
 \begin{equation}\label{eq:rank1-equivalence}
-\rank(\mat{W}_k) = 1 \quad \Longleftrightarrow \quad \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0.
+\tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0 \quad \Longleftrightarrow \quad \rank(\mat{W}_k) \leq 1.
 \end{equation}
 由于 $\lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k)$ 对 PSD 矩阵恒成立，定义秩亏量
 \begin{equation}\label{eq:rho-def}
@@ -291,9 +291,9 @@ g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
 \caption{双 DC 惩罚 SCA 迭代（秩一 + 二元联合恢复）}
 \label{alg:sca-joint}
 \begin{algorithmic}[1]
-\Require 初始可行点 $\{\mat{W}_k^{(0)}, b_{mp}^{(0)}\}$（\S2-E 末段启发式生成）、惩罚因子 $\eta_{\text{rank}}, \eta_b > 0$、容差 $\varepsilon > 0$、最大迭代次数 $T_{\max}$。
-\Ensure 秩一（或近似秩一）波束协方差 $\{\mat{W}_k^\star\}$、二元 AP-target 分配 $\{b_{mp}^\star \in \{0,1\}\}$、感知协方差 $\{\mat{S}_p^\star\}$。
-\State 求解无惩罚 ($\eta_{\text{rank}} = \eta_b = 0$) 的 (P3) 获得初始 SDR 解；该解对应 $\eta_b = 0$ 时 $b_{mp}$ 可能非 $\{0,1\}$，但作为 SCA 起点可行。若不可行则报告 infeasible。
+\Require 固定惩罚因子 $\eta_{\text{rank}},\eta_b>0$、容差 $\varepsilon>0$、最大迭代次数 $T_{\max}$。
+\Ensure 近似秩一协方差、满足基数约束的二元分配，以及恢复成功时经物理约束验证的解。
+\State 求解无惩罚 SDR ($\eta_{\text{rank}}=\eta_b=0$) 得到可行 SCA 起点 $(\{\mat{W}_k^{(0)}\},\{b_{mp}^{(0)}\},\ldots)$；若不可行则报告 infeasible。启发式只可作 warm start，且可能影响到达的稳定点。
 \For{$t = 0, 1, \ldots, T_{\max}-1$}
     \For{每个 $k \in \mathcal{K}$}
         \State 对 $\mat{W}_k^{(t)}$ 特征分解，得主特征向量 $\vect{u}_{\max,k}^{(t)}$。
@@ -303,18 +303,19 @@ g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
     \EndFor
     \State 求解凸 SDP \eqref{eq:p3-sca} 得 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \{\mat{S}_p^{(t+1)}\}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$。
     \State 计算 $\delta_{\text{rank}}^{(t)} = \sum_k \rho(\mat{W}_k^{(t+1)})$、$\delta_b^{(t)} = \sum_{m,p} g(b_{mp}^{(t+1)})$。
-    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$ 且 $\delta_b^{(t)} \leq \varepsilon$ 且目标变化 $|P^{(t+1)} - P^{(t)}| \leq \varepsilon$}
+    \State 计算真实固定惩罚目标 $F_\eta^{(t+1)}$（即 \eqref{eq:p3-dcp} 的目标）。
+    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$、$\delta_b^{(t)} \leq \varepsilon$ 且 $|F_\eta^{(t+1)}-F_\eta^{(t)}|\leq\varepsilon$}
         \State \textbf{break}。
     \EndIf
 \EndFor
-\State 对每个 $k$，令 $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^{(t+1)})} \, \vect{u}_{\max,k}^{(t+1)}$。
-\State 对每个 $(m, p)$，舍入 $b_{mp}^\star = \mathbb{1}[b_{mp}^{(t+1)} \geq 0.5]$（若 $\delta_b^{(t)}$ 已充分小则舍入无代价）。
-\State \Return $\{\vect{w}_k^\star, b_{mp}^\star, \{\mat{S}_p^\star\}\}$。
+\State 对每个 target $p$，将 $\{b_{mp}^{(t+1)}\}_{m=1}^M$ 中最大的 $N_{\text{req}}$ 个置为 1，其余置为 0，得到 $b_{mp}^{\rm fix}$。
+\State 固定 $b=b^{\rm fix}$ 后重解连续恢复问题，并核验所有原始物理约束。若 $\delta_{\rm rank}\leq\varepsilon$ 且恢复的 $\mat{W}_k\neq0$，令 $\vect{w}_k^\star=\sqrt{\lambda_{\max}(\mat{W}_k)}\vect{u}_{\max,k}$；否则报告恢复失败。
+\State 仅返回通过物理约束验证的恢复解。
 \end{algorithmic}
 \end{algorithm}
 
 \begin{theorem}[双 DC SCA 收敛性]\label{thm:sca-conv}
-由 Algorithm~\ref{alg:sca-joint} 产生的目标序列 $\{P^{(t)}\}$ 单调非增且有下界，因此收敛。此外，惩罚项序列 $\{\sum_k \rho(\mat{W}_k^{(t)})\}$ 与 $\{\sum_{m,p} g(b_{mp}^{(t)})\}$ 收敛到 0 的充分条件是惩罚因子 $\eta_{\text{rank}}, \eta_b$ 足够大；在收敛点处，若 $\rho(\mat{W}_k^\star) = 0$（对所有 $k$）且 $g(b_{mp}^\star) = 0$（对所有 $(m, p)$），则恢复出的 $\{\vect{w}_k^\star, b_{mp}^\star\}$ 严格满足原问题 (P1-C1)--(P1-C7')。
+固定 $\eta_{\text{rank}},\eta_b>0$，每次凸子问题精确求解且初始点可行时，Algorithm~\ref{alg:sca-joint} 生成的真实固定惩罚目标序列 $\{F_\eta^{(t)}\}$ 单调非增且有下界，因此收敛。本结论本身不声称任意有限惩罚会使残差严格为零。若任一聚点对所有非零 $\mat{W}_k^\star$ 满足 $\rho(\mat{W}_k^\star)=0$、对所有 $(m,p)$ 满足 $g(b_{mp}^\star)=0$，则秩一提取和保持基数的分配投影与该点一致，并满足原问题 (P1-C1)--(P1-C7')。
 \end{theorem}
 
 \begin{proof}
@@ -323,7 +324,7 @@ g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
 
 \subsection*{C. 基线：Gaussian 随机化 / 主特征向量提取}
 
-若追求单次 SDP 的极速运行，可直接求解 $\eta_{\text{rank}} = \eta_b = 0$ 的 (P3) 主问题，再通过后处理恢复 rank-1 + 二元解：$\mat{W}_k$ 通过 Algorithm~\ref{alg:rank1} 的主特征向量提取 + 功率缩放恢复为 $\vect{w}_k^\star$，$b_{mp}$ 按阈值 0.5 舍入为 $\{0,1\}$。需要强调的是，这种后处理方式会破坏 S-Procedure 严格保证的鲁棒 SINR 约束与 box 约束的精确满足，实践中可能需要额外的功率缩放来恢复可行性。
+若追求单次 SDP 的极速运行，可直接求解 $\eta_{\text{rank}}=\eta_b=0$ 的 (P3) 主问题，再由主特征向量生成 rank-1 候选。这只作为基线：特征提取和分配投影可能破坏鲁棒 SINR/PCRB 保证，故每个候选必须按原问题逐项验算；不可行候选须重优化或丢弃。
 
 \begin{algorithm}[htbp]
 \caption{秩一波束提取（基线后处理）}
@@ -339,13 +340,12 @@ g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
 \If{$\{\vect{w}_k^\star, b_{mp}^\star\}$ 满足所有 (P1-C1)--(P1-C7')}
     \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$。
 \Else
-    \State 应用功率缩放回退：$\vect{w}_k^\star \leftarrow \alpha \vect{w}_k^\star$，$\alpha \in (0, 1]$ 恢复可行性。
-    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$。
+    \State 求解固定分配恢复问题并重新核验原始约束；若仍不可行，则丢弃该候选。
 \EndIf
 \end{algorithmic}
 \end{algorithm}
 
-经过 \S\ref{sec:relaxation} 的凸化链 + \S3 双 DC 惩罚 SCA，(P3) 中的所有物理约束（鲁棒 SINR、PCRB、感知 SINR、AP 功率、AP-target 关联、box）均被精确凸化或转化为可由 DC 框架处理的非凸项；$b_{mp}$ 的二元性与 $\mat{W}_k$ 的 rank-1 性质在同一 SCA 循环内被同步恢复，避免了外层启发式搜索带来的最优性损失。
+经过 \S\ref{sec:relaxation} 的凸化链 + \S3 双 DC 惩罚 SCA，(P3) 中的所有物理约束（鲁棒 SINR、PCRB、感知 SINR、AP 功率、AP-target 关联、box）均以凸约束表示。其余秩与二元残差在同一 SCA 循环内受控；论文应报告这些数值残差、保持基数的投影和后续物理可行性核验，而不能由未经证明的精确惩罚结论直接推断恢复成功。
 
 \appendix
 \section{Proof of Theorem~\ref{thm:p3-structure}}\label{app:proof-p3}
@@ -360,56 +360,17 @@ g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
 
 \section{Proof of Theorem~\ref{thm:sca-conv}}\label{app:proof-sca-conv}
 
-本附录给出 Algorithm~\ref{alg:sca-joint} 目标序列收敛性以及 $b_{mp} \to \{0,1\}$ 极限性质的证明。
+本附录证明真实固定惩罚目标的单调性；不对任意有限惩罚下必然精确秩一/二元恢复作出断言。
 
-记第 $t$ 次 SCA 子问题 \eqref{eq:p3-sca} 的目标函数为
-\[
-P^{(t)}(\mat{W}_k, b_{mp}) \triangleq \sum_{k=1}^K \tr(\mat{W}_k) + \sum_{p=1}^P \tr(\mat{S}_p) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] + \eta_b \sum_{m, p} (1 - 2 b_{mp}^{(t)}) \, b_{mp}.
-\]
-设第 $t$ 次迭代的最优解为 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \{\mat{S}_p^{(t+1)}\}, \ldots)$。真实惩罚目标定义为
-\[
-\tilde{P}^{(t)} \triangleq \sum_{k=1}^K \tr(\mat{W}_k^{(t+1)}) + \sum_{p=1}^P \tr(\mat{S}_p^{(t+1)}) + \eta_{\text{rank}} \sum_{k=1}^K \rho(\mat{W}_k^{(t+1)}) + \eta_b \sum_{m, p} g(b_{mp}^{(t+1)}).
-\]
+令 $F_\eta(x)$ 表示 \eqref{eq:p3-dcp} 的目标，$x$ 汇集所有决策变量。第 $t$ 次迭代中，令 $Q_t(x)$ 表示由 \eqref{eq:rho-linearized} 与 \eqref{eq:g-linearized} 构造的 SCA 上界，并保留 $g$ 的完整仿射上界常数项；\eqref{eq:p3-sca} 省略该常数仅因它不改变子问题最优解。
 
-\paragraph{关键不等式 (1).} 由于 $\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H$ 是 $\lambda_{\max}(\mat{W}_k)$ 在 $\mat{W}_k^{(t)}$ 处的次梯度，由凸函数一阶条件有
+由 $\lambda_{\max}$ 的凸性及 $g$ 的凹性，对每个可行 $x$ 都有 $F_\eta(x)\leq Q_t(x)$，且上界在当前点处紧，即 $F_\eta(x^{(t)})=Q_t(x^{(t)})$。若 $x^{(t+1)}$ 是凸子问题的最优解，则
 \[
-\lambda_{\max}(\mat{W}_k^{(t+1)}) \geq \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)} \big),
+ F_\eta(x^{(t+1)})\leq Q_t(x^{(t+1)})\leq Q_t(x^{(t)})=F_\eta(x^{(t)}).
 \]
-等价地 $\rho(\mat{W}_k^{(t+1)}) \leq \tr(\mat{W}_k^{(t+1)}) - \tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)})$。同理，凹函数 $g$ 在 $b_{mp}^{(t)}$ 处一阶 Taylor 给出过估计
-\[
-g(b_{mp}^{(t+1)}) = b_{mp}^{(t+1)} - (b_{mp}^{(t+1)})^2 \leq (1 - 2b_{mp}^{(t)}) b_{mp}^{(t+1)} + (b_{mp}^{(t)})^2,
-\]
-其中 $(b_{mp}^{(t)})^2$ 为常数。结合两式得
-\[
-\tilde{P}^{(t)} \leq P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) + \eta_{\text{rank}} \cdot 0 + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
-\]
-其中 $\eta_{\text{rank}} \cdot 0 = 0$ 是因为 $\rho(\mat{W}_k^{(t+1)})$ 的线性化上界在 $\mat{W}_k^{(t+1)}$ 处的值**正好**等于 $\rho(\mat{W}_k^{(t+1)})$ 本身（无多余常数项）；$b$-端的常数项 $\eta_b \sum (b_{mp}^{(t)})^2$ 来自 $g$ 的一阶 Taylor 高估计、将在 (2) 中被吸收。
+故 $\{F_\eta(x^{(t)})\}$ 单调非增。功率项与两个亏量均非负，故其下界为零，从而该序列收敛。
 
-\paragraph{关键不等式 (2).} 取迭代点 $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$ 作为第 $t$ 次子问题的可行点（约束 (P3-C1)--(P3-C8) 在迭代点处仍满足，因 (P3-C1)--(P3-C8) 关于 $(\mat{W}_k, \{\mat{S}_p\}, b_{mp})$ 凸、(P3-C9) box 在迭代点满足），其子问题目标值为
-\begin{align*}
-P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) 
-&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) \\
-&\quad + \eta_{\text{rank}} \sum_k \Big[\tr(\mat{W}_k^{(t)}) - \tr\big(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}\big)\Big] \\
-&\quad + \eta_b \sum_{m,p} (1 - 2b_{mp}^{(t)}) b_{mp}^{(t)} \\
-&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) + \eta_{\text{rank}} \sum_k \rho(\mat{W}_k^{(t)}) + \eta_b \sum_{m,p} \big(b_{mp}^{(t)} - 2(b_{mp}^{(t)})^2\big) \\
-&= \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
-\end{align*}
-其中第三行利用了 $\tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}) = \lambda_{\max}(\mat{W}_k^{(t)})$（主特征向量定义），第四行利用了 $g(b_{mp}^{(t)}) = b_{mp}^{(t)} - (b_{mp}^{(t)})^2$ 与 $\tilde{P}^{(t-1)}$ 的定义对比（差恰好 $-\eta_b \sum (b_{mp}^{(t)})^2$）。由于 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\})$ 是子问题最优解，有
-\[
-P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) \leq P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) = \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
-\]
-
-\paragraph{单调非增.} 结合上述两式得
-\[
-\tilde{P}^{(t)} \leq \big(\tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2\big) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2 = \tilde{P}^{(t-1)},
-\]
-即真实目标函数序列 $\{\tilde{P}^{(t)}\}$ 单调非增。
-
-\paragraph{收敛性结论.} 真实目标 $\tilde{P}^{(t)}$ 单调非增、且关于 $(\{\mat{W}_k\}, \{\mat{S}_p\}, \{b_{mp}\})$ 的物理下界为 0（功率非负、惩罚非负），故由单调收敛定理 $\{\tilde{P}^{(t)}\}$ 收敛。
-
-\paragraph{$b_{mp} \to \{0,1\}$ 极限性质.} 当 $\eta_b$ 足够大时，有限目标值要求 $\sum_{m,p} g(b_{mp}^{(t)})$ 不能远离 0，否则 $\eta_b \sum g$ 会驱使目标值趋向无穷大。因此存在 $\eta_{b,0}$ 使得对所有 $\eta_b \geq \eta_{b,0}$，序列 $\sum_{m,p} g(b_{mp}^{(t)}) \to 0$。由 $g(b) \geq 0$ 与 $g$ 的连续性，$g(b_{mp}^{(t)}) \to 0$ 蕴含 $b_{mp}^{(t)} \to \{0,1\}$（因 $g^{-1}(0) \cap [0,1] = \{0, 1\}$）。同理，$\eta_{\text{rank}} \geq \eta_{\text{rank},0}$ 时 $\sum_k \rho(\mat{W}_k^{(t)}) \to 0$，从而 $\rank(\mat{W}_k^\star) = 1$。
-
-\paragraph{原始约束恢复.} 在 $(\rho, g) = (0, 0)$ 的收敛点，恢复出的 $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^\star)} \vect{u}_{\max,k}^\star$、$b_{mp}^\star \in \{0,1\}$ 代入 (P1) 后，所有约束由 (P3) 的凸化等价链严格保持：(P1-C1)/(P1-C2)/(P1-C3) 由 (P3-C1)/(P3-C2)/(P3-C3) + (P3-C3b) 保证；(P1-C4'a)/(P1-C4'b)/(P1-C5')/(P1-C6)/(P1-C7') 由 (P3-C4'a)/(P3-C4'b)/(P3-C5')/(P3-C6)/(P3-C9) 保证；rank-1 性质保证 $\mat{W}_k^\star$ 可恢复为 $\vect{w}_k^\star$。故 (P1-C1)--(P1-C7') 全部满足。
+若某一聚点满足 $\rho(\mat{W}_k^\star)=0$ 且 $\mat{W}_k^\star\neq0$，则 $\mat{W}_k^\star$ 秩一并可由主特征向量表示；若同时 $g(b_{mp}^\star)=0$，则 $b_{mp}^\star\in\{0,1\}$。只有在这一精确恢复情形下，(P3) 的凸化等价链才直接保证原问题约束。对于有限惩罚的实际计算，应报告残差，并按 Algorithm~\ref{alg:sca-joint} 做保持基数的投影、固定分配恢复和物理可行性核验。
 
 \begin{thebibliography}{9}
 \bibitem{Boyd2004}

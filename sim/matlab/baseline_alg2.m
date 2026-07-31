@@ -71,9 +71,12 @@ rank_trace = rank_trace(1:iters);
 binary_trace = binary_trace(1:iters);
 
 % Cardinality-preserving projection followed by deterministic local repair.
-% Candidates differ only by a single selected/unselected AP swap and are
-% ordered by their loss in the relaxed b score.  This is a recovery stage,
-% not an additional random or nearest-AP baseline.
+% Besides the relaxed-b projection, use a small ISAC-aware candidate set:
+% the per-AP sensing-to-user coupling efficiency and two normalized mixtures
+% of that efficiency with the relaxed score.  These candidates account for
+% sensing strength and communication interference jointly, rather than using
+% a distance/nearest-AP rule; every one is judged by its fixed-assignment
+% physical solution and true transmit power.
 candidates = recovery_assignments(b_prev, prm, 21);
 res = [];
 for c = 1:numel(candidates)
@@ -100,7 +103,7 @@ res.dc_iterations = iters;
 res.dc_rank_deficiency = rank_trace(end);
 res.dc_binary_distance = binary_trace(end);
 res.init_label = 'unpenalized_sdr';
-res.rounding_label = 'topN_local_swap_fixed_b_recovery';
+res.rounding_label = 'relaxed_channel_aware_local_swap_fixed_b_recovery';
 end
 
 function b = round_assignment(b_relaxed, prm)
@@ -114,6 +117,19 @@ end
 function candidates = recovery_assignments(b_relaxed, prm, max_candidates)
 base = round_assignment(b_relaxed, prm);
 candidates = {base};
+
+% Add ISAC-aware Top-N projections before spending the bounded budget on
+% local swaps.  The score is target-channel energy divided by aggregate
+% communication-channel coupling at an AP: large values favor sensing gain
+% while reducing likely sensing-waveform interference at UEs.  The two
+% mixtures retain the SCA association information.
+efficiency = sensing_to_user_efficiency(prm);
+score_sets = {efficiency, ...
+    0.75 * normalize_columns(b_relaxed) + 0.25 * normalize_columns(efficiency), ...
+    0.50 * normalize_columns(b_relaxed) + 0.50 * normalize_columns(efficiency)};
+for s = 1:numel(score_sets)
+    candidates = append_unique_candidate(candidates, round_assignment(score_sets{s}, prm));
+end
 swaps = struct('leave', {}, 'enter', {}, 'target', {}, 'loss', {});
 for p = prm.active_targets
     selected = find(base(:,p) > 0.5);
@@ -125,6 +141,7 @@ for p = prm.active_targets
         end
     end
 end
+
 [~, order] = sort([swaps.loss], 'ascend');
 single_limit = min(8, numel(order));
 for q = 1:single_limit
@@ -149,6 +166,37 @@ end
 for q = 1:numel(pair_order)
     candidates = append_unique_candidate(candidates, pair_list{pair_order(q)});
     if numel(candidates) >= max_candidates, break; end
+end
+end
+
+function efficiency = sensing_to_user_efficiency(prm)
+efficiency = zeros(prm.M, prm.P);
+user_coupling = zeros(prm.M, 1);
+for m = 1:prm.M
+    ap_idx = (m-1)*prm.Nt + (1:prm.Nt);
+    user_coupling(m) = real(trace(prm.H(ap_idx,:) * prm.H(ap_idx,:)'));
+end
+coupling_floor = max(1e-12, 1e-6 * max(user_coupling));
+for p = prm.active_targets
+    for m = 1:prm.M
+        ap_idx = (m-1)*prm.Nt + (1:prm.Nt);
+        sensing_gain = real(prm.G(ap_idx,p)' * prm.G(ap_idx,p));
+        efficiency(m,p) = sensing_gain / (user_coupling(m) + coupling_floor);
+    end
+end
+end
+
+function x_norm = normalize_columns(x)
+x_norm = zeros(size(x));
+for p = 1:size(x,2)
+    col = real(x(:,p));
+    lo = min(col);
+    hi = max(col);
+    if hi > lo
+        x_norm(:,p) = (col - lo) / (hi - lo);
+    else
+        x_norm(:,p) = 0;
+    end
 end
 end
 

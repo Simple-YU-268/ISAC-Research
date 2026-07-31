@@ -200,7 +200,7 @@ For $b \in [0,1]$, $g(b) = b - b^2 \geq 0$ holds and $g$ is a concave function o
 \begin{equation}
 \min \quad \underbrace{\sum_{k=1}^K \tr(\mat{W}_k) + \sum_{p=1}^P \tr(\mat{S}_p)}_{\text{original objective}} \; + \; \eta_b \underbrace{\sum_{m \in \mathcal{M}, p \in \mathcal{P}} g(b_{mp})}_{= \sum_{m,p} (b_{mp} - b_{mp}^2)} \quad \text{s.t. (P2-C1)} \sim \text{(P2-C9)} \setminus \{\text{(P2-C9)}\}, \tag{P2-DCP}
 \end{equation}
-where $\eta_b \geq 0$ is the penalty factor; the objective exhibits a DC structure (``convex function $+$ concave function $\times \eta_b$'') and the box constraints (P2-C9) are kept in their convex form, but the term $-\eta_b b_{mp}^2$ in the objective is concave in $b_{mp}$, so (P2-DCP) is not a convex optimization problem and this non-convexity is handled jointly with the rank-1 constraint by the dual DC penalty SCA framework in \S3. For $b_{mp} \in \{0,1\}$ we have $g(b_{mp}) = 0$ and the penalty incurs no cost on binary solutions; for $b_{mp} \in (0,1)$ we have $g(b_{mp}) > 0$ and the penalty grows with $\eta_b$, so a sufficiently large $\eta_b$ forces any finite objective value of (P2-DCP) to satisfy $g(b_{mp}) \to 0$ and therefore $b_{mp}^\star \in \{0,1\}$ (see Theorem~\ref{thm:sca-conv} in \S3 for details). After introducing the $\eta_b$ concave penalty, (P2-DCP) has exactly the same mathematical structure as the rank-1 penalty $\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k)$ introduced in \S3-A---both are ``convex $-$ convex'' DC forms---so the SCA framework designed in \S3 can carry both penalties simultaneously: within a single SCA iteration we perform an eigendecomposition of $\mat{W}_k$ and a first-order Taylor expansion of $g$ at $b_{mp}$, yielding a unified convex SDP subproblem in the variables $(\{\mat{W}_k\}, \{b_{mp}\}, \{\mat{S}_p\}, \{\mu_k\}, \{\mat{M}_p\})$. The box constraint $0 \leq b_{mp} \leq 1$ of (P2-DCP) restricts the SCA cold start; in practice we may use a \emph{large-scale-fading heuristic} to generate the initial point---for each target $p$, sort APs by $\text{PL}(d_{m,p})$ in ascending order, set $b_{mp}^{(0)} = 1$ for the top-$N_{\text{req}}$ APs and $b_{mp}^{(0)} = 0$ for the rest; this value automatically satisfies the box constraint and the equality (P2-C5'), and is at most one step away from the $\{0,1\}$ boundary. \emph{This heuristic serves only as a cold-start aid for SCA and is no longer the final solver}---the final solution is determined by the iterative limit of the dual DC penalties and is theoretically independent of the initial point (only the convergence speed is affected).
+where $\eta_b \geq 0$ is the penalty factor; the objective exhibits a DC structure (``convex function $+$ concave function $\times \eta_b$'') and the box constraints (P2-C9) are kept in their convex form, but the term $-\eta_b b_{mp}^2$ in the objective is concave in $b_{mp}$, so (P2-DCP) is not a convex optimization problem and this non-convexity is handled jointly with the rank-1 constraint by the dual DC penalty SCA framework in \S3. For $b_{mp}\in\{0,1\}$, $g(b_{mp})=0$; for $b_{mp}\in(0,1)$, $g(b_{mp})>0$ and the penalty grows with $\eta_b$. A finite penalty can reduce but does not by itself prove that this residual vanishes; exact recovery must be established by the residual test and fixed-assignment recovery in \S3. After introducing the $\eta_b$ concave penalty, (P2-DCP) has exactly the same mathematical structure as the rank-1 penalty $\rho(\mat{W}_k)=\tr(\mat{W}_k)-\lambda_{\max}(\mat{W}_k)$ introduced in \S3-A---both are ``convex $-$ convex'' DC forms---so the SCA framework designed in \S3 can carry both penalties simultaneously. A large-scale-fading heuristic may be used as a warm start, but for this non-convex SCA it can affect both convergence speed and the stationary point reached.
 
 \subsection*{F. Consolidation (P3): Final Form with Dual DC Penalties}
 \addcontentsline{toc}{subsection}{F. Consolidation (P3): Final Form with Dual DC Penalties}
@@ -240,9 +240,9 @@ The feasible region of (P3) is convex but its objective is DC; obtaining the glo
 
 \subsection*{A. Unified Characterization of the Dual DC Penalties}
 
-For any positive-semidefinite matrix $\mat{W}_k \succeq \mat{0}$, it has rank one if and only if its trace equals its largest eigenvalue:
+For any positive-semidefinite matrix $\mat{W}_k \succeq \mat{0}$, its trace equals its largest eigenvalue if and only if it has rank at most one.  In the nonzero case (which is implied for an active user by a positive SINR target), this is equivalent to rank one:
 \begin{equation}\label{eq:rank1-equivalence}
-\rank(\mat{W}_k) = 1 \quad \Longleftrightarrow \quad \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0.
+\tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0 \quad \Longleftrightarrow \quad \rank(\mat{W}_k) \leq 1.
 \end{equation}
 Since $\lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k)$ always holds for PSD matrices, define the rank-deficiency measure
 \begin{equation}\label{eq:rho-def}
@@ -295,9 +295,9 @@ The objective of \eqref{eq:p3-sca} is linear in $(\{\mat{W}_k\}, \{\mat{S}_p\}, 
 \caption{Dual DC Penalty SCA Iteration (Joint Rank-One and Binary Recovery)}
 \label{alg:sca-joint}
 \begin{algorithmic}[1]
-\Require Initial feasible point $\{\mat{W}_k^{(0)}, b_{mp}^{(0)}\}$ (generated by the heuristic of \S\ref{sec:relaxation}-E), penalty factors $\eta_{\text{rank}}, \eta_b > 0$, tolerance $\varepsilon > 0$, maximum number of iterations $T_{\max}$.
-\Ensure Rank-one (or approximately rank-one) beamforming covariance $\{\mat{W}_k^\star\}$, binary AP--target assignment $\{b_{mp}^\star \in \{0,1\}\}$, sensing covariances $\{\mat{S}_p^\star\}$.
-\State Solve the unpenalized ($\eta_{\text{rank}} = \eta_b = 0$) problem (P3) to obtain an initial SDR solution; this solution may have $b_{mp} \notin \{0,1\}$ when $\eta_b = 0$, but it is feasible as an SCA starting point. Report infeasible if no such solution exists.
+\Require Fixed penalty factors $\eta_{\text{rank}},\eta_b>0$, tolerance $\varepsilon>0$, and maximum number of iterations $T_{\max}$.
+\Ensure An approximately rank-one covariance, a cardinality-feasible binary assignment, and a physically verified recovered solution when recovery succeeds.
+\State Solve the unpenalized SDR ($\eta_{\text{rank}}=\eta_b=0$) to obtain a feasible SCA start $(\{\mat{W}_k^{(0)}\},\{b_{mp}^{(0)}\},\ldots)$. Report infeasible if it has no solution. A heuristic may provide a warm start, but may affect the stationary point reached.
 \For{$t = 0, 1, \ldots, T_{\max}-1$}
     \For{each $k \in \mathcal{K}$}
         \State Eigendecompose $\mat{W}_k^{(t)}$ to obtain the leading eigenvector $\vect{u}_{\max,k}^{(t)}$.
@@ -307,18 +307,19 @@ The objective of \eqref{eq:p3-sca} is linear in $(\{\mat{W}_k\}, \{\mat{S}_p\}, 
     \EndFor
     \State Solve the convex SDP \eqref{eq:p3-sca} to obtain $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \{\mat{S}_p^{(t+1)}\}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$.
     \State Compute $\delta_{\text{rank}}^{(t)} = \sum_k \rho(\mat{W}_k^{(t+1)})$ and $\delta_b^{(t)} = \sum_{m,p} g(b_{mp}^{(t+1)})$.
-    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$ and $\delta_b^{(t)} \leq \varepsilon$ and the change in objective $|P^{(t+1)} - P^{(t)}| \leq \varepsilon$}
+    \State Evaluate the true fixed-penalty objective $F_\eta^{(t+1)}$ in \eqref{eq:p3-dcp}.
+    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$, $\delta_b^{(t)} \leq \varepsilon$, and $|F_\eta^{(t+1)}-F_\eta^{(t)}|\leq\varepsilon$}
         \State \textbf{break}.
     \EndIf
 \EndFor
-\State For each $k$, set $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^{(t+1)})} \, \vect{u}_{\max,k}^{(t+1)}$.
-\State For each $(m, p)$, round $b_{mp}^\star = \mathbb{1}[b_{mp}^{(t+1)} \geq 0.5]$ (if $\delta_b^{(t)}$ is sufficiently small, the rounding incurs no cost).
-\State \Return $\{\vect{w}_k^\star, b_{mp}^\star, \{\mat{S}_p^\star\}\}$.
+\State For each target $p$, set exactly the $N_{\text{req}}$ largest entries of $\{b_{mp}^{(t+1)}\}_{m=1}^M$ to one and the others to zero, obtaining $b_{mp}^{\rm fix}$.
+\State Re-solve the continuous fixed-assignment recovery problem with $b=b^{\rm fix}$, and verify every original physical constraint. If $\delta_{\rm rank}\leq\varepsilon$ and the recovered $\mat{W}_k$ is nonzero, set $\vect{w}_k^\star=\sqrt{\lambda_{\max}(\mat{W}_k)}\vect{u}_{\max,k}$; otherwise declare recovery unsuccessful.
+\State \Return only a physically verified recovered solution.
 \end{algorithmic}
 \end{algorithm}
 
 \begin{theorem}[Dual DC SCA Convergence]\label{thm:sca-conv}
-The objective sequence $\{P^{(t)}\}$ produced by Algorithm~\ref{alg:sca-joint} is monotonically non-increasing and bounded below, hence convergent. Moreover, a sufficient condition for both penalty sequences $\{\sum_k \rho(\mat{W}_k^{(t)})\}$ and $\{\sum_{m,p} g(b_{mp}^{(t)})\}$ to converge to zero is that the penalty factors $\eta_{\text{rank}}$ and $\eta_b$ are sufficiently large; at a limit point, if $\rho(\mat{W}_k^\star) = 0$ (for every $k$) and $g(b_{mp}^\star) = 0$ (for every $(m, p)$), then the recovered $\{\vect{w}_k^\star, b_{mp}^\star\}$ strictly satisfies the original constraints (P1-C1)--(P1-C7').
+For fixed $\eta_{\text{rank}},\eta_b>0$, exact solution of every convex subproblem, and a feasible initial point, the true fixed-penalty objective $\{F_\eta^{(t)}\}$ generated by Algorithm~\ref{alg:sca-joint} is monotonically non-increasing and bounded below, hence convergent. This statement alone does not assert that a finite penalty makes either residual exactly zero. If an accumulation point has $\rho(\mat{W}_k^\star)=0$ for every nonzero $\mat{W}_k^\star$ and $g(b_{mp}^\star)=0$ for every $(m,p)$, then the rank-one extraction and the cardinality-preserving assignment agree with that point and satisfy the original constraints (P1-C1)--(P1-C7').
 \end{theorem}
 
 \begin{proof}
@@ -328,7 +329,7 @@ See Appendix \ref{app:proof-sca-conv}.
 \subsection*{C. Baseline: Gaussian Randomization / Eigen-Extraction}
 \addcontentsline{toc}{subsection}{C. Baseline: Gaussian Randomization / Eigen-Extraction}
 
-If one pursues the fastest single-SDP run, the master problem (P3) with $\eta_{\text{rank}} = \eta_b = 0$ can be solved directly and the rank-one and binary solutions are recovered by post-processing: $\mat{W}_k$ is recovered as $\vect{w}_k^\star$ via leading-eigenvector extraction and power scaling in Algorithm~\ref{alg:rank1}, and $b_{mp}$ is rounded to $\{0,1\}$ by a threshold of $0.5$. It must be emphasized that this kind of post-processing breaks the strict robust-SINR guarantee of the S-Procedure and the exact satisfaction of the box constraints, and additional power scaling may be required in practice to restore feasibility.
+If one pursues the fastest single-SDP run, the master problem (P3) with $\eta_{\text{rank}}=\eta_b=0$ can be solved directly and a rank-one candidate can be extracted from its leading eigenvectors. This is only a baseline: extraction and assignment projection can break the robust-SINR/PCRB guarantees, so every candidate must be checked against the original constraints and an infeasible candidate must be reoptimized or discarded.
 
 \begin{algorithm}[htbp]
 \caption{Rank-One Beamforming Extraction (Baseline Post-Processing)}
@@ -344,13 +345,12 @@ If one pursues the fastest single-SDP run, the master problem (P3) with $\eta_{\
 \If{$\{\vect{w}_k^\star, b_{mp}^\star\}$ satisfies all of (P1-C1)--(P1-C7')}
     \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$.
 \Else
-    \State Apply a power-scaling fallback: $\vect{w}_k^\star \leftarrow \alpha \vect{w}_k^\star$, with $\alpha \in (0, 1]$ chosen to restore feasibility.
-    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$.
+    \State Solve a fixed-assignment recovery problem and recheck all original constraints; if it is infeasible, discard this candidate.
 \EndIf
 \end{algorithmic}
 \end{algorithm}
 
-After the convexification chain of \S\ref{sec:relaxation} and the dual DC penalty SCA of \S3, all physical constraints of (P3) (robust SINR, PCRB, sensing SINR, AP power, AP--target assignment, box) have been exactly convexified or transformed into terms that can be handled by the DC framework; the binarity of $b_{mp}$ and the rank-one property of $\mat{W}_k$ are recovered simultaneously within the same SCA loop, avoiding the optimality loss caused by an outer heuristic search.
+After the convexification chain of \S\ref{sec:relaxation} and the dual DC penalty SCA of \S3, all physical constraints of (P3) (robust SINR, PCRB, sensing SINR, AP power, AP--target assignment, box) are represented by convex constraints. The remaining rank and binarity residuals are controlled in the same SCA loop; their numerical values, the cardinality-preserving projection, and the subsequent physical feasibility check must be reported rather than inferred from an unverified exact-penalty claim.
 
 \appendix
 \section{Proof of Theorem~\ref{thm:p3-structure}}\label{app:proof-p3}
@@ -365,51 +365,17 @@ For complexity, the total number of decision variables is $n = K \cdot (MN_t)^2 
 
 \section{Proof of Theorem~\ref{thm:sca-conv}}\label{app:proof-sca-conv}
 
-This appendix proves the convergence of the objective sequence of Algorithm~\ref{alg:sca-joint} and the limiting property $b_{mp} \to \{0,1\}$.
+This appendix proves monotonicity of the true fixed-penalty objective; it does not claim exact rank-one or binary recovery for an arbitrary finite penalty.
 
-Denote the objective of the $t$-th SCA subproblem \eqref{eq:p3-sca} by
+Let $F_\eta(x)$ denote the objective in \eqref{eq:p3-dcp}, where $x$ collects all decision variables. At iteration $t$, let $Q_t(x)$ be its SCA majorizer obtained by replacing $\rho(\mat{W}_k)$ with \eqref{eq:rho-linearized} and $g(b_{mp})$ with the full affine upper bound in \eqref{eq:g-linearized}, including its constant term. The constants are omitted in \eqref{eq:p3-sca} only because they do not change its minimizer.
+
+For every feasible $x$, convexity of $\lambda_{\max}$ and concavity of $g$ give $F_\eta(x)\leq Q_t(x)$. The two bounds are tight at the current iterate, so $F_\eta(x^{(t)})=Q_t(x^{(t)})$. If $x^{(t+1)}$ minimizes the convex subproblem, then
 \[
-P^{(t)}(\mat{W}_k, b_{mp}) \triangleq \sum_{k=1}^K \tr(\mat{W}_k) + \sum_{p=1}^P \tr(\mat{S}_p) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] + \eta_b \sum_{m, p} (1 - 2 b_{mp}^{(t)}) \, b_{mp}.
+ F_\eta(x^{(t+1)})\leq Q_t(x^{(t+1)})\leq Q_t(x^{(t)})=F_\eta(x^{(t)}).
 \]
-Let the optimal solution of the $t$-th iteration be $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \{\mat{S}_p^{(t+1)}\}, \ldots)$. Define the true penalty objective as
-\[
-\tilde{P}^{(t)} \triangleq \sum_{k=1}^K \tr(\mat{W}_k^{(t+1)}) + \sum_{p=1}^P \tr(\mat{S}_p^{(t+1)}) + \eta_{\text{rank}} \sum_{k=1}^K \rho(\mat{W}_k^{(t+1)}) + \eta_b \sum_{m, p} g(b_{mp}^{(t+1)}).
-\]
+Thus $\{F_\eta(x^{(t)})\}$ is monotonically non-increasing. It is bounded below by zero because the power and both deficiency measures are nonnegative; hence it converges.
 
-\paragraph{Key inequality (1).} Since $\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H$ is a subgradient of $\lambda_{\max}(\mat{W}_k)$ at $\mat{W}_k^{(t)}$, by the first-order condition for convex functions,
-\[
-\lambda_{\max}(\mat{W}_k^{(t+1)}) \geq \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)} \big),
-\]
-equivalently $\rho(\mat{W}_k^{(t+1)}) \leq \tr(\mat{W}_k^{(t+1)}) - \tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)})$. Likewise, the first-order Taylor expansion of the concave $g$ at $b_{mp}^{(t)}$ gives $g(b_{mp}^{(t+1)}) \leq (1-2b_{mp}^{(t)}) b_{mp}^{(t+1)} + (b_{mp}^{(t)})^2$ (where $(b_{mp}^{(t)})^2$ is a constant). Combining both inequalities yields
-\[
-\tilde{P}^{(t)} \leq P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
-\]
-
-\paragraph{Key inequality (2).} Taking the iterate $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$ as a feasible point of the $t$-th subproblem (constraints (P3-C1)--(P3-C9) are still satisfied at the iterate, since (P3-C1)--(P3-C9) are convex in $(\mat{W}_k, \{\mat{S}_p\}, b_{mp})$), its subproblem objective value is
-\begin{align*}
-P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) 
-&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) \\
-&\quad + \eta_{\text{rank}} \sum_k \Big[\tr(\mat{W}_k^{(t)}) - \tr\big(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}\big)\Big] \\
-&\quad + \eta_b \sum_{m,p} (1 - 2b_{mp}^{(t)}) b_{mp}^{(t)} \\
-&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) + \eta_{\text{rank}} \sum_k \rho(\mat{W}_k^{(t)}) + \eta_b \sum_{m,p} \big(b_{mp}^{(t)} - 2(b_{mp}^{(t)})^2\big) \\
-&= \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
-\end{align*}
-where the third line uses $\tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}) = \lambda_{\max}(\mat{W}_k^{(t)})$ (by the leading-eigenvector definition) and the fourth line uses $g(b_{mp}^{(t)}) = b_{mp}^{(t)} - (b_{mp}^{(t)})^2$ to compare with the definition of $\tilde{P}^{(t-1)}$ (the difference is exactly $-\eta_b \sum (b_{mp}^{(t)})^2$). Since $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\})$ is optimal for the subproblem,
-\[
-P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) \leq P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) = \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
-\]
-
-\paragraph{Monotone non-increase.} Combining the two inequalities gives
-\[
-\tilde{P}^{(t)} \leq \big(\tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2\big) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2 = \tilde{P}^{(t-1)},
-\]
-i.e.\ the true objective sequence $\{\tilde{P}^{(t)}\}$ is monotonically non-increasing.
-
-\paragraph{Convergence.} The true objective $\tilde{P}^{(t)}$ is monotonically non-increasing and physically bounded below by $0$ (power terms and penalty terms are non-negative); by the monotone convergence theorem $\{\tilde{P}^{(t)}\}$ converges.
-
-\paragraph{Limiting property $b_{mp} \to \{0,1\}$.} When $\eta_b$ is sufficiently large, a finite objective value requires $\sum_{m,p} g(b_{mp}^{(t)})$ to stay close to zero, otherwise $\eta_b \sum g$ would drive the objective to infinity. Hence there exists $\eta_{b,0}$ such that for all $\eta_b \geq \eta_{b,0}$, the sequence $\sum_{m,p} g(b_{mp}^{(t)}) \to 0$. Since $g(b) \geq 0$ and $g$ is continuous, $g(b_{mp}^{(t)}) \to 0$ implies $b_{mp}^{(t)} \to \{0,1\}$ (because $g^{-1}(0) \cap [0,1] = \{0, 1\}$). Likewise, when $\eta_{\text{rank}} \geq \eta_{\text{rank},0}$, $\sum_k \rho(\mat{W}_k^{(t)}) \to 0$ and hence $\rank(\mat{W}_k^\star) = 1$.
-
-\paragraph{Recovery of the original constraints.} At a limit point with $(\rho, g) = (0, 0)$, the recovered $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^\star)} \vect{u}_{\max,k}^\star$ and $b_{mp}^\star \in \{0,1\}$, when substituted into (P1), satisfy all constraints through the convexification equivalence chain of (P3): (P1-C1)/(P1-C2)/(P1-C3) are guaranteed by (P3-C1)/(P3-C2)/(P3-C3) + (P3-C3b); (P1-C4'a)/(P1-C4'b)/(P1-C5')/(P1-C6)/(P1-C7') are guaranteed by (P3-C4'a)/(P3-C4'b)/(P3-C5')/(P3-C6)/(P3-C9); the rank-1 property guarantees that $\mat{W}_k^\star$ can be recovered as $\vect{w}_k^\star$. Hence (P1-C1)--(P1-C7') are all satisfied.
+At any accumulation point for which $\rho(\mat{W}_k^\star)=0$ and $\mat{W}_k^\star\neq0$, $\mat{W}_k^\star$ is rank one and can be represented by its leading eigenvector. If also $g(b_{mp}^\star)=0$, then $b_{mp}^\star\in\{0,1\}$. In this special exact-recovery case, the convexification equivalence chain ensures the original constraints. For finite penalties, residuals must instead be reported and the cardinality-preserving projection followed by fixed-assignment recovery in Algorithm~\ref{alg:sca-joint} must be physically verified.
 
 \begin{thebibliography}{9}
 \bibitem{Boyd2004}

@@ -85,11 +85,15 @@ if isfield(res, 'true_obj_trace') && ~isempty(res.true_obj_trace)
     grid on; ylabel('True fixed-penalty objective');
     title(sprintf('Representative fixed-penalty DC-SCA (N_{req}=%d)', cfg.N_req_main));
     nexttile;
-    semilogy(1:numel(res.rank_residual_trace), max(res.rank_residual_trace, eps), ...
-        'r-o', 1:numel(res.binary_residual_trace), max(res.binary_residual_trace, eps), ...
+    rank_plot = max(real(res.rank_residual_trace(:)), cfg.eps * 1e-4);
+    binary_plot = max(real(res.binary_residual_trace(:)), cfg.eps * 1e-4);
+    semilogy(1:numel(rank_plot), rank_plot, ...
+        'r-o', 1:numel(binary_plot), binary_plot, ...
         'k-s', 'LineWidth', 1.5);
+    hold on; yline(cfg.eps, 'b--', sprintf('\\epsilon=%.0e', cfg.eps), ...
+        'LabelHorizontalAlignment', 'left');
     grid on; xlabel('DC-SCA iteration'); ylabel('Summed residual');
-    legend('rank residual', 'binary residual', 'Location', 'best');
+    legend('rank residual', 'binary residual', 'stopping tolerance', 'Location', 'best');
     saveas(gcf, fullfile(out_dir, [save_tag, '_fig1_convergence.png']));
 else
     warning('Representative N_req=%d realization did not complete a DCP iteration; no convergence plot.', ...
@@ -241,12 +245,18 @@ if cfg.N_workers > 0 && isempty(gcp('nocreate'))
     parpool('local', cfg.N_workers);
 end
 if cfg.N_workers > 0
+    completed = 0;
+    progress_start = tic;
+    progress_queue = parallel.pool.DataQueue;
+    afterEach(progress_queue, @report_progress);
     parfor n = 1:cfg.N_mc
         records{n} = run_trial(cfg, nreq, mode, design_eps, eval_eps, n);
+        send(progress_queue, n);
     end
 else
     for n = 1:cfg.N_mc
         records{n} = run_trial(cfg, nreq, mode, design_eps, eval_eps, n);
+        fprintf('    %s N_req=%d: %d/%d completed\n', mode, nreq, n, cfg.N_mc);
     end
 end
 
@@ -287,6 +297,13 @@ stats.conditional_realized_per_target = mean(cellfun(@(r) mean(r.realized_per_ta
 stats.conditional_realized_network_aps = mean(cellfun(@(r) r.realized_network_aps, valid));
 stats.conditional_sensing_power = mean(cellfun(@(r) r.sensing_power, valid));
 stats.conditional_communication_power = mean(cellfun(@(r) r.communication_power, valid));
+
+    function report_progress(~)
+        completed = completed + 1;
+        elapsed = toc(progress_start);
+        fprintf('    %s N_req=%d: %d/%d completed (%.1f min)\n', ...
+            mode, nreq, completed, cfg.N_mc, elapsed / 60);
+    end
 end
 
 function rec = run_trial(cfg, nreq, mode, design_eps, eval_eps, index)
