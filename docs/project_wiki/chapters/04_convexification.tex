@@ -1,0 +1,42 @@
+\chapter{From P1 to the Dual DC-SCA Subproblem}
+
+\section{P2: covariance lifting and SDR}
+Introduce $\mat{W}_k=\vect{w}_k\vect{w}_k^H$. The equality is equivalent to
+$\mat{W}_k\succeq0$ plus $\operatorname{rank}(\mat{W}_k)=1$. Dropping the rank
+constraint yields an SDP relaxation. This is a relaxation, not an assertion
+that rank one is automatically guaranteed in the present coupled robust ISAC
+problem.
+
+\section{Robust and PCRB LMIs}
+The S-procedure converts the norm-bounded worst-case communication constraint
+to an LMI with a nonnegative multiplier. The trace-PCRB constraint is expressed
+through a Schur block LMI using an auxiliary matrix $\mat{M}_p$ and
+$\operatorname{tr}(\mat{M}_p)\leq\Gamma_{\rm track,p}$. The full state dimension
+$N_\theta$ is retained in this block; reducing it to an unrelated scalar block
+would change the model.
+
+\section{P3: double DC-SCA}
+The rank penalty is based on the gap between trace and dominant eigenvalue; the
+binary penalty is based on $b_{mp}(1-b_{mp})$. At each iteration, concave terms
+are linearized around the previous iterate, producing a convex SDP subproblem.
+The approach is a stationary-point heuristic with penalty continuation, not a
+global certificate for the original mixed-integer problem.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{fig5_statistical_double_dc_convergence.png}
+\caption{Continuous double-DC stabilization over 25 common realizations.
+The figure supports support stabilization before discrete recovery; it is not
+itself a physical-feasibility result.}
+\end{figure}
+
+\section{Why the recovery step is separate}
+The stable Top-$N_{\rm req}$ support of a continuous relaxation suggests a
+binary topology but does not prove it physically feasible. Therefore, the
+algorithm projects to binary $b$, solves a fixed-assignment continuous problem,
+extracts rank-one beamformers when needed, and runs an explicit validator. This
+separation is scientifically important: it prevents fractional relaxation
+quality from being reported as a deployable result.
+
+\sourcebox{Derivation source: \texttt{CONVEXIFICATION\_CHAIN.md}; caveats:
+\texttt{SDR\_TIGHTNESS.md} and \texttt{COMPLEXITY\_BOUND.md}.}

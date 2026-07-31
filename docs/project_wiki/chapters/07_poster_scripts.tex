@@ -1,0 +1,44 @@
+\chapter{Poster Presentation Scripts}
+
+\section{30-second version}
+\quick{This work studies robust resource allocation for Cell-Free ISAC. We keep
+communication globally cooperative, but activate dedicated sensing waveforms
+only for a target-centric AP cluster. The resulting mixed-integer robust design
+is solved through SDR, robust LMIs, double DC-SCA, and a certified recovery
+stage. The key result is that FIM-aware sensing clusters improve feasibility and
+energy efficiency compared with distance-only association.}
+\logic{30 秒只讲问题、架构非对称性、方法链和一个结果。不要讲所有约束，不要先讲
+推导细节。}
+
+\section{2-minute version}
+\quick{Cell-Free ISAC must serve UEs and track targets with the same distributed
+AP network. Our model separates these roles: every AP may cooperate for
+communication, while the binary variable $b_{mp}$ authorizes only dedicated
+sensing transmission for target $p$. We minimize power under worst-case
+communication SINR, sensing SINR, PCRB tracking, and per-AP constraints. After
+covariance lifting, we use the S-procedure and Schur LMIs, then a double DC-SCA
+algorithm to promote rank-one covariances and binary associations. Because a
+relaxed result is not physical by itself, we project a stable support, solve a
+fixed-assignment problem, and validate it. Experiments show an intermediate
+cluster size is most energy efficient, robust design removes sampled outage,
+and FIM-aware recovery outperforms nearest-AP association in difficult geometry.}
+\logic{两分钟版本的顺序是：\textbf{architecture → problem → solution → certification → evidence}。
+看到老师点头后停在这里，把时间留给提问。}
+
+\section{5-minute version outline}
+\begin{enumerate}
+\item Motivation: shared AP infrastructure creates communication--sensing resource coupling.
+\item Architecture: global $\mat{W}_k$ versus target-specific $\mat{S}_p$ and $b_{mp}$.
+\item Constraints: robust SINR, sensing SINR, PCRB, power, and cardinality.
+\item Method: P1 to P2 lifting/SDR, P3 double DC-SCA, then certified recovery.
+\item Results: binary stabilization, $N_{\rm req}$ trade-off, baseline comparison, robustness, and M12 cost.
+\item Closing: geometric sensing selection plus robust continuous optimization; future distributed acceleration.
+\end{enumerate}
+
+\section{Transitions worth memorizing}
+\begin{itemize}
+\item ``The important modeling choice is that $b_{mp}$ limits dedicated sensing, not global communication.''
+\item ``The relaxation identifies a promising support; physical feasibility is established only after fixed-topology recovery.''
+\item ``This figure is a QoS sensitivity study, not a Pareto-boundary claim.''
+\item ``The large-scale runtime is a limitation we report transparently, not a real-time performance claim.''
+\end{itemize}

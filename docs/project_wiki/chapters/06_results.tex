@@ -1,0 +1,59 @@
+\chapter{Results, Evidence, and Safe Interpretation}
+
+\section{Evidence rules}
+The final evidence package is the sole numerical authority. Feasibility is an
+unconditional rate over all trials at the stated point. Other performance
+statistics are conditional on physical feasibility unless explicitly described
+as paired or common-feasible. These rules avoid silently discarding hard cases.
+
+\section{Core results}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\linewidth]{fig3_cluster_size_tradeoff.png}
+\caption{Cluster-size trade-off: feasibility, conditional total transmit power,
+and runtime. The lowest observed mean power in the M6 study occurs at an
+intermediate sensing-cluster size.}
+\end{figure}
+
+Across 30 common M6 scenarios, the proposed method is physically feasible at
+each tested $N_{\rm req}\in\{2,3,4,5,6\}$. Mean power is 37.65, 30.83, 29.50,
+29.74, and 30.94 mW, respectively. The nonmonotone relation is meaningful:
+small clusters lack geometric FIM diversity, while large clusters incur
+dedicated-waveform resource and interference costs.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.93\linewidth]{fig10_method_comparison_vs_nreq.png}
+\caption{Association/recovery comparison. FIM-aware selection is a strong
+topology baseline; full recovery performs the final coupled robust covariance
+optimization and validation.}
+\end{figure}
+
+At $N_{\rm req}=3$, mean power is 30.83 mW for the proposed method, 30.93 mW
+for FIM-greedy, and 39.29 mW for nearest-AP. The close FIM-greedy result shows
+that geometry strongly selects the sensing topology; it does not eliminate the
+need for robust beamforming, fixed-topology re-optimization, and certification.
+
+\section{Robustness and QoS sensitivity}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth]{fig9_csi_robustness.png}
+\caption{Sampled CSI robustness. The Monte Carlo result complements, but does
+not replace, the worst-case S-procedure formulation.}
+\end{figure}
+
+The robust design has zero sampled system outage over the reported uncertainty
+radii; the nominal-CSI design has mean outage around 89--92\%. Fig.~8 should be
+called a \emph{QoS-requirement sensitivity study}: stricter communication and
+tracking targets require more power over the tested grid. It is neither a
+global communication--sensing Pareto frontier nor the boundary of the full
+feasible region.
+
+\section{Scalability and limitations}
+The M12, $K=6$, $P=3$ fixed-cardinality study reports proposed recovery feasible
+in 8/8 cases at $N_{\rm req}=3$. Its mean end-to-end runtime is 496.3 seconds
+per scenario. This is evidence of larger-system applicability and a clear
+motivation for future acceleration, not a real-time claim.
+
+\sourcebox{Detailed bilingual figure explanations and all precise values are in
+\texttt{RESULTS\_AND\_FIGURES\_BILINGUAL.md}.}

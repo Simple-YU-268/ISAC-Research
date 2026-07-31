@@ -1,0 +1,130 @@
+\chapter{Poster Defense Q\&A Bank}
+
+\newcommand{\defenseqa}[5]{\subsection{Q#1. #2}\quick{#3}\logic{#4}\deep{#5}}
+
+\section{Research motivation and contribution}
+\defenseqa{1}{What problem does this project solve?}{It minimizes transmit power in a Cell-Free ISAC network while guaranteeing robust communication, sensing detection, tracking accuracy, AP power limits, and sparse sensing participation.}{一句话是：同一套分布式 AP 同时服务用户和跟踪目标，资源耦合导致优化困难。}{The novelty is the participation-constrained dedicated sensing architecture plus a physically validated recovery pipeline. See Chapters 1--4.}
+
+\defenseqa{2}{Why use Cell-Free ISAC?}{Cell-Free cooperation removes fixed cell boundaries and lets distributed APs jointly shape communication and sensing resources according to geometry.}{强调分布式 AP 的空间分集，尤其适合目标定位而不是只增加通信信号强度。}{The benefit is conditional on fronthaul coordination and synchronization; those costs are listed as future work.}
+
+\defenseqa{3}{What is the central modeling idea?}{Communication is globally cooperative, whereas dedicated sensing is target-centric and sparse. This asymmetry preserves communication degrees of freedom while limiting sensing processing and waveform resources.}{核心关键词：global communication, local sensing。}{Do not say that unselected APs are switched off; they may still transmit communication data.}
+
+\defenseqa{4}{What is new beyond conventional AP association?}{The association controls dedicated sensing-waveform authorization and is optimized jointly with robust transmit covariances and PCRB constraints.}{不是传统只看距离或信道增益的用户关联；PCRB 需要空间几何多样性。}{FIM-greedy is a strong geometry baseline, but it does not replace coupled robust covariance optimization.}
+
+\defenseqa{5}{Why minimize power?}{Power is a common system cost that directly exposes the price of robust communication, sensing, and tracking requirements.}{功耗是统一资源指标，便于比较不同拓扑和 QoS 压力。}{The objective is total transmit power; fronthaul and computation energy are not yet included.}
+
+\defenseqa{6}{Is this a global MINLP optimum?}{No. The method is a structured relaxation, DC-SCA, and recovery heuristic that returns validated feasible solutions, not a global optimality certificate.}{必须主动承认：非凸混合整数问题没有全局最优保证。}{The SDR value is used only as a lower bound for interpreting a relaxation gap.}
+
+\defenseqa{7}{What is the main empirical finding?}{FIM-aware sensing topology and certified recovery improve feasibility and energy efficiency relative to nearest-AP and random association, particularly in difficult geometry.}{回答时给一条数字：$N_{\rm req}=3$ 下 proposed 30.83 mW，nearest-AP 39.29 mW。}{The result is backed by common-seed Monte Carlo comparisons in the final evidence package.}
+
+\defenseqa{8}{What should the audience remember?}{Tracking quality depends on sensing geometry, not only received energy; therefore a physically validated, FIM-aware sensing cluster is essential in Cell-Free ISAC.}{记忆点：PCRB 看 FIM 特征值和几何，不只是功率。}{Use this as the closing sentence after discussing the experiments.}
+
+\section{Physical model and architecture}
+\defenseqa{9}{What exactly does $b_{mp}$ mean?}{$b_{mp}=1$ authorizes AP $m$ to transmit nonzero dedicated sensing power for target $p$; it is an AP--target sensing-participation indicator.}{它是感知任务参与/授权变量，不是通信 AP 开关。}{With a sensing-power floor, it represents actual nonzero sensing participation; otherwise it is only an upper-bound authorization.}
+
+\defenseqa{10}{Does $b_{mp}$ gate communication transmission?}{No. Communication covariance is globally cooperative and is not gated by $b_{mp}$.}{这是海报最容易被问到的点，回答必须坚定。}{The dedicated sensing covariance obeys the Big-M authorization constraint, while total AP power includes both communication and sensing.}
+
+\defenseqa{11}{Why is dedicated sensing interference included at UEs?}{A UE cannot generally cancel an unshared dedicated sensing waveform, so its received energy is modeled as interference in the communication SINR denominator.}{如果波形未知，UE 无法 SIC，因此必须算干扰。}{A cancellation model would be a different physical architecture and would require explicit receiver-side assumptions.}
+
+\defenseqa{12}{Why not make every AP sense every target?}{Using every AP can improve diversity but consumes dedicated waveform, power, processing, synchronization, and fronthaul resources.}{全参与不是免费；$N_{\rm req}$ 控制感知规模。}{The measured power relation is nonmonotone because diversity gains eventually saturate while sensing costs persist.}
+
+\defenseqa{13}{Why use dedicated sensing covariance $\mat{S}_p$?}{It gives each target an explicitly controlled sensing waveform and makes AP--target participation physically meaningful.}{这样 $b_{mp}$ 真正控制专用感知资源，而不是空洞标签。}{Communication beams are intentionally not credited toward PCRB in this partially shared signaling model.}
+
+\defenseqa{14}{Is the system MIMO or MISO?}{The implemented downlink is multi-user MISO: UEs are single-antenna and the distributed AP network is the multi-antenna transmitter.}{不要把 Cell-Free massive MIMO 的架构名称误说成 UE 端 MIMO 接收机。}{The M12 experiment scales the distributed transmit dimension, not the UE receive dimension.}
+
+\defenseqa{15}{Why not use a Kronecker MIMO observation model?}{That model would imply a more complex receive architecture and would no longer match the implemented MISO-equivalent signal model.}{理论、代码和接收机假设必须闭环；不能为了公式复杂而改变物理模型。}{The manuscript should state the MISO-equivalent observation assumption explicitly.}
+
+\defenseqa{16}{How is AP power enforced?}{Each AP has a hard per-AP constraint on the corresponding block of the total covariance $\mat{R}_X$.}{功率单位统一使用瓦特，$0.1$ W 等于 20 dBm。}{This prevents a relaxed solution from satisfying QoS by concentrating unbounded power at one AP.}
+
+\defenseqa{17}{What is the role of $N_{\rm req}$?}{It fixes the number of APs participating in the dedicated sensing cluster for each target and is a key system design variable.}{它控制感知的空间自由度和资源成本。}{It is swept from 2 to 6 in the main M6 study and from 2 to 5 in the M12 study.}
+
+\section{Mathematical formulation}
+\defenseqa{18}{Why is the communication SINR robust?}{The design guarantees the required SINR for every channel error in a bounded uncertainty ball, rather than only at the estimated channel.}{讲清楚：CSI 有误差，所以不是只在 $\hat h$ 上满足。}{The S-procedure is exact for the single quadratic implication under its standard regularity condition.}
+
+\defenseqa{19}{What does the PCRB constraint measure?}{It bounds the trace of the inverse target FIM, which summarizes the achievable estimation-error covariance for the target-state parameters.}{PCRB 是跟踪精度，不等同于检测 SINR。}{A small sensing SINR alone does not ensure a well-conditioned FIM.}
+
+\defenseqa{20}{Why can sensing SINR and PCRB disagree?}{Sensing SINR measures useful energy, while PCRB also requires independent geometric information directions in the FIM.}{同方向的高能量观测可能仍然定位差。}{This is why FIM geometry is used in topology construction.}
+
+\defenseqa{21}{Why is there a factor of two in the FIM?}{For the adopted proper complex Gaussian mean model, the real FIM contribution includes $2/\sigma_s^2$.}{这是复高斯均值模型的标准系数；漏掉会让 PCRB 标度错误。}{The implementation and metric evaluator use the same convention.}
+
+\defenseqa{22}{How is the PCRB inverse handled?}{A Schur-complement LMI introduces an auxiliary matrix so that the trace-PCRB bound is represented without directly inverting a variable matrix.}{回答结构：inverse 很难，Schur LMI 把它变成凸约束。}{The block retains the full $N_\theta$ state dimension; replacing it by a scalar would be a different approximation.}
+
+\defenseqa{23}{What makes P1 nonconvex?}{Rank-one beamforming, binary participation, SINR ratios, worst-case uncertainty, and the inverse-FIM PCRB constraint are jointly nonconvex.}{不要只说 binary；rank、robust、PCRB 都是难点。}{The convexification chain documents each source and its treatment.}
+
+\defenseqa{24}{What is covariance lifting?}{It replaces beamforming-vector products by PSD covariance matrices, making received powers affine in the covariance variables.}{$W_k=w_kw_k^H$ 后，二次项变 trace 线性项。}{The price is an explicit rank-one constraint, which is subsequently relaxed and penalized.}
+
+\defenseqa{25}{What is SDR?}{Semidefinite relaxation drops the rank-one constraint and solves a convex PSD covariance problem.}{SDR 给下界和初始化，但不是最终可部署方案。}{Rank tightness is empirical here; it is not claimed as a general theorem.}
+
+\defenseqa{26}{What is the S-procedure doing?}{It converts a norm-bounded, infinitely many-channel robust SINR condition into one finite LMI with a nonnegative multiplier.}{无穷多个 CSI 扰动约束变为一个矩阵不等式。}{The multiplier must also be checked nonnegative by the validator.}
+
+\defenseqa{27}{Why use trace-PCRB rather than one scalar FIM gain?}{The trace of the inverse FIM penalizes weak state directions and therefore reflects multi-dimensional tracking quality.}{不能只看 FIM 总能量；最小特征值太小会主导误差。}{D-optimal or E-optimal scores are used only as topology heuristics, not as replacements for the PCRB constraint.}
+
+\section{Optimization and recovery}
+\defenseqa{28}{What is the purpose of the rank DC penalty?}{It encourages a PSD covariance to approach rank one by penalizing the gap between its trace and dominant eigenvalue.}{秩一意味着可从协方差恢复单流波束。}{In the current MU-MISO tests, SDR is already nearly rank one, so the observed dominant benefit is binary recovery.}
+
+\defenseqa{29}{What is the binary DC penalty?}{It penalizes the concave binary residual $b_{mp}(1-b_{mp})$ while maintaining a convex linearized subproblem at each iteration.}{$b(1-b)$ 在 0 和 1 为零，中间最大。}{The reported median binary residual drops from roughly $4.3\times10^{-1}$ to about $6\times10^{-5}$.}
+
+\defenseqa{30}{Why call it double DC-SCA?}{Two nonconvex structural penalties, rank and binary, are successively linearized within an SCA framework.}{double 指两类 DC 结构，不是两个独立算法。}{The robust and PCRB LMIs are already convex after reformulation.}
+
+\defenseqa{31}{Does DC-SCA converge?}{The implemented procedure shows rapid empirical stabilization of support and residuals; it does not prove global convergence of P1.}{用“stabilization”而不是“global convergence”。}{The 25-seed trace shows support stability from the first DC iteration and binary residual near $10^{-4}$ by the second.}
+
+\defenseqa{32}{Why stop after support stabilization?}{Once the Top-$N_{\rm req}$ support stops changing, further continuous iterations often do not alter the discrete candidate, so recovery can begin.}{节省 SDP 时间，但最后必须做 fixed-$b$ 验证。}{The stopping signal is not a replacement for physical feasibility.}
+
+\defenseqa{33}{Why is direct rounding insufficient?}{A small fractional residual can still represent a topology that becomes infeasible after exact binary projection.}{连续解可借用很小的分数自由度平衡严格约束。}{The recovery ablation shows direct DC Top-N rounding has much lower feasibility than full recovery.}
+
+\defenseqa{34}{What happens in fixed-$b$ re-optimization?}{The association is held binary and the continuous communication and sensing covariances are re-optimized under all original physical constraints.}{固定拓扑后重新找最好的波束与功率，不能直接复用松弛协方差。}{This is the key bridge from a promising relaxed support to a certified physical solution.}
+
+\defenseqa{35}{Why include FIM-greedy candidates?}{They cheaply construct geometry-diverse sensing clusters that target informative FIM directions and repair poor DC rounding choices.}{FIM-greedy 是纯代数、速度快、物理直觉强。}{It is a candidate generator and strong baseline, not an oracle or global combinatorial solver.}
+
+\defenseqa{36}{What is validated after recovery?}{Binary/cardinality constraints, authorized sensing power, per-AP power, PSD, robust LMIs, PCRB, communication SINR, and sensing SINR are checked independently.}{强调“独立验证器”，避免只相信 CVX status。}{A solver status of Infeasible or Failed is recorded separately from a validated physical infeasibility conclusion.}
+
+\section{Code and reproducibility}
+\defenseqa{37}{Where is the main algorithm implemented?}{The development implementation is centered on \texttt{sim/matlab/baseline\_alg2.m}, with separate SCA, fixed-$b$, scenario, metric, and validation functions.}{主入口不是一个文件完成所有事，而是模块化 pipeline。}{The frozen scripts used for final evidence are copied under the final deliverables package.}
+
+\defenseqa{38}{Why keep a separate validator?}{It prevents the optimization and reporting code from sharing the same modeling omission unnoticed.}{独立验证是防御性科研实践。}{For example, it checks the sensing-interference term, multiplier signs, binary association, and cardinality explicitly.}
+
+\defenseqa{39}{How are random experiments made comparable?}{Competing methods use identical common seeds and geometry within each trial.}{同一 seed 下比较才可归因于方法差异，不是场景差异。}{Conditional power comparisons are reported only on feasible cases or paired common-feasible sets.}
+
+\defenseqa{40}{What solver stack is used?}{The recorded final environment uses MATLAB R2026a, CVX 2.2, and MOSEK 11.2.2.}{版本要和证据包 README 一致，勿混用旧元数据。}{The build manual records the command and warns that solver versions must be frozen before submission.}
+
+\defenseqa{41}{How are units handled?}{Power and noise variances are consistently represented in linear watts; for example, 20 dBm is 0.1 W.}{单位不一致会造成数千倍 SNR 标度错误。}{All input parameters and evaluation metrics should be checked in the same linear unit system.}
+
+\defenseqa{42}{How is automatic PCRB calibration protected?}{The reference FIM is checked for observability and conditioning before using its inverse to set a threshold.}{若参考 FIM 奇异，不能把 Inf 或 NaN 当作正常阈值。}{A calibration rejection is distinct from a solver-declared infeasibility.}
+
+\defenseqa{43}{What is the reproducibility minimum?}{A result needs the exact seed list, configuration, code commit, MATLAB/CVX/MOSEK versions, machine information, and saved MAT/CSV records.}{只有图不够；必须能从数据和脚本复画。}{The final evidence package stores figures, raw summaries, scripts, and reporting conventions.}
+
+\section{Experiments and interpretation}
+\defenseqa{44}{Why does an intermediate $N_{\rm req}$ minimize power?}{More APs initially add geometric FIM diversity, but beyond a point dedicated sensing waveform and interference costs outweigh the diversity gain.}{这是“少了不够信息，多了资源浪费”的平衡。}{In M6, the observed minimum mean power occurs at $N_{\rm req}=4$.}
+
+\defenseqa{45}{Why is nearest-AP a weak sensing baseline?}{Distance alone ignores derivative directions and angular diversity, which determine the conditioning of the PCRB FIM.}{最近不代表从不同角度看目标。}{Nearest-AP remains a useful theoretical geometry reference, not an online policy requiring unknown exact target positions.}
+
+\defenseqa{46}{Why is FIM-greedy close to the proposed method?}{The sensing topology is strongly governed by geometry, so a good FIM score selects many of the same APs as the optimized recovery.}{这不是坏事，说明优化发现了有物理意义的几何规律。}{The proposed method still performs the coupled robust covariance optimization and validation that FIM-greedy alone does not provide.}
+
+\defenseqa{47}{How should Fig. 5 be described?}{It is a 25-realization statistical stabilization trace for the continuous double-DC phase before discrete recovery.}{不要说“每轮都产生物理解”。}{It shows support stabilization and small residuals; fixed-$b$ recovery remains mandatory.}
+
+\defenseqa{48}{How should Fig. 8 be described?}{It is a QoS-requirement sensitivity study: the required mean transmit power is mapped over communication SINR and PCRB allowance targets.}{不要叫 Pareto frontier。}{All tested grid points are feasible, but the figure does not identify the entire feasible-region boundary.}
+
+\defenseqa{49}{What does zero sampled outage prove?}{It shows strong empirical robustness over the sampled channel perturbations, consistent with the worst-case design.}{先说 sampled，再说 worst-case certificate；不要把样本当完整证明。}{The S-procedure constraint, not Monte Carlo sampling alone, is the formal robustness mechanism.}
+
+\defenseqa{50}{Why is nominal outage near 90 percent?}{A design optimized only for the estimated channel can violate a tight SINR target under even moderate perturbations.}{说明鲁棒约束有实际价值，而非纯数学复杂化。}{The robust power premium at the reported high uncertainty point remains modest relative to the outage reduction.}
+
+\defenseqa{51}{Are PCRB and SINR constraints actually active?}{The reported QoS-tightness checks show PCRB ratios essentially at their boundaries and nonnegative communication and sensing margins.}{防止别人怀疑低功耗是因为偷偷放松约束。}{Metrics are recomputed from returned covariances, not taken only from solver internals.}
+
+\defenseqa{52}{What does the M12 study add?}{It tests a larger network with $M=12$, $K=6$, and $P=3$, showing the method can still find validated solutions while exposing substantial runtime.}{大规模验证既展示可扩展性，也诚实展示代价。}{At fixed $N_{\rm req}=3$, the proposed method is feasible in 8/8 reported cases.}
+
+\defenseqa{53}{Why are some statistics conditional on feasibility?}{Power or rate is undefined for a method that has no validated physical solution, so those values are conditioned on feasible cases while feasibility itself remains unconditional.}{先报成功率，再比较成功样本性能。}{For fair method gaps, use paired common-feasible sets when explicitly stated.}
+
+\section{Limitations and future work}
+\defenseqa{54}{What is the largest current limitation?}{The robust SDP and recovery pipeline is computationally expensive, especially at larger transmit dimension.}{不要回避 496 秒；把它作为下一步动机。}{Distributed, first-order, warm-started, or learning-assisted methods are natural acceleration directions.}
+
+\defenseqa{55}{Does the model include fronthaul capacity?}{No. The current model interprets sparse sensing participation as a processing/fronthaul-motivated abstraction, but it does not yet optimize an explicit fronthaul capacity constraint.}{这是合理但必须承认的模型边界。}{A future extension can add fronthaul rate, synchronization, and processing-energy terms.}
+
+\defenseqa{56}{Does the model include clutter and hardware impairments?}{Not explicitly. It uses the stated channel, noise, CSI-ball, and FIM assumptions as an analytical baseline.}{承认理想化假设，但说明鲁棒 CSI 是迈向实践的一步。}{Future work includes clutter, calibration error, waveform nonidealities, and hardware-in-the-loop testing.}
+
+\defenseqa{57}{What if a target moves?}{The present optimization is a static snapshot; a dynamic system would repeatedly update geometry and perform cluster handover or predictive warm starts.}{不要说当前已解决动态问题。}{The stable-support observation motivates incremental updates, but dynamic handover is future work.}
+
+\defenseqa{58}{Can machine learning replace the optimizer?}{Learning can accelerate candidate initialization or predict promising clusters, but the final design still needs optimization-based physical constraint certification.}{AI 适合 warm start，不应替代可行性认证。}{A hybrid approach can retain fixed-$b$ validation as a safety layer.}
+
+\defenseqa{59}{Why not claim real-time applicability?}{The current centralized SDP runtime is too high for a real-time claim; the contribution is a rigorous reference design and evidence base for faster future methods.}{诚实比夸张更重要。}{The M12 runtime is explicitly reported as computational cost.}
+
+\defenseqa{60}{What is the next concrete research step?}{Develop a distributed or first-order solver with topology warm starts, then validate it under moving targets, fronthaul limits, and realistic radar/channel measurements.}{未来工作要具体：算法加速、动态、物理非理想、实验验证。}{This preserves the current model's strongest feature: certified coupling of sensing topology and robust covariances.}

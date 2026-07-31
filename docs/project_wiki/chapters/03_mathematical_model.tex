@@ -1,0 +1,39 @@
+\chapter{Mathematical Model}
+
+\section{Robust communication QoS}
+For an uncertain channel $\vect{h}_k=\hat{\vect{h}}_k+\Delta\vect{h}_k$ with
+$\|\Delta\vect{h}_k\|_2\leq\epsilon_h$, the worst-case communication SINR
+requirement is imposed over the entire uncertainty ball. In covariance form,
+the desired communication covariance must dominate multiuser interference,
+dedicated sensing interference, and noise for every admissible channel error.
+This is a semi-infinite constraint before the S-procedure is applied.
+
+\section{Sensing SINR and PCRB}
+The dedicated covariance $\mat{S}_p$ is used to guarantee target detection
+through a sensing-SINR threshold. Tracking accuracy is controlled by the data
+FIM $\mat{J}_p$ and the trace-PCRB condition
+\[
+ \operatorname{tr}(\mat{J}_p^{-1})\leq\Gamma_{\rm track,p}.
+\]
+For the adopted complex Gaussian mean model, the data FIM contains the factor
+$2/\sigma_s^2$. The physical derivative matrix $\mat{D}_p$ retains the target
+geometry. A small numerical regularization may be used only to prevent singular
+linear algebra; it must not be misrepresented as new sensing information.
+
+\section{Original problem P1}
+The original formulation jointly minimizes total transmit power over
+$\{\vect{w}_k\}$, $\{\mat{S}_p\}$, and $\{b_{mp}\}$ subject to robust
+communication QoS, sensing SINR, PCRB, per-AP power, sensing authorization, and
+cardinality constraints. The coupled sources of nonconvexity are: beamformer
+quadratic products, rank-one covariance relations, worst-case CSI constraints,
+PCRB inverse, SINR ratios, and binary variables.
+
+\section{Interpretation of PCRB geometry}
+Sensing SINR is largely an energy measure, whereas PCRB depends on the
+eigenstructure of $\mat{J}_p$. APs with similar viewing geometry can contribute
+energy without providing a second informative direction. This explains why a
+distance-only association can be poor for tracking, and why FIM-aware topology
+construction is a strong baseline.
+
+\sourcebox{Full derivation reference: \texttt{PROBLEM\_FORMULATION.md},
+Sections 2--6; numerical implementation: \texttt{solve\_p3\_sca\_t.m}.}

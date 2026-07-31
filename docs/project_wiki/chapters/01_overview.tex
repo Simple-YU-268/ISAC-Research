@@ -1,0 +1,48 @@
+\chapter{Project Overview and Research Claim}
+
+\begin{introduction}
+\item Explain the physical architecture before presenting the optimization.
+\item Separate the mathematical relaxation from the certified physical solution.
+\item Use the final evidence package as the sole source of numerical claims.
+\end{introduction}
+
+\section{Problem in one paragraph}
+This project studies downlink resource allocation for a participation-constrained
+Cell-Free integrated sensing and communication (ISAC) network. Distributed APs
+jointly transmit communication streams to single-antenna UEs, while dedicated
+target-specific sensing waveforms are emitted only by selected AP--target
+pairs. The central processor minimizes total transmit power subject to robust
+communication QoS, sensing-detection QoS, PCRB tracking accuracy, per-AP power,
+and sensing-cluster cardinality constraints. Imperfect CSI and binary AP--target
+participation make the design a nonconvex mixed-integer problem.
+
+\section{Core contribution}
+The contribution is not a global MINLP solver. It is a physically interpretable
+and certifiable solution pipeline: covariance lifting and SDR expose an SDP
+structure; robust SINR and PCRB constraints are represented by LMIs; double DC
+penalties encourage rank-one and binary structure; and a separate recovery
+stage fixes a binary topology, re-optimizes continuous covariances, and
+validates every physical constraint.
+
+\section{One-page oral summary}
+\quick{We propose a Cell-Free ISAC design in which communication remains
+globally cooperative, while dedicated sensing waveforms are authorized by a
+target-centric AP cluster. The resulting robust mixed-integer design is handled
+by SDR, the S-procedure, PCRB Schur LMIs, and double DC-SCA. A fixed-assignment
+recovery and validation stage converts the relaxed result into a physically
+feasible binary sensing solution.}
+\logic{先讲架构的非对称性：通信全网协作，感知按目标选择集群。再讲难点：
+鲁棒约束、PCRB 和二元关联耦合。最后强调贡献是\textbf{可认证的启发式恢复流程}，
+不是声称原始混合整数问题的全局最优。}
+
+\section{Claim boundaries}
+\begin{itemize}
+\item SDR is a continuous lower bound, not a deployable design.
+\item A solver failure or time limit is not evidence of physical infeasibility.
+\item Fig.~8 is a QoS-requirement sensitivity study, not a global Pareto frontier.
+\item M12 results demonstrate scalability evidence and computational cost, not real-time operation.
+\end{itemize}
+
+\sourcebox{Primary sources: \texttt{PROBLEM\_FORMULATION.md},
+\texttt{MASTER\_CONSTRAINTS.md}, and
+\texttt{deliverables/paper\_results\_and\_figures\_v1\_0/README.md}.}
