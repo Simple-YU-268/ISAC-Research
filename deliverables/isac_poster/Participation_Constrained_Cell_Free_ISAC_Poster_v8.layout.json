@@ -1,0 +1,2991 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/2ja2io",
+    "id": "2ja2io",
+    "slide": 1,
+    "layoutId": "7f7f4e13-c32a-4d70-a009-9b7f62ddacc2",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "7f16150f-e9bb-4210-9589-9929e7727b1b",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 4608,
+      "height": 3456
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "+mn-lt"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "7f7f4e13-c32a-4d70-a009-9b7f62ddacc2",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "7f16150f-e9bb-4210-9589-9929e7727b1b",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "7f16150f-e9bb-4210-9589-9929e7727b1b",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vu9cbexc",
+      "id": "1",
+      "name": "unsw_yellow",
+      "bbox": [
+        0,
+        0,
+        4608,
+        310
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFD500",
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/hwb6hoje",
+      "id": "2",
+      "bbox": [
+        145,
+        42,
+        720,
+        170
+      ],
+      "geometry": "rect",
+      "alt": "UNSW Australia institutional mark from supplied template",
+      "contentType": "image/jpeg",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "a7b35e2e-22d8-4e88-93fc-0f830bc97d8a",
+        "contentType": "image/jpeg",
+        "byteLength": 311893
+      }
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hwbudofi",
+      "id": "3",
+      "name": "thesis_label",
+      "bbox": [
+        3370,
+        76,
+        950,
+        72
+      ],
+      "geometry": "rect",
+      "text": "Thesis 2026",
+      "textPreview": "Thesis 2026",
+      "resolvedFontSize": 48,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 48,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "right",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Thesis 2026"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Thesis 2026",
+          "resolvedTextStyle": {
+            "fontSize": 48,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Thesis 2026",
+              "fontSize": 48,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ixkv6tg3",
+      "id": "4",
+      "name": "faculty_bar",
+      "bbox": [
+        0,
+        310,
+        4608,
+        74
+      ],
+      "geometry": "rect",
+      "fillColor": "#B02012",
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/jytcfexo",
+      "id": "5",
+      "name": "faculty_bar_dark",
+      "bbox": [
+        3030,
+        310,
+        1578,
+        74
+      ],
+      "geometry": "rect",
+      "fillColor": "#931500",
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4z2d8jy9",
+      "id": "6",
+      "name": "faculty_left",
+      "bbox": [
+        150,
+        326,
+        940,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Australia's Global University",
+      "textPreview": "Australia's Global University",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Australia's Global University"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Australia's Global University",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Australia's Global University",
+              "fontSize": 23,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/50buhofu",
+      "id": "7",
+      "name": "faculty_mid",
+      "bbox": [
+        1320,
+        326,
+        900,
+        36
+      ],
+      "geometry": "rect",
+      "text": "Faculty of Engineering",
+      "textPreview": "Faculty of Engineering",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Faculty of Engineering"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Faculty of Engineering",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Faculty of Engineering",
+              "fontSize": 23,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/y1gbupgz",
+      "id": "8",
+      "name": "faculty_right",
+      "bbox": [
+        2430,
+        326,
+        1960,
+        36
+      ],
+      "geometry": "rect",
+      "text": "School of Electrical Engineering and Telecommunications",
+      "textPreview": "School of Electrical Engineering and Telecommunications",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 22,
+        "typeface": "+mn-lt",
+        "color": "#FFFFFF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "School of Electrical Engineering and Telecommunications"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "School of Electrical Engineering and Telecommunications",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "color": "#FFFFFF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "School of Electrical Engineering and Telecommunications",
+              "fontSize": 22,
+              "color": "#FFFFFF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/z2pc3uxk",
+      "id": "9",
+      "name": "title",
+      "bbox": [
+        200,
+        420,
+        4208,
+        94
+      ],
+      "geometry": "rect",
+      "text": "Robust Beamforming for Participation-Constrained Cell-Free ISAC",
+      "textPreview": "Robust Beamforming for Participation-Constrained Cell-Free ISAC",
+      "resolvedFontSize": 60,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 60,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Robust Beamforming for Participation-Constrained Cell-Free ISAC"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Robust Beamforming for Participation-Constrained Cell-Free ISAC",
+          "resolvedTextStyle": {
+            "fontSize": 60,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Robust Beamforming for Participation-Constrained Cell-Free ISAC",
+              "fontSize": 60,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zq9w3ed4",
+      "id": "10",
+      "name": "subtitle",
+      "bbox": [
+        270,
+        518,
+        4068,
+        46
+      ],
+      "geometry": "rect",
+      "text": "Geometry-aware sensing authorization with globally cooperative communication",
+      "textPreview": "Geometry-aware sensing authorization with globally cooperative communication",
+      "resolvedFontSize": 35,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 35,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "italic": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Geometry-aware sensing authorization with globally cooperative communication"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Geometry-aware sensing authorization with globally cooperative communication",
+          "resolvedTextStyle": {
+            "fontSize": 35,
+            "color": "#111827",
+            "italic": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Geometry-aware sensing authorization with globally cooperative communication",
+              "fontSize": 35,
+              "color": "#111827",
+              "italic": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/e50vu9wj",
+      "id": "11",
+      "name": "authors",
+      "bbox": [
+        270,
+        568,
+        4068,
+        35
+      ],
+      "geometry": "rect",
+      "text": "Xinpeng Yu | Supervisors: Derrick Ng and Shaokang Hu",
+      "textPreview": "Xinpeng Yu | Supervisors: Derrick Ng and Shaokang Hu",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "+mn-lt",
+        "color": "#4B5563",
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Xinpeng Yu | Supervisors: Derrick Ng and Shaokang Hu"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Xinpeng Yu | Supervisors: Derrick Ng and Shaokang Hu",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "color": "#4B5563",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Xinpeng Yu | Supervisors: Derrick Ng and Shaokang Hu",
+              "fontSize": 23,
+              "color": "#4B5563",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1sre5ova",
+      "id": "12",
+      "name": "motivation_bg",
+      "bbox": [
+        110,
+        660,
+        1380,
+        485
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0rixwjep",
+      "id": "13",
+      "name": "motivation_band",
+      "bbox": [
+        110,
+        660,
+        1380,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/r29wzed8",
+      "id": "14",
+      "name": "motivation_title",
+      "bbox": [
+        138,
+        667,
+        1324,
+        40
+      ],
+      "geometry": "rect",
+      "text": "ABSTRACT & RATIONALE",
+      "textPreview": "ABSTRACT & RATIONALE",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ABSTRACT & RATIONALE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ABSTRACT & RATIONALE",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ABSTRACT & RATIONALE",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q10vq9wn",
+      "id": "15",
+      "name": "motivation_body",
+      "bbox": [
+        150,
+        745,
+        1300,
+        330
+      ],
+      "geometry": "rect",
+      "text": "Cell-free ISAC needs both globally cooperative communication and a sparse, physically meaningful sensing cluster. We minimize transmit power subject to robust communication SINR, sensing SINR, and PCRB tracking constraints.\n\nThe key modelling decision is asymmetric gating: b_mp authorizes only the target-p dedicated sensing waveform S_p; communication covariances remain globally cooperative.",
+      "textPreview": "Cell-free ISAC needs both globally cooperative communication and a sparse, physically meaningful sensing cluster. We minimize transmit po...",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 5,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Cell-free ISAC needs both globally cooperative communication and a sparse, physically meaningful sensing cluster."
+          },
+          {
+            "index": 2,
+            "text": "We minimize transmit power subject to robust communication SINR, sensing SINR, and PCRB tracking constraints."
+          },
+          {
+            "index": 3,
+            "text": ""
+          },
+          {
+            "index": 4,
+            "text": "The key modelling decision is asymmetric gating: b_mp authorizes only the target-p dedicated sensing waveform"
+          },
+          {
+            "index": 5,
+            "text": "S_p; communication covariances remain globally cooperative."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Cell-free ISAC needs both globally cooperative communication and a sparse, physically meaningful sensing cluster. We minimize transmit power subject to robust communication SINR, sensing SINR, and PCRB tracking constraints.",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Cell-free ISAC needs both globally cooperative communication and a sparse, physically meaningful sensing cluster. We minimize transmit power subject to robust communication SINR, sensing SINR, and PCRB tracking constraints.",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "The key modelling decision is asymmetric gating: b_mp authorizes only the target-p dedicated sensing waveform S_p; communication covariances remain globally cooperative.",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The key modelling decision is asymmetric gating: b_mp authorizes only the target-p dedicated sensing waveform S_p; communication covariances remain globally cooperative.",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/d4re1ovy",
+      "id": "16",
+      "name": "system_bg",
+      "bbox": [
+        1614,
+        660,
+        1380,
+        485
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/c3idsjet",
+      "id": "17",
+      "name": "system_band",
+      "bbox": [
+        1614,
+        660,
+        1380,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/3ypwvudw",
+      "id": "18",
+      "name": "system_title",
+      "bbox": [
+        1642,
+        667,
+        1324,
+        40
+      ],
+      "geometry": "rect",
+      "text": "OBJECTIVES & SYSTEM MODEL",
+      "textPreview": "OBJECTIVES & SYSTEM MODEL",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "OBJECTIVES & SYSTEM MODEL"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "OBJECTIVES & SYSTEM MODEL",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "OBJECTIVES & SYSTEM MODEL",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2xgvmpwb",
+      "id": "19",
+      "name": "system_body",
+      "bbox": [
+        1660,
+        748,
+        1290,
+        340
+      ],
+      "geometry": "rect",
+      "text": "• M=6 APs, N_t=2 antennas/AP, K=3 UEs, P=2 targets\n• Each target receives exactly N_req AP authorizations\n• Total AP transmit power is hard limited by P_max\n• Selected APs carry nonzero dedicated sensing power\n• FIM geometry drives sensing-cluster choice; robust beams absorb communication QoS pressure",
+      "textPreview": "• M=6 APs, N_t=2 antennas/AP, K=3 UEs, P=2 targets | • Each target receives exactly N_req AP authorizations | • Total AP transmit power i...",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 5,
+        "lines": [
+          {
+            "index": 1,
+            "text": "• M=6 APs, N_t=2 antennas/AP, K=3 UEs, P=2 targets"
+          },
+          {
+            "index": 2,
+            "text": "• Each target receives exactly N_req AP authorizations"
+          },
+          {
+            "index": 3,
+            "text": "• Total AP transmit power is hard limited by P_max"
+          },
+          {
+            "index": 4,
+            "text": "• Selected APs carry nonzero dedicated sensing power"
+          },
+          {
+            "index": 5,
+            "text": "• FIM geometry drives sensing-cluster choice; robust beams absorb communication QoS pressure"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "• M=6 APs, N_t=2 antennas/AP, K=3 UEs, P=2 targets",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• M=6 APs, N_t=2 antennas/AP, K=3 UEs, P=2 targets",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "• Each target receives exactly N_req AP authorizations",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Each target receives exactly N_req AP authorizations",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "• Total AP transmit power is hard limited by P_max",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Total AP transmit power is hard limited by P_max",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 4,
+          "text": "• Selected APs carry nonzero dedicated sensing power",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Selected APs carry nonzero dedicated sensing power",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 5,
+          "text": "• FIM geometry drives sensing-cluster choice; robust beams absorb communication QoS pressure",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• FIM geometry drives sensing-cluster choice; robust beams absorb communication QoS pressure",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6twfepgj",
+      "id": "20",
+      "name": "result_summary_bg",
+      "bbox": [
+        3118,
+        660,
+        1380,
+        485
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7upw7uh4",
+      "id": "21",
+      "name": "result_summary_band",
+      "bbox": [
+        3118,
+        660,
+        1380,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/svyxgzy9",
+      "id": "22",
+      "name": "result_summary_title",
+      "bbox": [
+        3146,
+        667,
+        1324,
+        40
+      ],
+      "geometry": "rect",
+      "text": "RESULTS AT A GLANCE",
+      "textPreview": "RESULTS AT A GLANCE",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RESULTS AT A GLANCE"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RESULTS AT A GLANCE",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RESULTS AT A GLANCE",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tw7y94zu",
+      "id": "23",
+      "name": "summary_body",
+      "bbox": [
+        3160,
+        748,
+        1295,
+        340
+      ],
+      "geometry": "rect",
+      "text": "• Dual DC: median binary distance 5.94×10⁻⁵ over 25 scenarios\n• Robust design: 0 sampled outage under tested CSI errors\n• Nominal CSI: 89–92% mean outage under the same perturbations\n• M=12 sweep: lowest conditional mean power 35.72 mW at N_req=4\n\nAll reported performance is post-recovery and physically validated.",
+      "textPreview": "• Dual DC: median binary distance 5.94×10⁻⁵ over 25 scenarios | • Robust design: 0 sampled outage under tested CSI errors | • Nominal CSI...",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 6,
+        "lines": [
+          {
+            "index": 1,
+            "text": "• Dual DC: median binary distance 5.94×10⁻⁵ over 25 scenarios"
+          },
+          {
+            "index": 2,
+            "text": "• Robust design: 0 sampled outage under tested CSI errors"
+          },
+          {
+            "index": 3,
+            "text": "• Nominal CSI: 89–92% mean outage under the same perturbations"
+          },
+          {
+            "index": 4,
+            "text": "• M=12 sweep: lowest conditional mean power 35.72 mW at N_req=4"
+          },
+          {
+            "index": 5,
+            "text": ""
+          },
+          {
+            "index": 6,
+            "text": "All reported performance is post-recovery and physically validated."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "• Dual DC: median binary distance 5.94×10⁻⁵ over 25 scenarios",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Dual DC: median binary distance 5.94×10⁻⁵ over 25 scenarios",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "• Robust design: 0 sampled outage under tested CSI errors",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Robust design: 0 sampled outage under tested CSI errors",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "• Nominal CSI: 89–92% mean outage under the same perturbations",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• Nominal CSI: 89–92% mean outage under the same perturbations",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 4,
+          "text": "• M=12 sweep: lowest conditional mean power 35.72 mW at N_req=4",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "• M=12 sweep: lowest conditional mean power 35.72 mW at N_req=4",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 6,
+          "text": "All reported performance is post-recovery and physically validated.",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "All reported performance is post-recovery and physically validated.",
+              "fontSize": 27,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/uxgfi9gf",
+      "id": "24",
+      "name": "mid_heading",
+      "bbox": [
+        110,
+        1205,
+        4388,
+        58
+      ],
+      "geometry": "rect",
+      "fillColor": "#FFFFFF",
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fypgbeh0",
+      "id": "25",
+      "name": "mid_heading_text",
+      "bbox": [
+        145,
+        1214,
+        4318,
+        42
+      ],
+      "geometry": "rect",
+      "text": "CORE ALGORITHM: DUAL-DC RECOVERY WITH PHYSICAL CERTIFICATION",
+      "textPreview": "CORE ALGORITHM: DUAL-DC RECOVERY WITH PHYSICAL CERTIFICATION",
+      "resolvedFontSize": 31,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 31,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "CORE ALGORITHM: DUAL-DC RECOVERY WITH PHYSICAL CERTIFICATION"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "CORE ALGORITHM: DUAL-DC RECOVERY WITH PHYSICAL CERTIFICATION",
+          "resolvedTextStyle": {
+            "fontSize": 31,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "CORE ALGORITHM: DUAL-DC RECOVERY WITH PHYSICAL CERTIFICATION",
+              "fontSize": 31,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gzyxkjyl",
+      "id": "26",
+      "name": "flow_bg",
+      "bbox": [
+        110,
+        1280,
+        1745,
+        1020
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/h07yd4z6",
+      "id": "27",
+      "name": "flow_band",
+      "bbox": [
+        110,
+        1280,
+        1745,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/21gfm9gr",
+      "id": "28",
+      "name": "flow_title",
+      "bbox": [
+        138,
+        1287,
+        1689,
+        40
+      ],
+      "geometry": "rect",
+      "text": "THREE-STAGE OPTIMIZATION",
+      "textPreview": "THREE-STAGE OPTIMIZATION",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "THREE-STAGE OPTIMIZATION"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "THREE-STAGE OPTIMIZATION",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "THREE-STAGE OPTIMIZATION",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/329gfehw",
+      "id": "29",
+      "name": "flow_1",
+      "bbox": [
+        170,
+        1380,
+        1625,
+        210
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#EAF2FA",
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/d8vq1cna",
+      "id": "30",
+      "name": "flow1a",
+      "bbox": [
+        225,
+        1410,
+        300,
+        55
+      ],
+      "geometry": "rect",
+      "text": "1  Relax",
+      "textPreview": "1  Relax",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#0A4F85",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "1  Relax"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "1  Relax",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#0A4F85",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "1  Relax",
+              "fontSize": 36,
+              "color": "#0A4F85",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 31,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/c7m9s7m5",
+      "id": "31",
+      "name": "flow1b",
+      "bbox": [
+        225,
+        1470,
+        1480,
+        72
+      ],
+      "geometry": "rect",
+      "text": "Lift covariances, apply the S-procedure, and express PCRB with Schur LMIs.",
+      "textPreview": "Lift covariances, apply the S-procedure, and express PCRB with Schur LMIs.",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 28,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Lift covariances, apply the S-procedure, and express PCRB with Schur LMIs."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Lift covariances, apply the S-procedure, and express PCRB with Schur LMIs.",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Lift covariances, apply the S-procedure, and express PCRB with Schur LMIs.",
+              "fontSize": 28,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 32,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b6t8z25k",
+      "id": "32",
+      "name": "flow_2",
+      "bbox": [
+        170,
+        1635,
+        1625,
+        210
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#F5F9FD",
+      "lineWidth": 0
+    },
+    {
+      "order": 33,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/q5krqx4z",
+      "id": "33",
+      "name": "flow2a",
+      "bbox": [
+        225,
+        1665,
+        330,
+        55
+      ],
+      "geometry": "rect",
+      "text": "2  Recover",
+      "textPreview": "2  Recover",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#0A4F85",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "2  Recover"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "2  Recover",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#0A4F85",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2  Recover",
+              "fontSize": 36,
+              "color": "#0A4F85",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 34,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/lwva5cnm",
+      "id": "34",
+      "name": "flow2b",
+      "bbox": [
+        225,
+        1725,
+        1480,
+        72
+      ],
+      "geometry": "rect",
+      "text": "Use rank and binary DC penalties to obtain a stable AP–target topology.",
+      "textPreview": "Use rank and binary DC penalties to obtain a stable AP–target topology.",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 28,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Use rank and binary DC penalties to obtain a stable AP–target topology."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Use rank and binary DC penalties to obtain a stable AP–target topology.",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Use rank and binary DC penalties to obtain a stable AP–target topology.",
+              "fontSize": 28,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 35,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0vm9wrm1",
+      "id": "35",
+      "name": "flow_3",
+      "bbox": [
+        170,
+        1890,
+        1625,
+        310
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#EAF2FA",
+      "lineWidth": 0
+    },
+    {
+      "order": 36,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zud83m5g",
+      "id": "36",
+      "name": "flow3a",
+      "bbox": [
+        225,
+        1920,
+        340,
+        55
+      ],
+      "geometry": "rect",
+      "text": "3  Certify",
+      "textPreview": "3  Certify",
+      "resolvedFontSize": 36,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 36,
+        "typeface": "+mn-lt",
+        "color": "#0A4F85",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "3  Certify"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "3  Certify",
+          "resolvedTextStyle": {
+            "fontSize": 36,
+            "color": "#0A4F85",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "3  Certify",
+              "fontSize": 36,
+              "color": "#0A4F85",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 37,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/yt4ruh4v",
+      "id": "37",
+      "name": "flow3b",
+      "bbox": [
+        225,
+        1980,
+        1480,
+        150
+      ],
+      "geometry": "rect",
+      "text": "Fix the recovered binary b, re-optimize continuous covariances, and validate power, gate, SINR, PCRB, and rank constraints. Only certified designs enter the statistics.",
+      "textPreview": "Fix the recovered binary b, re-optimize continuous covariances, and validate power, gate, SINR, PCRB, and rank constraints. Only certifie...",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 28,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Fix the recovered binary b, re-optimize continuous covariances, and validate power, gate, SINR, PCRB, and rank constraints. Only"
+          },
+          {
+            "index": 2,
+            "text": "certified designs enter the statistics."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Fix the recovered binary b, re-optimize continuous covariances, and validate power, gate, SINR, PCRB, and rank constraints. Only certified designs enter the statistics.",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Fix the recovered binary b, re-optimize continuous covariances, and validate power, gate, SINR, PCRB, and rank constraints. Only certified designs enter the statistics.",
+              "fontSize": 28,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 38,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/90fa9w3i",
+      "id": "38",
+      "name": "ablation_bg",
+      "bbox": [
+        1950,
+        1280,
+        2548,
+        1020
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 39,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8z690rmx",
+      "id": "39",
+      "name": "ablation_band",
+      "bbox": [
+        1950,
+        1280,
+        2548,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 40,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4vqtsv65",
+      "id": "40",
+      "name": "ablation_title",
+      "bbox": [
+        1978,
+        1287,
+        2492,
+        40
+      ],
+      "geometry": "rect",
+      "text": "WHY TWO DC PENALTIES?",
+      "textPreview": "WHY TWO DC PENALTIES?",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "WHY TWO DC PENALTIES?"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "WHY TWO DC PENALTIES?",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "WHY TWO DC PENALTIES?",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 41,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/ud4jm94n",
+      "id": "41",
+      "bbox": [
+        1980,
+        1340,
+        2488,
+        770
+      ],
+      "geometry": "rect",
+      "alt": "Dual-DC ablation across common scenarios",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "6299d443-1978-44fb-bbfd-f29a2e3e51b7",
+        "contentType": "image/png",
+        "byteLength": 207294
+      }
+    },
+    {
+      "order": 42,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/it8bqlof",
+      "id": "42",
+      "name": "dc_note",
+      "bbox": [
+        2000,
+        2130,
+        2448,
+        104
+      ],
+      "geometry": "rect",
+      "text": "Binary recovery is the decisive step: rank-only relaxation leaves the association fractional, whereas the coupled DC scheme reaches a median binary distance of 5.94×10⁻⁵.",
+      "textPreview": "Binary recovery is the decisive step: rank-only relaxation leaves the association fractional, whereas the coupled DC scheme reaches a med...",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#08734A",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Binary recovery is the decisive step: rank-only relaxation leaves the association fractional, whereas the coupled DC scheme reaches a median binary distance of 5.94×10⁻⁵."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Binary recovery is the decisive step: rank-only relaxation leaves the association fractional, whereas the coupled DC scheme reaches a median binary distance of 5.94×10⁻⁵.",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#08734A",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Binary recovery is the decisive step: rank-only relaxation leaves the association fractional, whereas the coupled DC scheme reaches a median binary distance of 5.94×10⁻⁵.",
+              "fontSize": 27,
+              "color": "#08734A",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 43,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/juhczqp0",
+      "id": "43",
+      "name": "robust_bg",
+      "bbox": [
+        110,
+        2380,
+        1440,
+        770
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 44,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wrqtob69",
+      "id": "44",
+      "name": "robust_band",
+      "bbox": [
+        110,
+        2380,
+        1440,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 45,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hszuxg7u",
+      "id": "45",
+      "name": "robust_title",
+      "bbox": [
+        138,
+        2387,
+        1384,
+        40
+      ],
+      "geometry": "rect",
+      "text": "ROBUST CSI PROTECTION",
+      "textPreview": "ROBUST CSI PROTECTION",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "ROBUST CSI PROTECTION"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "ROBUST CSI PROTECTION",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "ROBUST CSI PROTECTION",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 46,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/tcv2t432",
+      "id": "46",
+      "bbox": [
+        140,
+        2440,
+        1380,
+        560
+      ],
+      "geometry": "rect",
+      "alt": "Robust versus nominal CSI designs under perturbation",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "b8e2ab4d-11b1-4d79-9404-4c22592b1f18",
+        "contentType": "image/png",
+        "byteLength": 157024
+      }
+    },
+    {
+      "order": 47,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/vqhcvqpo",
+      "id": "47",
+      "name": "robust_note",
+      "bbox": [
+        150,
+        3020,
+        1360,
+        78
+      ],
+      "geometry": "rect",
+      "text": "Robust S-procedure design: 0 sampled outage; nominal design: 89–92% mean outage.",
+      "textPreview": "Robust S-procedure design: 0 sampled outage; nominal design: 89–92% mean outage.",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 25,
+        "typeface": "+mn-lt",
+        "color": "#08734A",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Robust S-procedure design: 0 sampled outage; nominal design: 89–92% mean outage."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Robust S-procedure design: 0 sampled outage; nominal design: 89–92% mean outage.",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#08734A",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Robust S-procedure design: 0 sampled outage; nominal design: 89–92% mean outage.",
+              "fontSize": 25,
+              "color": "#08734A",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 48,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/gnad0f6d",
+      "id": "48",
+      "name": "methods_bg",
+      "bbox": [
+        1585,
+        2380,
+        1440,
+        770
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 49,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1oju9kny",
+      "id": "49",
+      "name": "methods_band",
+      "bbox": [
+        1585,
+        2380,
+        1440,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 50,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/bi5wzepg",
+      "id": "50",
+      "name": "methods_title",
+      "bbox": [
+        1613,
+        2387,
+        1384,
+        40
+      ],
+      "geometry": "rect",
+      "text": "METHOD COMPARISON VERSUS N_req",
+      "textPreview": "METHOD COMPARISON VERSUS N_req",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "METHOD COMPARISON VERSUS N_req"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "METHOD COMPARISON VERSUS N_req",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "METHOD COMPARISON VERSUS N_req",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 51,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/9crixgjy",
+      "id": "51",
+      "bbox": [
+        1615,
+        2440,
+        1380,
+        560
+      ],
+      "geometry": "rect",
+      "alt": "Method comparison versus Nreq",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "1d088d43-b651-4c28-aca2-a54a43b5c4ed",
+        "contentType": "image/png",
+        "byteLength": 390880
+      }
+    },
+    {
+      "order": 52,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dkne1o76",
+      "id": "52",
+      "name": "methods_note",
+      "bbox": [
+        1625,
+        3020,
+        1360,
+        78
+      ],
+      "geometry": "rect",
+      "text": "FIM-aware recovery retains physical feasibility where distance-only or random baselines can fail.",
+      "textPreview": "FIM-aware recovery retains physical feasibility where distance-only or random baselines can fail.",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 25,
+        "typeface": "+mn-lt",
+        "color": "#08734A",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "FIM-aware recovery retains physical feasibility where distance-only or random baselines can fail."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "FIM-aware recovery retains physical feasibility where distance-only or random baselines can fail.",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "color": "#08734A",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "FIM-aware recovery retains physical feasibility where distance-only or random baselines can fail.",
+              "fontSize": 25,
+              "color": "#08734A",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 53,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cjexsjql",
+      "id": "53",
+      "name": "scale_bg",
+      "bbox": [
+        3060,
+        2380,
+        1438,
+        770
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFFFFF",
+      "lineColor": "#AFC4D9",
+      "lineWidth": 3
+    },
+    {
+      "order": 54,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/zm5g3ypc",
+      "id": "54",
+      "name": "scale_band",
+      "bbox": [
+        3060,
+        2380,
+        1438,
+        56
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 55,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ylwfut8r",
+      "id": "55",
+      "name": "scale_title",
+      "bbox": [
+        3088,
+        2387,
+        1382,
+        40
+      ],
+      "geometry": "rect",
+      "text": "SCALABILITY AND TAKEAWAY",
+      "textPreview": "SCALABILITY AND TAKEAWAY",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "SCALABILITY AND TAKEAWAY"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "SCALABILITY AND TAKEAWAY",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "SCALABILITY AND TAKEAWAY",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 56,
+      "kind": "image",
+      "scope": "slide",
+      "aid": "im/ad0zqlkj",
+      "id": "56",
+      "bbox": [
+        3090,
+        2425,
+        1378,
+        465
+      ],
+      "geometry": "rect",
+      "alt": "M12 cluster-size scalability sweep",
+      "contentType": "image/png",
+      "imageFit": "contain",
+      "imageMask": {
+        "geometry": "rect"
+      },
+      "asset": {
+        "assetId": "3f9757f5-c523-4441-870e-7d16bc24dfe5",
+        "contentType": "image/png",
+        "byteLength": 328943
+      }
+    },
+    {
+      "order": 57,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0nexwjqx",
+      "id": "57",
+      "name": "scale_note",
+      "bbox": [
+        3100,
+        2895,
+        1358,
+        58
+      ],
+      "geometry": "rect",
+      "text": "M=12: the lowest observed conditional mean power is 35.72 mW at N_req=4; PCRB constraints remain tight.",
+      "textPreview": "M=12: the lowest observed conditional mean power is 35.72 mW at N_req=4; PCRB constraints remain tight.",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 24,
+        "typeface": "+mn-lt",
+        "color": "#08734A",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "M=12: the lowest observed conditional mean power is 35.72 mW at N_req=4; PCRB constraints remain tight."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "M=12: the lowest observed conditional mean power is 35.72 mW at N_req=4; PCRB constraints remain tight.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "color": "#08734A",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "M=12: the lowest observed conditional mean power is 35.72 mW at N_req=4; PCRB constraints remain tight.",
+              "fontSize": 24,
+              "color": "#08734A",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 58,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fqlwru98",
+      "id": "58",
+      "name": "takeaway",
+      "bbox": [
+        3100,
+        2962,
+        1358,
+        132
+      ],
+      "geometry": "rect",
+      "text": "Dedicated sensing is sparse and geometry-aware; communication stays globally cooperative. The proposed recovery turns the relaxed design into a certified physical solution.",
+      "textPreview": "Dedicated sensing is sparse and geometry-aware; communication stays globally cooperative. The proposed recovery turns the relaxed design ...",
+      "resolvedFontSize": 27,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 27,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Dedicated sensing is sparse and geometry-aware; communication stays globally cooperative. The proposed recovery"
+          },
+          {
+            "index": 2,
+            "text": "turns the relaxed design into a certified physical solution."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Dedicated sensing is sparse and geometry-aware; communication stays globally cooperative. The proposed recovery turns the relaxed design into a certified physical solution.",
+          "resolvedTextStyle": {
+            "fontSize": 27,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Dedicated sensing is sparse and geometry-aware; communication stays globally cooperative. The proposed recovery turns the relaxed design into a certified physical solution.",
+              "fontSize": 27,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 59,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/epcfip8n",
+      "id": "59",
+      "name": "footer",
+      "bbox": [
+        0,
+        3235,
+        4608,
+        221
+      ],
+      "geometry": "rect",
+      "fillColor": "#B8CFE7",
+      "lineWidth": 0
+    },
+    {
+      "order": 60,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i50z6xsb",
+      "id": "60",
+      "name": "footer_head",
+      "bbox": [
+        150,
+        3265,
+        2000,
+        38
+      ],
+      "geometry": "rect",
+      "text": "CONCLUSIONS, LIMITATIONS & FUTURE WORK",
+      "textPreview": "CONCLUSIONS, LIMITATIONS & FUTURE WORK",
+      "resolvedFontSize": 28,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 28,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "CONCLUSIONS, LIMITATIONS & FUTURE WORK"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "CONCLUSIONS, LIMITATIONS & FUTURE WORK",
+          "resolvedTextStyle": {
+            "fontSize": 28,
+            "color": "#111827",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "CONCLUSIONS, LIMITATIONS & FUTURE WORK",
+              "fontSize": 28,
+              "color": "#111827",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 61,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/j690z29g",
+      "id": "61",
+      "name": "footer_text",
+      "bbox": [
+        150,
+        3310,
+        3600,
+        72
+      ],
+      "geometry": "rect",
+      "text": "Findings: participation-gated sensing clusters are physically meaningful; N_req=4 is the best tested energy point; robust CSI protection is essential.  Limitation: fronthaul and compute energy are not yet modelled.  Future work: distributed optimization and hardware-in-the-loop validation.",
+      "textPreview": "Findings: participation-gated sensing clusters are physically meaningful; N_req=4 is the best tested energy point; robust CSI protection ...",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "+mn-lt",
+        "color": "#111827",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Findings: participation-gated sensing clusters are physically meaningful; N_req=4 is the best tested energy point; robust CSI protection is essential.  Limitation: fronthaul and compute energy are not yet modelled.  Future work: distributed optimization and hardware-in-the-loop validation."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Findings: participation-gated sensing clusters are physically meaningful; N_req=4 is the best tested energy point; robust CSI protection is essential.  Limitation: fronthaul and compute energy are not yet modelled.  Future work: distributed optimization and hardware-in-the-loop validation.",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "color": "#111827",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Findings: participation-gated sensing clusters are physically meaningful; N_req=4 is the best tested energy point; robust CSI protection is essential.  Limitation: fronthaul and compute energy are not yet modelled.  Future work: distributed optimization and hardware-in-the-loop validation.",
+              "fontSize": 23,
+              "color": "#111827",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 62,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/k72h87a1",
+      "id": "62",
+      "name": "footer_note",
+      "bbox": [
+        3600,
+        3280,
+        850,
+        45
+      ],
+      "geometry": "rect",
+      "text": "Source package: audited MATLAB experiments | Editable poster",
+      "textPreview": "Source package: audited MATLAB experiments | Editable poster",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 22,
+        "typeface": "+mn-lt",
+        "color": "#4B5563",
+        "bold": true,
+        "alignment": "right",
+        "verticalAlignment": "middle",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Source package: audited MATLAB experiments | Editable poster"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Source package: audited MATLAB experiments | Editable poster",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "color": "#4B5563",
+            "bold": true,
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Source package: audited MATLAB experiments | Editable poster",
+              "fontSize": 22,
+              "color": "#4B5563",
+              "bold": true,
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

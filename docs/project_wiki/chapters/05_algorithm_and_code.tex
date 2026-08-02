@@ -1,0 +1,42 @@
+\chapter{Algorithm, Code, and Reproducibility}
+
+\section{End-to-end pipeline}
+\begin{enumerate}[label=\textbf{Step \arabic*:},leftmargin=2.4cm]
+\item Generate AP, UE, and target geometry; calibrate observable PCRB thresholds.
+\item Solve the continuous SDR/DC-SCA subproblems and record rank, binary, and support diagnostics.
+\item Construct binary candidates: stable Top-$N_{\rm req}$, FIM-greedy, and repair candidates when required.
+\item For each candidate, solve the fixed-$b$ robust covariance problem.
+\item Extract implementable beamformers when needed and validate cardinality, binary status, power, robust SINR, sensing SINR, PCRB, PSD, and LMI residuals.
+\end{enumerate}
+
+\section{Primary MATLAB map}
+\begin{longtable}{p{0.30\linewidth}p{0.61\linewidth}}
+\toprule
+File & Responsibility\\ \midrule
+\texttt{baseline\_alg2.m} & Orchestrates SDR/DC-SCA, candidate construction, recovery, and final status.\\
+\texttt{solve\_p3\_sca\_t.m} & Builds and solves one convex dual-DC SCA subproblem.\\
+\texttt{solve\_p3\_with\_fixed\_b.m} & Re-optimizes continuous covariances after a binary topology is fixed.\\
+\texttt{validate\_solution.m} & Independently checks the returned physical solution.\\
+\texttt{generate\_scenario.m} & Geometry, channels, derivatives, and automatic PCRB calibration.\\
+\texttt{evaluate\_isac\_metrics.m} & Recomputes power, rates, PCRB, and sensing metrics.\\
+\texttt{run\_*.m} and \texttt{plot\_*.m} & Reproducible Monte Carlo campaigns and figures.\\
+\bottomrule
+\end{longtable}
+
+\section{What counts as a physical solution}
+An accepted record must have a binary association, exact target cardinality,
+authorized dedicated sensing power, per-AP power within tolerance, PSD
+covariances, nonnegative S-procedure multipliers, robust LMI satisfaction, and
+all QoS/PCRB checks passed. A fractional relaxation, an unverified
+principal-eigenvector extraction, or a solver status alone is insufficient.
+
+\section{Reproducibility protocol}
+Use deterministic seed lists, common scenarios for method comparisons, and
+unconditional denominators for feasibility. Condition power, sum rate, PCRB,
+and sensing SINR on physically feasible solutions unless a common-feasible set
+is stated. Record MATLAB, CVX, MOSEK, machine, solver tolerance, seed list, and
+Git commit with every campaign.
+
+\sourcebox{Authoritative frozen scripts and data snapshots are in
+\texttt{deliverables/paper\_results\_and\_figures\_v1\_0/scripts} and
+\texttt{.../results}. The active development copies are under \texttt{sim/matlab}.}

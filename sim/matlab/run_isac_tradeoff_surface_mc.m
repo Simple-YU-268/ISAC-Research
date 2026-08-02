@@ -67,7 +67,7 @@ fig=figure('Visible','off','Position',[100 100 1050 450]);
 tiledlayout(fig,1,2,'TileSpacing','compact','Padding','compact');
 ax=nexttile; surf(ax,G,A,1e3*result.mean_power_W,'EdgeColor',[.25 .25 .25]);
 xlabel(ax,'Robust communication SINR target (dB)'); ylabel(ax,'PCRB allowance scale, \alpha');
-zlabel(ax,'Mean transmit power (mW)'); title(ax,'Mean ISAC trade-off surface'); colorbar(ax); view(ax,45,30);
+zlabel(ax,'Mean transmit power (mW)'); title(ax,'QoS-requirement sensitivity'); colorbar(ax); view(ax,45,30);
 ax=nexttile; imagesc(ax,result.gamma_db,result.alpha,100*result.feasibility_rate);
 set(ax,'YDir','normal'); xlabel(ax,'Robust communication SINR target (dB)');
 ylabel(ax,'PCRB allowance scale, \alpha'); title(ax,'Physical feasibility rate (%)');

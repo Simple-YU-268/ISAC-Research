@@ -24,8 +24,11 @@ addParameter(p, 'N_req_list', [], @(x) isnumeric(x) && isvector(x));
 addParameter(p, 'Run_robustness', true, @islogical);
 addParameter(p, 'T_max', 30, @(x) isnumeric(x) && isscalar(x) && x >= 1 && x == round(x));
 addParameter(p, 'Solver', 'mosek', @(x) ischar(x) || isstring(x));
+addParameter(p, 'Recovery_max_candidates', 21, @(x) isnumeric(x) && isscalar(x) && x >= 1 && x == round(x));
+addParameter(p, 'Recovery_stop_first_feasible', false, @islogical);
 addParameter(p, 'Output_dir', '', @(x) ischar(x) || isstring(x));
 addParameter(p, 'Output_tag', '', @(x) ischar(x) || isstring(x));
+addParameter(p, 'Progress_file', '', @(x) ischar(x) || isstring(x));
 parse(p, varargin{:});
 opt = p.Results;
 if opt.Quick, opt.N_mc = 3; end
@@ -60,6 +63,9 @@ if ~isempty(opt.N_req_list)
 end
 cfg.run_robustness = opt.Run_robustness;
 cfg.solver = char(opt.Solver);
+cfg.nearest_baseline = 'oracle_true_position';
+cfg.recovery_max_candidates = opt.Recovery_max_candidates;
+cfg.recovery_stop_first_feasible = opt.Recovery_stop_first_feasible;
 
 if strlength(string(opt.Output_dir)) == 0
     out_dir = fullfile(pwd, 'figures');
@@ -70,6 +76,17 @@ if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 save_tag = sprintf('feasibility_M%d_K%d_P%d_mc%d', cfg.M, cfg.K, cfg.P, cfg.N_mc);
 if strlength(string(opt.Output_tag)) > 0
     save_tag = [save_tag, '_', char(opt.Output_tag)];
+end
+if strlength(string(opt.Progress_file)) == 0
+    cfg.progress_file = fullfile(out_dir, [save_tag, '_progress.log']);
+else
+    cfg.progress_file = char(opt.Progress_file);
+end
+fid = fopen(cfg.progress_file, 'a');
+if fid >= 0
+    fprintf(fid, '[%s] Started: N_mc=%d, N_req=%s, solver=%s\\n', ...
+        datestr(now, 'yyyy-mm-dd HH:MM:SS'), cfg.N_mc, mat2str(cfg.N_req_list), cfg.solver);
+    fclose(fid);
 end
 
 %% Figure 1: representative convergence at a feasible operating point -----
@@ -129,7 +146,7 @@ plot(cfg.N_req_list, near_feas, 'r--s', 'LineWidth', 1.5);
 plot(cfg.N_req_list, rand_feas, 'k:^', 'LineWidth', 1.5);
 grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]); ylim([0 1]);
 xlabel('Required APs per target N_{req}'); ylabel('Binary physical feasibility rate');
-legend('Optimized association + recovery', 'Nearest-AP fixed-b', 'Random fixed-b', 'Location', 'southeast');
+legend('Proposed association + recovery', 'Oracle nearest-AP fixed-b', 'Random fixed-b', 'Location', 'southeast');
 title('Feasibility versus AP-association cardinality');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig2_feasibility_vs_nreq.png']));
 
@@ -140,7 +157,7 @@ errorbar(cfg.N_req_list, rand_power, rand_std, 'k:^', 'LineWidth', 1.5);
 grid on; xlim([min(cfg.N_req_list)-0.5, max(cfg.N_req_list)+0.5]);
 xlabel('Required APs per target N_{req}');
 ylabel('Transmit power [W] | feasible');
-legend('Optimized association + recovery', 'Nearest-AP fixed-b', 'Random fixed-b', 'Location', 'best');
+legend('Proposed association + recovery', 'Oracle nearest-AP fixed-b', 'Random fixed-b', 'Location', 'best');
 title('Conditional power: infeasible trials are excluded explicitly');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig3_conditional_power_vs_nreq.png']));
 
@@ -247,6 +264,7 @@ if cfg.N_workers > 0
 else
     for n = 1:cfg.N_mc
         records{n} = run_trial(cfg, nreq, mode, design_eps, eval_eps, n);
+        write_trial_progress(cfg, nreq, mode, n, records{n});
     end
 end
 
@@ -345,6 +363,20 @@ prm = generate_scenario(cfg.M, cfg.Nt, cfg.K, cfg.P, cfg.N_theta, ...
     cfg.Pmax_dBm, cfg.Gamma_track, 'AreaSize', cfg.AreaSize, ...
     'N_req', nreq, 'eps_h', eps_h, 'seed', seed);
 prm.solver = cfg.solver;
+prm.recovery_max_candidates = cfg.recovery_max_candidates;
+prm.recovery_stop_first_feasible = cfg.recovery_stop_first_feasible;
+end
+
+function write_trial_progress(cfg, nreq, mode, index, rec)
+message = sprintf('[%s] mode=%s N_req=%d trial=%d/%d status=%s feasible=%d\\n', ...
+    datestr(now, 'yyyy-mm-dd HH:MM:SS'), mode, nreq, index, cfg.N_mc, ...
+    rec.status, rec.feasible);
+fprintf('%s', message);
+fid = fopen(cfg.progress_file, 'a');
+if fid >= 0
+    fprintf(fid, '%s', message);
+    fclose(fid);
+end
 end
 
 function outage = evaluate_outage(W, S_p, prm, eps_h, n_samples, rng_seed)
@@ -425,8 +457,12 @@ end
 
 function b = nearest_assignment(prm)
 b = zeros(prm.M, prm.P);
+% Oracle benchmark: true target positions are unavailable to an online AP
+% association policy. This method is retained only as a theoretical geometric
+% reference and must be labelled as such in all reported results.
+target_reference = prm.Target_pos;
 for p = prm.active_targets
-    distance = sqrt(sum((prm.AP_pos - prm.Target_pos(p,:)).^2, 2));
+    distance = sqrt(sum((prm.AP_pos - target_reference(p,:)).^2, 2));
     [~, order] = sort(distance, 'ascend');
     b(order(1:prm.N_req), p) = 1;
 end

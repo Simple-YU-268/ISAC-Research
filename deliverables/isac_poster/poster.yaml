@@ -1,0 +1,21 @@
+poster:
+  width_inches: 48
+  height_inches: 36
+  orientation: landscape
+  theme:
+    background: "#FFFFFF"
+    primary: "#10243E"
+    accent: "#1261A0"
+    accent_light: "#EAF5FC"
+    body_font: Arial
+  content:
+    title: "Robust Beamforming for Participation-Constrained Cell-Free ISAC"
+    subtitle: "Geometry-aware AP-target sensing authorization with globally cooperative communication"
+    author_placeholder: "Add author / affiliation / QR before printing"
+  figures:
+    - "fig1_system_architecture.png"
+    - "fig2_dual_dc_ablation.png"
+    - "fig10_method_comparison_vs_nreq.png"
+    - "fig9_csi_robustness.png"
+    - "fig12_pressure_geometries.png"
+    - "fig12_m12_nreq_scalability.png"

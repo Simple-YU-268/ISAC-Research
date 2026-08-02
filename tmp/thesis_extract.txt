@@ -1,0 +1,376 @@
+SCHOOL OF ELECTRICAL ENGINEERING
+AND TELECOMMUNICATIONS
+Resource Allocation for Integrated
+Sensing and Communication (ISAC)
+in Cell-Free Massive MIMO Systems
+by
+Xinpeng Yu
+Student ID: z5615351
+Thesis submitted as a requirement for the degree
+Master of Engineering (Telecommunications)
+Submitted: March 17, 2026
+Supervisor: Derrick Wing Kwan Ng
+Shaokang Hu\n\f\nContents
+Contents 2
+1 Thesis A Review 3
+1.1 Communication Model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.2 Sensing Model . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.3 Problem Formulation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+2 Thesis B Progress 6
+2.1 Algorithmic Analysis and Selection . . . . . . . . . . . . . . . . . . . . . . . 6
+2.2 Current Implementation and Identified Bottlenecks . . . . . . . . . . . . . . . 7
+2.2.1 Implementation of AO Solver . . . . . . . . . . . . . . . . . . . . . . 7
+2.2.2 Performance Bottlenecks Analysis . . . . . . . . . . . . . . . . . . . . 9
+3 Conclusion and Future Work 11
+3.1 Progress Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+3.2 Revised Project Plan . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+3.3 Concluding Remarks . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+2\n\f\nChapter 1
+Thesis A Review
+1.1 Communication Model
+In the considered multi-antenna downlink cell-free network, the system comprises multiple Ac-
+cess Points (APs) equipped with Nt transmit antennas, concurrently serving K single-antenna
+communication users (CUs). The system allocates independent communication beamforming
+vectors wm,k to each user via linear precoding. To address the practical challenge of acquiring
+perfect Channel State Information (CSI), a worst-case channel uncertainty model bounded by a
+spherical norm is introduced. Specifically, the actual channel hm,k is modeled as the superposi-
+tion of the estimated channel and an error vectorem,k, satisfying ∥em,k∥ ≤ ϵk. Consequently, the
+communication quality is strictly defined by the worst-case Signal-to-Interference-plus-Noise
+Ratio (SINR). The fundamental premise of the system’s resource allocation is to guarantee that
+the worst-case SINR for each user strictly satisfies the predefined Quality of Service (QoS)
+threshold γk under any allowable channel error.
+1.2 Sensing Model
+To equip the communication network with active environmental sensing capabilities, a ded-
+icated sensing signal with a covariance matrix Zm is introduced at the transmitter, which is
+spatially superimposed with the communication beams. The sensing performance is evaluated
+across two physical dimensions: target detection and target tracking. For detection, the sys-
+tem must ensure that the effective echo SINR at the sensing receivers meets the threshold γPoD
+S
+required for a specified Probability of Detection (PoD). For tracking, the trace of the Fisher
+3\n\f\nInformation Matrix (FIM) carried by the transmitted signals must exceed the predefined track-
+ing accuracy lower bound ΓTrack. Furthermore, to facilitate distributed multi-node cooperative
+sensing, binary variables bmp are formulated to dynamically define the clustering strategy of
+APs assigned to specific target sensing tasks.
+1.3 Problem Formulation
+The following paper sets out the establishment of an ISAC joint optimization framework, build-
+ing upon the aforementioned physical models. The primary objective of the framework is to
+efficiently manage and allocate limited network resources to maximize the system’s energy
+efficiency. This is achieved by minimizing the total transmit power at the APs while strictly
+adhering to all system-level performance constraints.
+This is a multi-dimensional resource allocation problem. The decision variables encompass
+the continuous resources (i.e., the transmit power optimally distributed between communica-
+tion precoders {wm,k[n]} and dedicated sensing covariance matrices {Zm[n]}) and the discrete
+resources (i.e., the cooperative AP-target association indicators {bmp[n]}). Based on these con-
+siderations, the joint resource allocation problem at time instant n is rigorously formulated as
+follows:
+min
+{wm,k[n]},{Zm[n]},
+{bmp[n]}
+M∑
+m=1
+( K∑
+k=1
+∥wm,k[n]∥2 + Tr(Zm[n])
+)
+(1.1a)
+s.t. SINR wc
+k [n] ≥ γk, ∀k ∈ K, (1.1b)
+SINRS,p[n] ≥ γPoD
+S , ∀p ∈ P , (1.1c)
+Tr
+(
+J data
+p [n]
+)
+≥ ΓTrack,p, ∀p ∈ P , (1.1d)
+M∑
+m=1
+bmp[n] = Nreq, ∀p ∈ P active
+n , (1.1e)
+K∑
+k=1
+∥wm,k[n]∥2 + Tr(Zm[n]) ≤ Pmax, ∀m ∈ M, (1.1f )
+Zm[n] ⪰ 0, ∀m ∈ M, (1.1g)
+bmp[n] ∈ {0, 1}, ∀m ∈ M, p ∈ P . (1.1h)
+From a mathematical optimization perspective, the feasible region is severely restricted not
+4\n\f\nonly by the continuous-domain worst-case QoS constraints ( 1.1b), sensing dual-threshold con-
+straints (1.1c)-(1.1d), and per-AP power caps ( 1.1f), but also by the topological positive semi-
+definite constraint ( 1.1g) of the covariance matrices and the discrete binary constraint ( 1.1h)
+of AP selection. As a result, problem ( 1.1) is formulated as a Mixed-Integer Non-Convex
+Programming (MINLP) problem. It is evident that the inherent cross-functional interference
+between communication and sensing signals embedded in the constraints gives rise to highly
+complex non-convex geometric characteristics. Consequently, this problem is intractable to
+solve directly.
+5\n\f\nChapter 2
+Thesis B Progress
+2.1 Algorithmic Analysis and Selection
+As formulated in ( 1.1), the joint resource allocation problem for the ISAC system is math-
+ematically classified as a Mixed-Integer Non-Convex Programming (MINLP) problem. The
+intractability of this formulation stems from two fundamental characteristics. First, the pres-
+ence of the binary AP-target association variables {bmp[n]} inherently shatters the convexity
+of the feasible region. Second, even upon relaxing or fixing the discrete variables, the con-
+tinuous variables—namely, the communication precoding vectors {wm,k[n]} and the sensing
+covariance matrices {Zm[n]}—remain deeply coupled.
+Specifically, the coupling manifests in the worst-case communication SINR constraint (1.1b),
+which exhibits a Difference of Convex (DC) functions structure. By isolating the desired signal
+power, the constraint is dominated by the non-convex term −|hH
+m,kwm,k|2. Attempting a global
+joint optimisation via global semi-definite relaxation (SDR) would require the elevation of all
+communication vectors into covariance matrices. This approach not only precipitates an escala-
+tion in computational complexity – thereby rendering standard interior-point methods incapable
+of executing even a single iteration due to memory exhaustion – but also inevitably results in
+the destruction of the rank-one property of the communication beams, necessitating suboptimal
+Gaussian randomisation that contravenes the strict worst-case quality of service (QoS) guaran-
+tees.
+To rigorously bypass these mathematical dead ends, an Alternating Optimization (AO) ar-
+chitecture rooted in Block Coordinate Descent (BCD) is proposed. Prior to entering the op-
+timization loop, the MINLP is subjected to a dimensionality reduction: the binary variables
+6\n\f\n{bmp[n]} are predetermined via a greedy max-channel-gain heuristic, completely decoupling the
+integer constraints. Subsequently, the AO framework alternates between optimizing {wm,k[n]}
+and {Zm[n]} in two sequential, convexified subproblems. This strategy guarantees monotonic
+convergence of the total power consumption to a stationary point while natively preserving the
+rank-one constraints of the communication beams.
+2.2 Current Implementation and Identified Bottlenecks
+2.2.1 Implementation of AO Solver
+The proposed AO framework has been implemented in full using the CVX modelling system
+with the SDPT3 solver. The algorithmic execution of the framework dictates an iterative loop
+between two precisely constructed subproblems, continuing until the relative fractional change
+in the total system power consumption falls below a predefined tolerance threshold. The com-
+plete procedure is summarised in algorithm [alg:procedure]. 1.
+Step A: Robust SOCP for Communication Beamforming In the first subproblem, the sens-
+ing covariance matrices {Zm[n]} are temporarily treated as fixed parameters. Consequently,
+the sensing-induced cross-interference hH
+m,kZm[n]hm,k condenses into a constant noise-plus-
+interference floor. To completely eradicate the non-convex DC structure, a phase rotation mech-
+anism is introduced. By forcing the imaginary part of the desired signal to zero (Im(hH
+m,kwm,k) =
+0) and constraining the real part to be non-negative, the absolute value |hH
+m,kwm,k| strictly
+equates to its real component Re (hH
+m,kwm,k).
+Taking the square root of the SINR inequality and applying the Cauchy-Schwarz inequality
+to bound the worst-case channel estimation error ∥∆hm,k∥ ≤ ϵk, the non-convex constraint is
+elegantly reformulated into a strict Second-Order Cone Programming (SOCP) constraint. To
+ensure algorithmic vitality during early iterations where fixed sensing interference might be
+overwhelmingly high, a non-negative slack variable δc
+k is introduced to soften the hard con-
+straint, penalized heavily in the objective function to prevent arbitrary constraint violations.
+Step B: SDP for Sensing Covariance with Anti-Blinding Penalty In the subsequent sub-
+problem, the communication precoders {wm,k[n]} are fixed, transforming into a known covari-
+ance matrix Wcov. The optimization of the sensing signals is then formulated as a standard
+7\n\f\nAlgorithm 1 Alternating Optimization for ISAC Joint Resource Allocation
+Require: Channels ˆhm,k, Gjmp; thresholds γk, γPoD
+S , ΓTrack,p; tolerance ϵtol.
+Ensure: Optimal {w⋆
+m,k}, {Z ⋆
+m}, and {b⋆
+mp}.
+1: Initialize: t ← 0; obtain {b⋆
+mp} via max-channel-gain; feasible {Z (0)
+m }.
+2: repeat
+3: t ← t + 1
+4: {Step A: Robust SOCP for Communication Precoders }
+5: given {Z (t−1)
+m }, compute noise-plus-interference floor.
+6: solve SOCP subproblem for {wm,k}:
+7: minimize Total power + λc
+∑δc
+k
+8: subject to Phase rotation Im(ˆhH
+k wk) = 0 , ∀k
+9: Worst-case QoS constraints with slack δc
+k ≥ 0
+10: update {w(t)
+m,k} ← { w⋆
+m,k}
+11: {Step B: SDP for Sensing Covariance Matrices }
+12: given {w(t)
+m,k}, compute constant communication covariance.
+13: solve SDP subproblem for {Zm}:
+14: minimize Total power + λz
+∑
+k
+ˆhH
+k Zmˆhk {Null-steering penalty }
+15: subject to Detection (γPoD
+S ) and tracking ( ΓTrack) constraints
+16: update {Z (t)
+m } ← { Z ⋆
+m}
+17: {Convergence Check }
+18: P (t) ← ∑
+m,k ∥w(t)
+m,k∥2 + ∑
+m Tr(Z (t)
+m )
+19: until |P (t) − P (t−1)|/P (t−1) < ϵ tol
+20: return {w(t)
+m,k}, {Z (t)
+m }
+8\n\f\nSemi-Definite Programming (SDP) problem.
+A pivotal engineering innovation implemented in this step is the ”anti-blinding” penalty
+mechanism. Without intervention, a naive SDP solver would aggressively fulfill the target de-
+tection (γPoD
+S ) and tracking ( ΓTrack) thresholds by forming intense sensing beams, oblivious to
+the spatial locations of the CUs. This would cause a tremendous amount of cross-interference,
+causing the communication power to jump erratically in the subsequent Step A process. In order
+to impose a cooperative behavior between users, a penalty term based on active null-steering,
+defined by the total amount of power sensed by the communication users and injected into the
+communication channels, is heavily weighted and injected into the objective function. This
+mathematically forces the sensed signals to primarily align with the null space of the commu-
+nication users, greatly improving the stability and convergence rate of the AO process.
+Figure 2.1: Convergence profile of the AO solver.
+2.2.2 Performance Bottlenecks Analysis
+While the customized AO solver systematically resolves the mathematical intractability of the
+joint formulation, extensive numerical experiments have exposed two critical bottlenecks that
+mandate future structural optimization.
+• Feasibility Crisis vs. Penalty Weighting: The convergence of the system under ex-
+9\n\f\ntreme spatial channel correlation relies heavily on the introduced slack variables. When
+the manual inputs for the tracking FIM threshold ( ΓTrack,p) and the communication QoS
+threshold (γk) approach the theoretical limits of the physical degrees of freedom, the strict
+feasibility region vanishes. In such situations, the success of the solver is artificially en-
+sured by compromising the physical constraints in favor of slack penalties. This reveals
+the vulnerability of a pure power minimization objective under overloaded demand, hint-
+ing at a possible switch towards a Max-Min Fairness or Pareto optimization approach.
+• Computational Complexity of the SDP Subproblem: Although substituting global
+SDR with the AO framework reduces the optimization scale exponentially, Step B still
+necessitates solving M independent positive semi-definite matrices of dimensionNt×Nt.
+The computational complexity of the interior-point method employed for this SDP step
+inherently scales at O(M 3N 6
+t ). As the system evolves toward a true Cell-Free Massive
+MIMO topology—characterized by massively distributed APs and large-scale antenna
+arrays—this O(N 6
+t ) scaling dictates an intolerable computational delay, rendering the
+current solver fundamentally incompatible with the strict real-time scheduling constraints
+of a dynamic coherence block.
+10\n\f\nChapter 3
+Conclusion and Future Work
+3.1 Progress Summary
+The problem addressed by this research is the basic problem of resource allocation for Cell-Free
+Massive MIMO ISAC systems for sixth-generation wireless networks. Starting from the theo-
+retical foundations provided by the previous research presented in Thesis A, where the problem
+of joint resource allocation has been formulated as a Mixed Integer Non-Linear Programming
+problem that reflects the intrinsic contradiction of the system in terms of QoS requirements for
+communication and sensing as well as power efficiency, the current semester has been devoted
+to the development of a viable solution based on the proposed mathematical framework.
+The major accomplishment thus far is the design and initial implementation of an Alternat-
+ing Optimization framework based on Block Coordinate Descent concepts. We realized that
+global methods based on Semi-Definite Relaxation would lead to an unmanagably complex
+formulation due to the need for lifting in the covariance matrices and destroying the rank-one
+structure of the desired beams in the communication link. Instead, we developed a decompo-
+sition strategy that splits the original problem into two tractable sub-problems. We developed
+a phase rotation mechanism for the communication precoding sub-problem that eliminates the
+non-convex structure of Difference of Convex functions in the absolute value terms due to the
+worst-case SINR requirements in the presence of imperfect knowledge of the channel state in-
+formation. We constrain the imaginary part of the desired signal to be zero and the real part to be
+non-negative, resulting in an exact reformulation as a Second Order Cone Programming prob-
+lem without any need for approximation or randomization. We also developed an innovative
+solution strategy for the sensing covariance sub-problem that revealed an important instability
+11\n\f\nmechanism in the original formulation. We realized that standard SDP solvers for this sub-
+problem generate beams that are blind to the possible locations of the communication users
+and lead to massive interference in the system. We developed an innovative ”Anti-Blinding”
+penalty term that discourages power in the sensing beams from leaking into the communication
+link.
+The algorithmic pipeline has been partially implemented through the use of the CVX mod-
+elling system along with an SDPT3 solver backend, which results in a codebase of approxi-
+mately two hundred lines of MA TLAB code that implements the alternating loop between robust
+SOCP-based communication precoding and penalized SDP-based sensing optimization. Nu-
+merical experimentation has shown mixed results in small-scale scenarios that demonstrate both
+the promise and current limitations of this proposed method. In some instances, the solver is able
+to converge to a solution that meets the required resource allocation criteria, meets the required
+communication quality of service thresholds, meets the required sensing detection thresholds,
+and meets the required tracking accuracy thresholds; however, the overall convergence of this
+alternating method is erratic and unpredictable, particularly due to an oscillatory behavior in
+which successive iterations of the communication precoders and sensing covariance matrices
+do not demonstrate a monotonic decrease in the overall objective function related to total power
+consumption, resulting in an early termination of the overall method without a stationary point
+being achieved. The Anti-Blinding penalty method, while theoretically sound, requires a man-
+ual adjustment of a regularization factor that is currently not well understood, which can result
+in an inability to sufficiently penalize the cross-interference terms or, on the other hand, overly
+constrain the sensing degrees of freedom to the point of infeasibility. Furthermore, the phase
+rotation mechanism utilized for the robust reformulation of the SOCP problem assumes that
+accurate channel information is available, while numerical issues have been observed with re-
+gard to the stability of the problem formulation, especially when the channel vectors approach
+orthogonality with respect to the feasible subspace defined by the rotation constraints. Based
+on these empirical results, it is evident that the current AO-based implementation is best char-
+acterized as a proof-of-concept, while there is a need to refine considerably the underlying al-
+gorithmic framework to ensure convergence, especially with regard to establishing theoretical
+convergence results. First, with regard to the power minimization problem, there is considerable
+sensitivity with regard to overloaded scenarios, where the required communication SINR lev-
+els, together with tracking FIM thresholds, approach the theoretical degrees of freedom limits
+12\n\f\nof the distributed antenna array, effectively leading to a zero feasible region, where slack vari-
+ables have to be utilized to artificially relax the problem constraints. Second, with regard to the
+interior-point method utilized to solve the SDP problem, there is a computational complexity of
+O(M 3N 6
+t ), which becomes computationally prohibitive, especially while addressing scenarios
+where the system is evolving towards massive Cell-Free configurations, where multiple dis-
+tributed APs, together with multiple antennas, have to operate within a real-time framework,
+especially while addressing dynamic coherence blocks.
+3.2 Revised Project Plan
+With the nature of the academic calendar, ten weeks per semester, and the current status in the
+fifth week of the current semester in Thesis B, the project schedule is adjusted to accommodate
+the completion of all algorithmic development and evaluation in the remaining five weeks of
+the current semester, with the entire current semester in Thesis C available for the writing of
+the final thesis documents. The condensed schedule for the remainder of Thesis B calls for
+aggressive prioritization in achieving functional simulation results that can be used as the basis
+for the final thesis, accepting the fact that algorithmic perfection may not be achievable in the
+current timeframe.
+The main priority activity to be completed between Weeks 5 and 6 involves addressing the
+underlying causes of convergence instability in the AO implementation. This can be achieved
+through comprehensive logging of residual values and objective functions at each alternating
+step to determine whether the source of instability is due to the SOCP subproblem through
+numerical instabilities associated with phase rotation, due to the SDP subproblem through in-
+sufficient penalty weights, or due to interactions between the two subproblems. A grid search
+strategy can also be adopted to identify at least one configuration of the Anti-Blinding regu-
+larization coefficient such that convergence stability can be ensured for a representative small-
+scale scenario involving four APs serving two communication users while tracking two targets,
+even if this involves a non-ideal configuration that does not generalize to other scenarios. Once
+a minimally functional solver has been developed by Week 7, a Monte Carlo simulation can be
+conducted between Weeks 7 and 8, but with a limited scope to ensure timely completion within
+this period. This simulation can be conducted on moderate-scale scenarios involving at most
+sixteen APs, each having at most four antennas, due to the computational challenges associated
+13\n\f\nwith the cubic complexity of the SDP subproblem. We will seek to characterize these three
+operating points in lightly loaded networks where the simultaneous satisfaction of the commu-
+nication and sensing requirements is easily achievable, in moderately loaded networks where
+the power minimization objective is operating close to the boundary of the feasible region, and
+in overloaded networks where the AO solver is seen to fail to converge or converge after an
+unacceptably large number of iterations. At the same time, acknowledging the fundamental
+computational challenge in solving the SDP using the interior-point method, we will also seek
+to develop an alternative machine learning-based approach in which a neural network is trained
+to learn a direct mapping from channel state information to near-optimal sensing covariance
+matrices. This is an exploratory direction that will involve the creation of a database of chan-
+nel state information for which the AO solver is seen to converge to an optimal solution, the
+design of an appropriate neural network architecture such as a graph neural network or a fully
+connected neural network with residual connections, and verification that the neural network is
+able to reproduce the same performance as the AO solver with millisecond-level latency. The
+final two weeks of Thesis B will be focused on consolidating the simulation results, identifying
+trends in the performance that are consistent across the random channel realizations, and doc-
+umenting the failure cases and limitations that were seen during the experimentation process,
+with the objective of delivering a comprehensive set of documentation that can be included in
+the Thesis C documentation without the need for further computational simulation.
+The period of ten weeks for the Thesis C is devoted to the development of the thesis doc-
+umentation. For the first three weeks, the focus will be on the development of the technical
+chapters of the thesis. These include the system model chapter that will cover the ISAC signal
+formulation and the MINLP problem statement. Another chapter is the algorithm chapter that
+will cover the AO framework. This will include the innovations such as the phase rotation and
+the anti-blinding. The chapter will also include the limitations such as the instabilities and the
+bottlenecks. The third chapter is the evaluation chapter. For the first three weeks, the focus
+will be on the development of the technical chapters of the thesis. These include the system
+model chapter that will cover the ISAC signal formulation and the MINLP problem statement.
+Another chapter is the algorithm chapter that will cover the AO framework. This will include
+the innovations such as the phase rotation and the anti-blinding. The chapter will also include
+the limitations such as the instabilities and the bottlenecks. The third chapter is the evaluation
+chapter.
+14\n\f\nFigure 3.1: Revised project timetable.
+3.3 Concluding Remarks
+This research has created a theoretical base for resource allocation in Cell-Free Massive MIMO
+ISAC systems, laying the groundwork for the creation of a computational framework to solve
+the problem. During this current semester, a preliminary AO solver implementation, including
+phase rotation for robust communication precoding and Anti-Blinding, was created for sens-
+ing covariance optimization, while convergence instabilities were empirically determined to be
+computation bottlenecks. The modified project plan presented here is a result of the condensed
+time frame required by the academic calendar, with all algorithm creation and empirical test-
+ing contained within the five weeks of Thesis B, leaving all of Thesis C available for thesis
+documentation.
+15

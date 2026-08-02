@@ -1,0 +1,375 @@
+%==============================================================================
+% IMPORTANT: Every numerical table and figure in this file must be regenerated
+% after changing sensing_min_power_fraction. Do not use legacy zero-lower-bound
+% results as evidence for the participation-constrained model.
+\section{Numerical Results}\label{sec:numerical}
+%==============================================================================
+
+\subsection{Simulation Setup}
+Unless otherwise stated, the Cell-Free ISAC network contains $M=6$ APs with
+$N_t=2$ antennas per AP, $K=3$ UEs, and $P=2$ targets. Each target state has
+dimension $N_\theta=2$, the deployment area is $400\,\mathrm{m}\times
+400\,\mathrm{m}$, and the AP power limit is $20$ dBm ($0.1$ W). The nominal
+CSI uncertainty radius is $\epsilon_h=0.05$, the communication and sensing
+SINR thresholds are $0$ dB, and the automatically calibrated PCRB allowance
+uses $\Gamma_{\mathrm{alpha}}=3$. A result is counted as feasible only after
+binary-topology recovery, fixed-$b$ re-optimization, and physical validation.
+
+\begin{table}[htbp]
+\centering
+\caption{Main simulation configuration.}
+\label{tab:simulation-setup}
+\begin{tabular}{p{0.56\linewidth}p{0.30\linewidth}}
+\toprule
+Parameter & Value\\
+\midrule
+APs and antennas per AP & $M=6$, $N_t=2$\\
+UEs, targets, and state dimension & $K=3$, $P=2$, $N_\theta=2$\\
+Required sensing APs per target & $N_{\mathrm{req}}=3$\\
+Deployment area and AP power limit & $400\,\mathrm{m}\times400\,\mathrm{m}$, $0.1$ W\\
+CSI uncertainty radius & $\epsilon_h=0.05$\\
+Communication and sensing SINR targets & $0$ dB, $0$ dB\\
+PCRB allowance & Automatic calibration, $\Gamma_{\mathrm{alpha}}=3$\\
+Dedicated sensing participation floor & $P_{\min}^{\rm sen}=0.01P_{\max}=1$ mW\\
+Solver and implementation & MATLAB R2024b, CVX, MOSEK 11.2.2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Binary-DC Recovery and Topology Quality}
+The penalty ablation is evaluated over $25$ common scenarios. Relative to the
+unpenalized continuous relaxation, the median binary residual decreases from
+$4.274\times10^{-1}$ to $5.940\times10^{-5}$ when the binary DC penalty is
+enabled. The rank residual remains below $10^{-8}$ for every ablation mode.
+In this MU--MISO configuration, the transmit covariance is already nearly
+rank one after SDR; consequently, the rank penalty is retained as a general
+formulation component but is not claimed to yield an additional empirical
+gain in this setting. Every reported physical point is obtained only after
+binary topology recovery, fixed-$b$ re-optimization, and explicit validation.
+
+\begin{table}[htbp]
+\centering
+\caption{Current-model topology and recovery evidence over $30$ common scenarios.}
+\label{tab:main-mc}
+\begin{tabular}{p{0.56\linewidth}p{0.30\linewidth}}
+\toprule
+Metric & Result\\
+\midrule
+Binary residual, unpenalized / dual-DC median & $4.268\times10^{-1}$ / $6.229\times10^{-5}$\\
+FIM fixed-topology feasibility & $30/30$\\
+FIM versus nearest-AP mean power reduction ($N_{\rm req}=3$) & $21.27\%$\\
+FIM versus random: jointly feasible cases ($N_{\rm req}=3$) & $10/10$; mean reduction $73.30\%$\\
+FIM power gap to SDR, median & $9.73\%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fig.~\ref{fig:architecture} depicts the asymmetric signaling architecture.
+The communication covariances $\{\mat{W}_k\}$ remain globally cooperative,
+whereas $b_{mp}$ requires each selected AP to allocate nonzero dedicated
+sensing covariance $\mat{S}_p$ to target $p$. The topology comparison shows
+that the FIM-aware candidate is not interchangeable with a path-loss-only or
+random association: at the main setting $N_{\rm req}=3$, its mean power is
+$21.27\%$ below the nearest-AP baseline, while random association is feasible
+in only $10$ of $30$ trials. Support
+stability is used only as an engineering stopping rule; final binary
+feasibility is certified by fixed-$b$ re-optimization.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../experiment_packages/v1.0/figures/fig2_dual_dc_ablation.png}
+\caption{Penalty ablation over $25$ common scenarios. The binary DC penalty,
+rather than the rank penalty, drives the association relaxation to the binary
+boundary in the present MISO setting. Rank residuals are already negligible
+after SDR, while all modes use the same fixed-$b$ physical validation step.}
+\label{fig:dual-dc-ablation}
+\end{figure*}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig1_system_architecture.png}
+\caption{Cell-Free ISAC architecture. Global communication beamforming is not
+gated by $b_{mp}$, whereas each selected AP--target pair radiates a
+nonzero target-specific dedicated sensing component.}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Cluster Size, QoS, and Recovery}
+Fig.~\ref{fig:cluster-size} uses $30$ common seeds for every
+$N_{\mathrm{req}}\in\{2,3,4,5,6\}$. The mean power decreases from
+$37.65$ mW at $N_{\mathrm{req}}=2$ to $29.50$ mW at
+$N_{\mathrm{req}}=4$, then rises to $30.94$ mW at $N_{\mathrm{req}}=6$.
+Thus, the extra geometric diversity initially reduces tracking cost, whereas
+the mandatory per-pair sensing floor eventually offsets this gain. All tested
+points are physically feasible. The QoS
+statistics in Fig.~\ref{fig:qos-cluster} show that the PCRB constraint is
+numerically active: the maximum target PCRB ratio is essentially one. The
+worst-user nominal communication and sensing-SINR margins remain
+nonnegative. A recomputation from the returned covariance matrices gives a
+maximum PCRB ratio numerically equal to one at the displayed precision.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig3_cluster_size_tradeoff.png}
+\caption{Physical feasibility, total transmit power, and runtime versus
+the required sensing-cluster size. Error bars show the 10th--90th
+percentile interval.}
+\label{fig:cluster-size}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig4_qos_vs_cluster_size.png}
+\caption{QoS statistics versus sensing-cluster size. Shaded regions denote
+the 10th--90th percentile interval across feasible trials.}
+\label{fig:qos-cluster}
+\end{figure}
+
+\subsection{Statistical Double-DC Stabilization}
+To distinguish continuous-phase stabilization from final physical recovery,
+we run the dual-DC SCA for six fixed iterations on 25 common seeds and include
+the unpenalized SDR point as iteration zero.  The discrete candidate recovery
+stage is intentionally omitted in this diagnostic, so the figure does not
+replace the fixed-$b$ physical validation used for every reported solution.
+The median maximum binary distance falls from $4.336\times 10^{-1}$ at the
+SDR point to $1.139\times 10^{-3}$ after the first binary-DC step and to
+$6.014\times10^{-5}$ after the second step.  All 25 Top-$N_{\rm req}$
+supports are unchanged and recovery-ready from the first DC step onward,
+while the median rank residual remains below $5\times10^{-9}$.  The
+continuous power settles near $29.49$ mW by the second step.  Since the binary
+penalty is continued, this power trace is a stabilization diagnostic rather
+than a monotone descent claim.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig5_statistical_double_dc_convergence.png}
+\caption{Statistical double-DC SCA stabilization over 25 common seeds. The
+iteration-zero point is the unpenalized SDR relaxation. The recovery-ready
+rate requires small rank residual, unchanged Top-$N_{\rm req}$ support, and
+binary distance below the recovery threshold; it does not itself certify the
+final physical solution.}
+\label{fig:statistical-dc-stabilization}
+\end{figure}
+
+\subsection{Comparison with Alternative Association Rules}
+Fig.~\ref{fig:method-comparison} compares the proposed binary-DC recovery
+with an FIM-greedy topology, a nearest-AP topology, and a random cardinality-
+feasible topology over $30$ common scenarios for each value of
+$N_{\mathrm{req}}$. After a topology is selected, all physical baselines use
+the same fixed-assignment robust beamforming and dedicated sensing-covariance
+optimization. Hence, the comparison isolates the association and recovery
+mechanism rather than attributing a continuous beamforming advantage to a
+discrete rule. The SDR is retained only as a power lower bound and is not
+included as a physical curve.
+
+The proposed method is physically feasible in all $30$ trials at every
+$N_{\mathrm{req}}$. The FIM-greedy rule is also feasible in all trials, but
+its mean power is slightly higher. In contrast, the nearest-AP rule is
+feasible in only $24/30$ trials at $N_{\mathrm{req}}=2$, while the random
+rule is feasible in only $1/30$ trials. At $N_{\mathrm{req}}=3$, the proposed
+method uses $30.83$ mW on average, compared with $30.93$ mW for FIM-greedy
+and $39.29$ mW for nearest-AP association. The random baseline must be read
+conditional on feasibility: it is feasible in only $10/30$ trials and has a
+conditional mean power of $115.82$ mW. The average normalized PCRB remains
+essentially one for every feasible method, confirming that the power gains do
+not result from relaxed tracking quality. The reported sum rate is the
+nominal aggregate spectral efficiency of the returned physical covariance;
+it is descriptive rather than an additional optimization objective.
+
+For every feasible physical solution, the number of nonzero AP--target
+dedicated-sensing pairs equals $PN_{\mathrm{req}}$, as required by the
+positive participation floor. The final panel of Fig.~\ref{fig:method-comparison}
+therefore reports the number of \emph{unique} APs with nonzero sensing power,
+which captures AP reuse across targets. At $N_{\mathrm{req}}=6$, every AP is
+assigned to every target and all association rules reduce to the same topology
+and the same solution.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../experiment_packages/v1.0/figures/fig10_method_comparison_vs_nreq.png}
+\caption{Thirty-seed comparison of physical association and recovery methods
+versus the required sensing-cluster size. Power, sum rate, sensing SINR, and
+the number of active sensing APs are conditional on physical feasibility;
+shaded bands denote the 10th--90th percentile interval.}
+\label{fig:method-comparison}
+\end{figure*}
+
+For the same $30$ scenarios, the complete recovery pool achieves a mean power
+of $30.83$ mW, compared with $30.93$ mW for the FIM fixed topology. The small
+difference indicates that FIM geometry is already an effective topology
+selector in the present architecture; the continuous robust beamforming and
+dedicated sensing-covariance optimization then supply the remaining gain.
+Fig.~\ref{fig:dimension} confirms the expected runtime increase with total
+antenna dimension.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.78\linewidth]{../experiment_packages/v1.0/figures/fig7_dimension_sensitivity.png}
+\caption{Runtime and physical feasibility versus total antenna dimension.}
+\label{fig:dimension}
+\end{figure}
+
+\subsection{Physical-Setting Scalability and Geometry Stress Tests}
+To assess robustness beyond the nominal configuration, we conduct a
+factorized physical-setting study with $30$ common seeds per point.  One
+factor is changed at a time from the reference setting
+$(M,N_t,K,P,N_{\rm req})=(6,2,3,2,3)$: the AP count, the antennas per AP,
+the UE load, the target load, the deployment side length, and the per-AP
+power budget are swept over the ranges shown in Fig.~\ref{fig:physical-factors}.
+Two controlled geometries are additionally considered: an edge UE--target
+co-location and a pair of closely spaced targets.  This yields $22$ physical
+configurations and $660$ scenarios.  The proposed recovery, FIM-greedy
+association, and nearest-AP association are evaluated on every identical
+realization, followed in each case by the same fixed-assignment robust
+beamforming re-optimization and physical validation.
+
+At $N_t=1$, automatic $\Gamma_{\rm track}$ calibration rejects all $30$
+records before optimization because the isotropic-reference FIM is
+unobservable.  This is a reference-observability screening event, rather than
+a physical-infeasibility outcome, and is excluded from the following physical
+method comparison.  For the remaining $630$ automatically observable
+scenarios, the proposed and FIM-greedy methods are physically feasible in all
+cases, while nearest-AP association is feasible in $600/630$ cases.  The
+maximum recomputed mean PCRB ratio is $1.000272$; this small relative excess
+is consistent with the $10^{-5}$ absolute solver-validation tolerance for
+the scenario-scaled PCRB constraint.  The minimum reported communication and
+sensing-SINR margins are $0.255$ dB and $9.49\times10^{-4}$ dB, respectively.
+
+Fig.~\ref{fig:physical-factors} shows that FIM-greedy is a strong geometric
+baseline: its power is close to that of the proposed recovery across the
+factor sweeps.  This is consistent with the role of the FIM in selecting a
+high-quality sensing topology, after which continuous robust beamforming
+optimizes the transmit covariance.  In contrast, nearest-AP association
+ignores angular information diversity.  Over the AP-count sweep, the proposed
+method reduces paired conditional power by $12.4\%$--$18.2\%$ relative to
+nearest-AP association.  The corresponding paired reduction is $21.3\%$ at
+$K=4$ and $19.3\%$ at $P=3$.
+
+The controlled geometries in Fig.~\ref{fig:pressure-geometries} expose the
+same mechanism more sharply.  In the edge co-location scenario, nearest-AP
+association is feasible in $29/30$ trials and requires $49.6\%$ more paired
+power than the proposed recovery.  When targets are crowded, it is feasible
+in only $7/30$ trials; conditional on those common feasible trials, its power
+is $81.4\%$ higher.  The proposed and FIM-greedy methods remain feasible in
+all $30$ trials in both stress geometries.  These results demonstrate that
+distance alone is not a reliable proxy for the FIM geometry needed by the
+PCRB constraint, whereas the proposed binary-DC recovery reliably realizes a
+geometry-aware sensing cluster together with a validated robust covariance.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../experiment_packages/v1.0/results/extended_physical_mc/fig11_extended_physical_factors.png}
+\caption{Extended $30$-seed physical-setting study. Solid curves show
+conditional mean transmit power and dashed curves show physical feasibility.
+All methods use the same fixed-topology robust beamforming re-optimization
+after association selection. The $N_t=1$ point is omitted because automatic
+reference-FIM calibration rejects it before optimization.}
+\label{fig:physical-factors}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../experiment_packages/v1.0/results/extended_physical_mc/fig12_pressure_geometries.png}
+\caption{Physical feasibility and conditional mean transmit power in the
+controlled edge co-location and crowded-target geometries over $30$ common
+seeds.}
+\label{fig:pressure-geometries}
+\end{figure*}
+
+\subsection{Higher-Dimensional Scalability Validation}
+We further consider a larger Cell-Free network with $M=12$ APs, $N_t=2$
+antennas per AP, $K=6$ UEs, and $P=3$ targets.  At $N_{\rm req}=3$, the
+experiment uses eight common realizations, four isolated MATLAB workers, and
+a $60$~s MOSEK limit per convex subproblem.  The proposed recovery is
+physically feasible in all $8/8$ cases, whereas the FIM-greedy and nearest-AP
+topologies are feasible in $6/8$ cases and random association in $1/8$ case.
+Conditional power must be interpreted on the common feasible set: on the six
+realizations where FIM-greedy is feasible, the proposed method requires
+$37.10$~mW versus $37.88$~mW; on the six nearest-AP common-feasible cases,
+it requires $38.72$~mW versus $94.89$~mW.  The mean normalized PCRB of the
+eight proposed solutions is $0.999987$, confirming that this gain is obtained
+at the tracking boundary.  The mean end-to-end runtime is $496.3$~s per
+scenario, which quantifies the computational cost of the high-dimensional
+robust recovery rather than implying real-time operation.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/results/large_scale_algorithm_validation/M12_K6_P3_Nreq3_seed01to08_workers4_t60/fig11_m12_scalability_validation.png}
+\caption{High-dimensional validation for $M=12$, $K=6$, $P=3$, and
+$N_{\rm req}=3$ over eight common realizations. Power is conditional on
+physical feasibility; runtime is averaged over all realizations.}
+\label{fig:m12-scalability}
+\end{figure}
+
+To verify that the cardinality effect is not specific to a single high-dimensional
+operating point, we additionally sweep $N_{\rm req}\in\{2,3,4,5\}$ on five
+common realizations of the same $M=12$, $K=6$, $P=3$ system.  Figure~\ref{fig:m12-nreq}
+reports the physical feasibility rate, the conditional mean power, the mean
+end-to-end runtime, and the normalized PCRB.  The proposed method is feasible
+in $4/5$ cases at $N_{\rm req}=2$ and in all five cases for $N_{\rm req}\geq3$.
+Its conditional mean power decreases from $45.07$~mW at $N_{\rm req}=2$ to
+$35.72$~mW at $N_{\rm req}=4$, and is $35.76$~mW at $N_{\rm req}=5$.
+FIM-greedy achieves the same full feasibility only from $N_{\rm req}=4$ onward,
+while nearest-AP is feasible in only $2/5$ cases at $N_{\rm req}=2$ and requires
+$104.40$~mW at $N_{\rm req}=3$.  The PCRB ratios remain at their respective
+tracking boundaries.  These results confirm that the cardinality trade-off
+persists at larger dimension, while also making explicit that the robust
+recovery incurs a substantial computational cost.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{../experiment_packages/v1.0/results/large_scale_algorithm_validation/M12_K6_P3_nreq2_4_5_seed01to05_workers4_t60/fig12_m12_nreq_scalability.png}
+\caption{High-dimensional sensing-cluster cardinality sweep for $M=12$,
+$N_t=2$, $K=6$, and $P=3$ over five common realizations.  Power is conditioned
+on physical feasibility, whereas runtime is averaged over all realizations.}
+\label{fig:m12-nreq}
+\end{figure*}
+
+\subsection{QoS-Requirement Sensitivity and CSI Robustness}
+Fig.~\ref{fig:tradeoff-mc} averages a $5\times5$ QoS grid over five common
+seeds. It reports the conditional mean transmit power required by the proposed
+method as the robust communication-SINR target and PCRB allowance scale
+$\alpha$ are varied; a smaller $\alpha$ imposes a stricter tracking
+requirement. The required power increases when the communication target is
+raised or $\alpha$ is reduced. All $25$ tested grid points are physically
+feasible. Hence, the figure characterizes QoS-requirement sensitivity over the
+tested range, rather than a communication--sensing Pareto boundary or the
+boundary of the full feasible region.
+
+Fig.~\ref{fig:robustness} compares the proposed robust design with a nominal
+CSI baseline that removes the S-procedure and is designed with
+$\epsilon_h=0$. Both designs are tested under identical independently sampled
+complex channel perturbations inside the uncertainty ball. For
+$\epsilon_h\in\{0.02,0.05,0.08\}$, the robust design has zero empirical
+system outage in the $100$ perturbation samples per seed over $30$ seeds,
+whereas the mean nominal-design outage is $89.0\%$, $89.6\%$, and $91.9\%$,
+respectively. At the uncertainty radius $0.08$, the median robust power premium is only
+$5.12\%$.
+This sampled result complements, but does not replace, the S-procedure
+certificate for the prescribed uncertainty set.
+
+Finally, a $30$-seed participation-floor sensitivity study verifies the
+physical interpretation of $b_{mp}$. For each positive floor in
+$P_{\min}^{\rm sen}/P_{\max}\in\{0.5\%,1\%,2\%,5\%\}$, all $30$ returned
+solutions satisfy the corresponding per-AP--target lower bound with zero
+measured violation. The mean power is $30.83$ mW at the selected $1\%$ floor,
+whereas a $5\%$ floor raises it to $37.11$ mW. This supports $1\%$ as a
+non-degenerate participation level with modest energy cost.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig8_statistical_tradeoff.png}
+\caption{QoS-requirement sensitivity of the proposed method over five common
+seeds: conditional mean transmit power and unconditional physical-feasibility
+rate versus the robust communication-SINR target and PCRB allowance scale.
+Smaller $\alpha$ corresponds to a stricter tracking requirement.}
+\label{fig:tradeoff-mc}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{../experiment_packages/v1.0/figures/fig9_csi_robustness.png}
+\caption{Robust and nominal CSI designs under ball-bounded channel
+perturbations.}
+\label{fig:robustness}
+\end{figure}

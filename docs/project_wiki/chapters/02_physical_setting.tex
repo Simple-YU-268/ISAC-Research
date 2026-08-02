@@ -1,0 +1,56 @@
+\chapter{Physical System Setting}
+
+\section{Architecture and participation semantics}
+The network has $M$ distributed APs, each with $N_t$ transmit antennas, $K$
+single-antenna UEs, and $P$ sensing targets. A central processor coordinates
+beamforming and AP--target sensing participation over fronthaul. Communication
+covariances $\{\mat{W}_k\}$ are globally cooperative. Dedicated sensing
+covariances $\{\mat{S}_p\}$ are target-specific.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\linewidth]{fig1_system_architecture.png}
+\caption{Asymmetric architecture: globally cooperative communication and
+target-specific dedicated sensing participation.}
+\end{figure}
+
+The binary variable $b_{mp}\in\{0,1\}$ authorizes AP $m$ to emit nonzero
+dedicated sensing power for target $p$. It is therefore an AP--target dedicated
+sensing-participation indicator. It does \emph{not} gate AP $m$'s communication
+transmission. With a nonzero sensing-power floor, an authorized pair has a
+physical sensing contribution; without that floor, $b_{mp}=1$ should be read
+only as authorization rather than proof of nonzero emission.
+
+\section{Signal and power model}
+Let $\vect{h}_k$ be the stacked AP-to-UE channel and let
+$\mat{W}_k=\vect{w}_k\vect{w}_k^H\succeq0$ denote the covariance of UE $k$'s
+communication beamformer. The total transmit covariance is
+\[
+  \mat{R}_X=\sum_{k=1}^{K}\mat{W}_k+\sum_{p=1}^{P}\mat{S}_p.
+\]
+Because a UE does not in general know the dedicated sensing waveform,
+$\sum_p\mat{S}_p$ enters its interference term unless waveform cancellation is
+explicitly assumed. Each AP obeys
+$\operatorname{tr}(\mat{E}_m\mat{R}_X)\leq P_{\max}$, whereas dedicated sensing
+participation is enforced through
+\[
+ \operatorname{tr}(\mat{E}_m\mat{S}_p)\leq P_{\max}b_{mp}.
+\]
+
+\section{Default operating point}
+The principal study uses a $400\,\mathrm{m}\times400\,\mathrm{m}$ area,
+$M=6$, $N_t=2$, $K=3$, $P=2$, $N_\theta=2$, and $P_{\max}=0.1$ W (20 dBm).
+The robustness radius is $\epsilon_h=0.05$ unless scanned. The cluster size is
+varied as $N_{\rm req}\in\{2,3,4,5,6\}$.
+
+\section{MISO versus massive MIMO}
+At the UE level, the current downlink model is multi-user MISO: each UE has one
+receive antenna, while the AP network provides a distributed multi-antenna
+transmit array. ``Cell-Free massive MIMO'' describes the distributed-array
+architecture and its scalable extension; it does not imply that the present
+UE receiver is a multi-antenna MIMO receiver. The implementation deliberately
+uses the MISO-equivalent observation model rather than a Kronecker MIMO
+observation model requiring a different receiver architecture.
+
+\sourcebox{Implementation sources: \texttt{sim/matlab/generate\_scenario.m},
+\texttt{default\_params.m}, and \texttt{build\_E\_m.m}.}

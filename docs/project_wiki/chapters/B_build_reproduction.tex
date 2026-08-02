@@ -1,0 +1,37 @@
+\chapter{Build and Reproduction Guide}
+
+\section{Build the manual}
+The manual is designed for XeLaTeX because it includes Chinese defense prompts.
+From \texttt{docs/project\_wiki}, run:
+\begin{lstlisting}[language=bash]
+latexmk -xelatex -interaction=nonstopmode main.tex
+\end{lstlisting}
+The vendored ElegantBook class is resolved through the document-class path, so
+no system-wide \texttt{elegantbook} installation is required.
+
+\section{Expected environment}
+\begin{itemize}
+\item TeX Live 2025 or later with XeLaTeX, CTeX, biblatex, and tcolorbox.
+\item MATLAB R2026a, CVX 2.2, and MOSEK 11.2.2 for the recorded experiments.
+\item The local final evidence package at
+\texttt{deliverables/paper\_results\_and\_figures\_v1\_0}.
+\end{itemize}
+
+\section{Troubleshooting}
+\begin{longtable}{p{0.34\linewidth}p{0.57\linewidth}}
+\toprule
+Symptom & Action\\ \midrule
+Chinese glyphs are missing & Use XeLaTeX, not pdfLaTeX; install a complete CTeX distribution.\\
+Figures are missing & Confirm the final evidence package exists at the repository-relative path; do not substitute exploratory figures.\\
+Undefined references & Run \texttt{latexmk} again, or delete only generated files with \texttt{latexmk -C}.\\
+ElegantBook class unavailable & Do not install a random package version; use the bundled vendor snapshot.\\
+MATLAB values differ & Check seed list, solver version, $P_{\max}$ unit, $\Gamma$ calibration, and whether metrics are conditioned on physical feasibility.\\
+\bottomrule
+\end{longtable}
+
+\section{Final validation checklist}
+Before distribution, compile twice, verify that the PDF has no unresolved
+references, render representative pages, and inspect the title page, long
+tables, formulas, figure captions, and the Q\&A chapter. Check that every
+numerical statement can be found in the final evidence package and that the
+Git commit records only files under \texttt{docs/project\_wiki}.

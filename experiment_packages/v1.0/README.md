@@ -1,88 +1,77 @@
-# ISAC Resource-Optimization Experiment Package v1.0
+# Participation-Constrained Cell-Free ISAC Experiment Package v1.0
 
-This package reproduces the non-perfect-CSI resource-allocation experiments
-for the Cell-Free ISAC study.  It compares the proposed optimized AP--target
-association with random and nearest-AP associations under identical channel
-realizations.
+This is the authoritative package for the current model.  It supersedes the
+earlier zero-lower-bound and `M=8, Nt=4` draft configurations.
 
-## What is compared
+## Current model and main configuration
 
-All methods use the same continuous covariance optimization, robust SINR
-constraints, PCRB constraints, sensing-SINR constraints, and per-AP power
-budget.  They differ only in the AP--target sensing association.
+Communication covariances remain globally cooperative.  The binary association
+only authorizes target-specific dedicated sensing covariance:
 
-| Method | Association rule |
-|---|---|
-| Proposed | Fixed-penalty DC-SCA, top-N projection, then deterministic one/two-AP swap recovery and fixed-assignment re-optimization. |
-| Random | Uniform random selection of exactly `N_req` APs for each target, followed by the same fixed-assignment recovery. |
-| Nearest AP | The `N_req` nearest APs for each target, followed by the same fixed-assignment recovery. |
+\[
+\sum_m b_{mp}=N_{\rm req},\qquad
+P_{\min}^{\rm sen}b_{mp}\leq\operatorname{tr}(\mathbf E_m\mathbf S_p)
+\leq P_{\max}b_{mp}.
+\]
 
-The proposed recovery accepts a candidate only after all original physical
-constraints have been checked.  Infeasible trials are retained in feasibility
-statistics and excluded only from explicitly labelled conditional metrics.
+The main setting is `M=6`, `Nt=2`, `K=3`, `P=2`, `Ntheta=2`, `Pmax=0.1 W`,
+`eps_h=0.05`, and `Pmin_sen=0.01 Pmax = 1 mW`.  The primary comparison uses
+30 common seeds and `Nreq=2:6`.  A point is feasible only after binary
+recovery, fixed-assignment re-optimization, and physical validation.
 
-## Software
+## Primary final artifacts
 
-- MATLAB R2026a (or compatible)
-- CVX 2.2
-- MOSEK 11.2, selected through `cvx_solver mosek`
-- Parallel Computing Toolbox for `N_workers > 0`
+- `results/nreq_method_performance_30seeds/nreq_method_performance_final.mat`:
+  150 common-seed scenarios and four physical methods.
+- `figures/fig10_method_comparison_vs_nreq.png` and
+  `figures/table_method_comparison_vs_nreq.csv`: final method comparison.
+- `results/csi_robustness/csi_robustness_final.mat`: robust-CSI study.
+- `results/participation_nreq_sweep_30seeds/nreq_qos_final.mat`: cluster-size
+  and QoS study.
+- `EXPERIMENT_RESULTS_SUMMARY.md`: claims, numerical evidence, and caveats.
 
-The experiment code is in `sim/matlab/experiments_paper.m` and the recovery
-implementation is in `sim/matlab/baseline_alg2.m`.
+## Reproduction
 
-## Reproducible commands
-
-Start MATLAB in `sim/matlab`, configure CVX/MOSEK once, then run:
+Start MATLAB from the repository root, add `sim/matlab` to the path, configure
+CVX and MOSEK, then invoke the corresponding `run_*.m` script.  The core
+common-seed comparison is:
 
 ```matlab
-addpath('/path/to/cvx');
-addpath('/path/to/mosek/toolbox/r2022b');
-cvx_setup;
-cvx_solver mosek;
-
-% Pipeline smoke test: one paired realization, N_req = 3, five SCA iterations.
-experiments_paper('N_mc', 1, 'N_req_list', 3, 'T_max', 5, ...
-    'Run_robustness', false, 'N_workers', 0, ...
-    'Output_dir', 'experiment_packages/v1.0/results/smoke', ...
-    'Output_tag', 'v1_smoke');
-
-% Formal paired Monte Carlo run.
-experiments_paper('N_mc', 100, 'N_req_list', 1:6, 'T_max', 30, ...
-    'Run_robustness', true, 'N_workers', 2, ...
-    'Output_dir', 'experiment_packages/v1.0/results/formal', ...
-    'Output_tag', 'v1_formal');
+addpath('sim/matlab');
+run_nreq_method_performance_mc('Seeds',1:30,'N_req_list',2:6, ...
+    'T_max',3,'Mosek_max_time',10);
+plot_nreq_method_performance_mc;
+audit_current_model_method_comparison;
 ```
 
-Use `N_workers=2` initially.  Increase only after verifying that the local
-MATLAB and MOSEK licenses permit concurrent workers.
+The plot reports feasibility unconditionally.  Power, sum rate, PCRB, and
+sensing SINR are conditional on physical feasibility, as labeled in the figure.
+The SDR is a continuous power lower bound only, not a physical competitor.
 
-## Fixed parameters
+## Evidence map and publication-readiness guidance
 
-| Parameter | Value |
-|---|---:|
-| APs `M` | 8 |
-| Antennas per AP `Nt` | 4 |
-| Users `K` | 4 |
-| Targets `P` | 2 |
-| CSI uncertainty radius `eps_h` | 0.05 |
-| DC iterations | 30 formal / 5 smoke |
-| Rank penalty `eta_rank` | 1.0 |
-| Binary penalty `eta_b` | 1.0 |
-| Recovery candidates | 21 (top-N, single-swap, two-swap beam) |
+The current artifact set closes the main empirical loop for the proposed
+participation-constrained formulation:
 
-## Outputs and reporting rules
+| Question | Evidence | Interpretation rule |
+|---|---|---|
+| Does double-DC recovery produce physical binary solutions? | `figures/fig2_dual_dc_ablation.png` | Compare feasibility and binary residual together; a small residual alone is not a physical certificate. |
+| How does cluster size affect feasibility and energy? | `figures/fig3_cluster_size_tradeoff.png`, `figures/fig10_method_comparison_vs_nreq.png` | Report feasibility unconditionally; report power only on the corresponding feasible set. |
+| Are QoS constraints actually met? | `figures/fig4_qos_vs_cluster_size.png` and raw metric files | PCRB ratios near one indicate operation at the tracking boundary, not a relaxed sensing constraint. |
+| Is the robust S-procedure useful? | `figures/fig9_csi_robustness.png` | Distinguish sampled outage evidence from the analytical uncertainty-set certificate. |
+| Does the conclusion persist under geometry and dimension stress? | `results/extended_physical_mc/fig11_extended_physical_factors.png`, `fig12_pressure_geometries.png`, and the M12 artifacts below | Treat solver failures separately from model infeasibility. |
+| Does the high-dimensional model retain the cluster-size trade-off? | `results/large_scale_algorithm_validation/M12_K6_P3_nreq2_4_5_seed01to05_workers4_t60/fig12_m12_nreq_scalability.png` | The M12 sweep uses five common seeds; it is scalability evidence, not a replacement for the larger M9 Monte Carlo sample. |
 
-Each run creates Figures 1--6, a MAT file, and an `nreq_summary.csv` file.
+The core paper figures are therefore complete: system architecture, dual-DC
+ablation, cluster-size/QoS behavior, method comparison, dimensional and
+physical-setting scalability, CSI robustness, and communication-sensing
+trade-off.  The remaining work before submission is editorial rather than a
+missing mandatory experiment: freeze the code commit and solver versions,
+state common-seed and conditional-mean conventions in every caption, and do
+not pool solver `Failed` statuses with physical `Infeasible` statuses.
 
-1. Report feasibility first: a trial is feasible only after fixed-assignment
-   recovery and physical-constraint validation.
-2. Report power, rate, PCRB, and sensing SINR conditionally on feasible trials.
-3. For direct method comparisons, also report paired statistics computed only
-   on realizations where both methods are feasible.
-4. Do not claim exact binary convergence from a finite DC penalty.  Figure 1
-   reports the true fixed-penalty objective and rank/binary residuals; recovery
-   success is established separately by physical feasibility checks.
-
-`results/` is intentionally excluded from version control because Monte Carlo
-outputs can be regenerated from the commands above.
+Optional follow-up experiments should be presented as extensions, not required
+evidence for the static formulation: target motion with cluster handover,
+hardware/fronthaul energy accounting, and a larger multi-antenna receiver
+model.  Each changes the model scope and should be introduced only with a
+corresponding mathematical formulation.

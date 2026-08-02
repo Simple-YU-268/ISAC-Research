@@ -1,0 +1,28 @@
+\chapter{Poster Consistency Ledger}
+
+This ledger is deliberately concise. It records statements that must remain
+consistent across the poster, manuscript, code, and oral answers.
+
+\begin{longtable}{p{0.30\linewidth}p{0.61\linewidth}}
+\toprule
+Topic & Approved statement\\ \midrule
+Receiver model & The current implementation is a Cell-Free multi-user MISO downlink with single-antenna UEs and distributed AP transmit arrays.\\
+Participation $b_{mp}$ & It authorizes dedicated sensing transmission for target $p$; it does not gate globally cooperative communication.\\
+P2 & Covariance lifting introduces rank-one constraints, and SDR relaxes them. P2 does not preserve an explicit rank-one convex constraint.\\
+P3 & P3 denotes the convex DC-SCA subproblem solved at each iteration, not the original MINLP.\\
+Step 4 & Certified physical recovery is an algorithmic step: project support, fix $b$, re-optimize, extract if needed, and validate. It is not a same-level theoretical P4.\\
+SDR & SDR is a lower bound / relaxation reference, never a deployable physical baseline.\\
+Fig. 5 & A continuous-phase stabilization diagnostic before discrete recovery.\\
+Fig. 8 & A QoS-requirement sensitivity study, not a global Pareto frontier.\\
+M12 runtime & A computational cost measurement, not evidence of real-time feasibility.\\
+Global optimality & Not claimed. The reported method is a validated heuristic recovery pipeline for a nonconvex MINLP.\\
+\bottomrule
+\end{longtable}
+
+\section{Poster-specific wording repairs}
+Use ``Step 1--4'' consistently in the solution framework. Keep P1, P2, and P3
+in the first three card titles to match the derivation. Call the final card
+``Certified Physical Recovery,'' not P4. Use ``QoS-requirement sensitivity''
+for the Fig.~8 description. Refer to the method as ``Cell-Free ISAC'' and,
+when challenged about receiver dimensionality, state ``MU-MISO downlink
+equivalent model.''

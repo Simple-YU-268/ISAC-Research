@@ -1,0 +1,63 @@
+\documentclass[lang=cn,color=blue,math=cm,device=normal]{elegantbook}
+
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{xurl}
+
+\hypersetup{pdftitle={Participation-Constrained Cell-Free ISAC: Project Wiki and Poster Defense Manual},pdfauthor={Xinpeng Yu}}
+\setcounter{tocdepth}{2}
+\graphicspath{{../../deliverables/paper_results_and_figures_v1_0/figures/}}
+\lstset{basicstyle=\ttfamily\small,breaklines=true,frame=single,columns=fullflexible}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\quick}[1]{\begin{tcolorbox}[colback=blue!4,colframe=blue!55!black,title=Quick answer / 英文速答]\small #1\end{tcolorbox}}
+\newcommand{\logic}[1]{\begin{tcolorbox}[colback=green!4,colframe=green!45!black,title=Chinese logic / 中文答题逻辑]\small #1\end{tcolorbox}}
+\newcommand{\deep}[1]{\begin{tcolorbox}[colback=orange!5,colframe=orange!65!black,title=Follow-up detail / 追问扩展]\small #1\end{tcolorbox}}
+\newcommand{\sourcebox}[1]{\begin{tcolorbox}[colback=gray!7,colframe=gray!65,title=Evidence and source]\raggedright\small #1\end{tcolorbox}}
+
+\title{Participation-Constrained Cell-Free ISAC}
+\subtitle{Project Wiki, Reproducibility Guide, and Poster Defense Manual}
+\author{Xinpeng Yu}
+\institute{UNSW Sydney --- School of Electrical Engineering and Telecommunications}
+\date{30 July 2026}
+\version{v1.0}
+\extrainfo{English technical text with Chinese defense prompts.}
+\cover{assets/solution_framework.png}
+
+\begin{document}
+\maketitle
+\frontmatter
+\tableofcontents
+
+\chapter*{How to Use This Manual}
+\addcontentsline{toc}{chapter}{How to Use This Manual}
+Read Chapters 1--6 to understand and reproduce the project. Chapter 7 gives
+spoken poster narratives. Chapter 8 is designed for rehearsal: state the blue
+``Quick answer'' first, then use the Chinese logic and follow-up detail only
+when the examiner asks for more depth. All reported numerical values are drawn
+only from the final evidence package in
+\texttt{deliverables/paper\_results\_and\_figures\_v1\_0}.
+
+\mainmatter
+\include{chapters/01_overview}
+\include{chapters/02_physical_setting}
+\include{chapters/03_mathematical_model}
+\include{chapters/04_convexification}
+\include{chapters/05_algorithm_and_code}
+\include{chapters/06_results}
+\include{chapters/07_poster_scripts}
+\include{chapters/08_defense_qa}
+
+\appendix
+\include{chapters/A_consistency_ledger}
+\include{chapters/B_build_reproduction}
+\backmatter
+\end{document}
