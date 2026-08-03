@@ -1,0 +1,69 @@
+\documentclass[12pt, a4paper]{report}
+
+\input{latexdefs}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm} 
+\usepackage{xcolor} 
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{url}
+\usepackage{mathtools} 
+\usepackage{bm} 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=apa,
+  doi=true,
+  url=true,
+  isbn=false,
+  eprint=false,
+  annotation=false
+]{biblatex}
+\addbibresource{thesisapa.bib}
+
+% Custom math operators and commands
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Tr}{Tr}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\mats}[1]{\bm{#1}}
+% Compatibility aliases for the unmodified derivation manuscript.
+\newcommand{\mat}[1]{\mats{#1}}
+\newcommand{\norm}[1]{\lVert#1\rVert_2}
+\newcommand{\tr}{\Tr}
+\newcommand{\Real}{\Re}
+\DeclareMathOperator{\rank}{rank}
+\newcommand{\set}[1]{\mathcal{#1}}
+\newcommand{\op}[1]{\mathrm{#1}}
+\renewcommand{\Re}{\operatorname{Re}}
+\def\H{\mathrm{H}}
+\def\T{\mathrm{T}}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+
+\begin{document}
+\thispagestyle{empty}
+\include{cover}
+\include{acknowledgements}
+\include{abbreviations}
+\include{notation}
+\tableofcontents
+%\listoffigures
+%\listoftables
+\include{introduction}
+\include{literaturereview}
+\include{systemmodel}
+\include{solutionmethod}
+\include{resultsanalysis}
+\include{conclusion}
+\printbibliography
+\appendix
+\include{derivationappendix}
+\include{appendix}
+\end{document}

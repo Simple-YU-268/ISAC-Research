@@ -1,0 +1,99 @@
+\chapter{Literature Review}\label{ch:literature_review}
+
+This chapter positions the thesis around the decisions that must be made by a
+robust cell-free ISAC transmitter. Rather than treating ISAC architectures,
+sensing metrics, and optimization methods as separate topics, the review
+follows the same chain as the proposed design: cooperation creates useful
+spatial degrees of freedom, QoS protection constrains their use, target-state
+accuracy determines the sensing requirement, and topology recovery determines
+whether the computed solution is physically implementable.
+
+\section{From Coexistence to Cooperative ISAC}
+
+ISAC emerged from the observation that wireless communication and sensing rely
+on the same electromagnetic propagation, spectrum, and radio hardware. Early
+single-base-station systems therefore studied waveform sharing, communication--
+sensing trade-offs, and self-interference management
+\autocite{liuSurveyFundamentalLimits2022,huaOptimalTransmitBeamforming2023,heIntegratedSensingFullduplex2023}.
+\autocite{liuIntegratedSensingCommunications2022,liuJointRadarCommunication2020}
+These studies establish the core trade-off, but a single transmitter provides
+limited geometric diversity and can be vulnerable to cell-edge blockage.
+
+Cooperative and multistatic ISAC extend the sensing and communication aperture
+across multiple base stations or APs. Spatially distributed observations can
+improve coverage, localization geometry, and interference management, provided
+that the transmitters are coordinated
+\autocite{cuiReviewMultibaseStation2025,mengCooperativeISACNetworks2025,liaoCooperativeBaseStation2025}.
+\autocite{chengNetworkedBeamforming2024,maoCommunicationSensingRegion2024,liNetworkedISAC2024}
+Cell-free massive MIMO takes this idea further: a large set of distributed APs
+is centrally coordinated without fixed cell boundaries
+\autocite{femeniasScalableCellfreeMassive2025,demirhanCellfreeISACMIMO2025}.
+\autocite{maoCommunicationSensingRegion2024,renSecureCellfreeISAC2024}
+The same cooperation that improves service flexibility also couples every
+AP's communication and sensing power decisions. This is the architectural
+setting of the present thesis.
+
+\section{Design Requirements for Robust Multi-Target Sensing}
+
+\subsection{Communication QoS under Imperfect CSI}
+
+Communication QoS is commonly expressed through rate or SINR constraints.
+Many ISAC formulations assume perfect CSI to simplify joint beamforming, but
+estimation error, feedback delay, and quantization make this assumption fragile
+in practice \autocite{yuLocationSensingBeamforming2022,chuIntegratedSensingCommunication2023}.
+\autocite{heMSETrainingISAC2024,gongDigitalTwinCSI2025}
+For a cell-free transmitter, channel uncertainty is particularly consequential:
+the dedicated sensing covariances and multi-user communication beams share the
+same AP power budgets and jointly determine the user interference level.
+This motivates a norm-bounded worst-case SINR requirement rather than a
+nominal-channel guarantee.
+
+\subsection{Target-Specific Detection and Tracking Accuracy}
+
+Sensing designs are often evaluated with sensing SINR and Cram\'er--Rao-bound
+(CRB) metrics. Sensing SINR is a detection-related proxy, whereas the CRB
+measures a lower bound on estimation error and is consequently useful for
+localization and tracking-oriented design
+\autocite{liaoCooperativeBaseStation2025,gengJointBeamformingCRBconstrained2025}.
+\autocite{liuCRBBeamforming2022}
+For multiple targets, however, the sensing resource assigned to one target
+should not be credited to another merely because the network uses a shared
+transmit infrastructure. The present model therefore assigns a known sensing
+covariance to each target and forms its FIM and matrix PCRB from that covariance
+alone. This choice makes the association and tracking requirements refer to
+the same physical sensing resource.
+
+\subsection{Sensing Topology and Physical Recovery}
+
+Cell-free systems can authorize subsets of APs to allocate a sensing waveform
+for a target, trading sensing geometry against finite AP power and implementation
+cost. This turns sensing-topology authorization into a mixed-integer design variable rather
+than a post-processing detail. Semidefinite relaxation is valuable for handling
+beamforming structure, but a relaxed covariance or a continuous association
+weight does not by itself establish an implementable design. A complete
+workflow must recover rank-one beamformers and binary associations, then test
+the recovered variables against the original communication, sensing, tracking,
+and power constraints.
+
+Recent work also broadens ISAC across waveform, hardware, and surface-assisted
+architectures: OTFS exploits delay--Doppler structure for high-mobility sensing
+and communication \autocite{yuanOTFSISAC2021}; one-bit transceiver design
+addresses low-resolution mmWave hardware \autocite{linOneBitISAC2025}; and
+STAR-RIS and holographic surfaces provide relevant near-field extensions
+\autocite{wangSTARRISNearfield2025,zhangHolographicISAC2022}. At the system
+layer, sensing-aware status updating offers a complementary scheduling view
+\autocite{pengSensingCommunicationStatus2023}. These directions motivate the
+scope of this thesis but are not assumed by its conventional multi-antenna AP
+signal model.
+
+\section{Research Gap and Thesis Position}
+
+The preceding literature motivates a precise gap at the intersection of the
+four requirements. Cooperative ISAC provides the relevant spatial degrees of
+freedom; robust QoS prevents their allocation from relying on nominal CSI;
+target-specific FIM/PCRB modelling makes dedicated sensing participation
+meaningful; and recovery-aware optimization separates a feasible relaxed point
+from a validated physical design. This thesis combines these elements in one
+power-minimizing cell-free ISAC formulation. Chapter~\ref{ch:system_model}
+defines the required resource separation, and Chapter~\ref{ch:solution_method}
+develops the corresponding robust and recovery-aware optimization method.

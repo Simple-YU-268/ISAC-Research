@@ -64,3 +64,7 @@ isac_diverse_train.npz
 *.fdb_latexmk
 *.synctex.gz
 # *.log is intentionally kept (existing rule) as a debug aid; delete per-build if not needed.
+# Generated local runtime and document-processing cache; never publish.
+.cache/
+.git-nested-backup/
+deliverables/paper2poster_engine/

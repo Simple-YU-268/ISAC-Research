@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#e9f2fb"/></linearGradient>
+    <linearGradient id="cpuTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#75b9e8"/><stop offset="1" stop-color="#3c82bd"/></linearGradient>
+    <linearGradient id="apTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d9efff"/><stop offset="1" stop-color="#8ec5ec"/></linearGradient>
+    <linearGradient id="apSide" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#5a9ac8"/><stop offset="1" stop-color="#2b669b"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#17486f" flood-opacity=".20"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8z" fill="#1769d1"/></marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8z" fill="#ef7b28"/></marker>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#10395b}.subtitle{font:400 18px Arial,sans-serif;fill:#45627b}.label{font:700 20px Arial,sans-serif;fill:#123b5c}.small{font:500 15px Arial,sans-serif;fill:#315873}.legend{font:600 17px Arial,sans-serif;fill:#183f60}.node{font:700 18px Arial,sans-serif;fill:#10395b}.node2{font:500 14px Arial,sans-serif;fill:#285a80}
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1920" height="94" fill="#103b60"/>
+  <text x="70" y="58" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="white">CELL-FREE ISAC SYSTEM ARCHITECTURE</text>
+  <text x="1440" y="57" font-family="Arial,sans-serif" font-size="19" font-weight="600" fill="#bde3ff">Asymmetric sensing gating</text>
+
+  <!-- fronthaul cloud and CPU -->
+  <path d="M717 153c0-31 25-56 56-56 20 0 38 11 48 28 6-3 13-5 21-5 25 0 45 20 45 45 0 5-1 10-2 14h45c27 0 49 22 49 49s-22 49-49 49H728c-29 0-53-24-53-53 0-27 18-49 42-55z" fill="#dff3ff" stroke="#72b7df" stroke-width="3"/>
+  <text x="749" y="187" class="label">Cloud fronthaul</text><text x="746" y="211" class="small">synchronization · data exchange</text>
+  <g filter="url(#shadow)">
+    <polygon points="765,292 914,239 1057,292 908,345" fill="url(#cpuTop)" stroke="#245d8b" stroke-width="3"/>
+    <polygon points="765,292 908,345 908,465 765,409" fill="#2d6f9f" stroke="#245d8b" stroke-width="3"/>
+    <polygon points="908,345 1057,292 1057,409 908,465" fill="#1f557f" stroke="#245d8b" stroke-width="3"/>
+    <rect x="793" y="318" width="228" height="82" rx="8" fill="#f9fdff" opacity=".97"/>
+    <text x="818" y="350" class="node">CENTRAL PROCESSOR</text><text x="820" y="375" class="node2">joint beamforming · clustering</text>
+  </g>
+
+  <!-- green fronthaul connectors -->
+  <g stroke="#31a56b" stroke-width="3" stroke-dasharray="9 8" fill="none" opacity=".9">
+    <path d="M842 459 L285 535"/><path d="M858 463 L542 535"/><path d="M885 466 L800 535"/><path d="M926 466 L1076 535"/><path d="M956 460 L1340 535"/><path d="M983 452 L1605 535"/>
+  </g>
+  <text x="107" y="432" class="small" fill="#218051">control / fronthaul</text>
+
+  <!-- Blue globally cooperative communication beams -->
+  <g stroke="#1769d1" stroke-width="3" fill="none" opacity=".24">
+    <path d="M280 680 L305 900"/><path d="M280 680 L777 900"/><path d="M280 680 L1192 900"/>
+    <path d="M538 680 L305 900"/><path d="M538 680 L777 900"/><path d="M538 680 L1192 900"/>
+    <path d="M797 680 L305 900"/><path d="M797 680 L777 900"/><path d="M797 680 L1192 900"/>
+    <path d="M1074 680 L305 900"/><path d="M1074 680 L777 900"/><path d="M1074 680 L1192 900"/>
+    <path d="M1336 680 L305 900"/><path d="M1336 680 L777 900"/><path d="M1336 680 L1192 900"/>
+    <path d="M1600 680 L305 900"/><path d="M1600 680 L777 900"/><path d="M1600 680 L1192 900"/>
+  </g>
+
+  <!-- AP isometric cards -->
+  <g filter="url(#shadow)">
+    <g transform="translate(180 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 1</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+    <g transform="translate(438 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 2</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+    <g transform="translate(696 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 3</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+    <g transform="translate(974 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 4</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+    <g transform="translate(1236 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 5</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+    <g transform="translate(1500 535)"><polygon points="0,42 96,7 190,42 94,77" fill="url(#apTop)" stroke="#3275a5" stroke-width="2"/><polygon points="0,42 94,77 94,142 0,106" fill="url(#apSide)" stroke="#3275a5" stroke-width="2"/><polygon points="94,77 190,42 190,106 94,142" fill="#397eaf" stroke="#3275a5" stroke-width="2"/><text x="60" y="62" class="node">AP 6</text><text x="55" y="101" fill="white" font-family="Arial" font-size="14">Nₜ antennas</text></g>
+  </g>
+
+  <!-- Dedicated sensing links, only selected AP-target pairs -->
+  <g stroke="#ef7b28" stroke-width="7" fill="none" marker-end="url(#arrowOrange)">
+    <path d="M275 677 Q780 738 1436 872"/><path d="M796 677 Q1130 756 1436 872"/><path d="M1072 677 Q1275 757 1436 872"/>
+    <path d="M1334 677 Q1470 770 1682 872"/><path d="M1598 677 Q1640 776 1682 872"/>
+  </g>
+  <g fill="#ef7b28"><circle cx="275" cy="677" r="7"/><circle cx="796" cy="677" r="7"/><circle cx="1072" cy="677" r="7"/><circle cx="1334" cy="677" r="7"/><circle cx="1598" cy="677" r="7"/></g>
+
+  <!-- UEs -->
+  <g filter="url(#shadow)"><g transform="translate(265 874)"><rect x="0" y="0" width="80" height="109" rx="14" fill="#1e76cf"/><rect x="8" y="12" width="64" height="76" rx="6" fill="#eaf7ff"/><circle cx="40" cy="98" r="5" fill="#d0eaff"/><text x="-3" y="137" class="node">UE 1</text></g><g transform="translate(737 874)"><rect x="0" y="0" width="80" height="109" rx="14" fill="#1e76cf"/><rect x="8" y="12" width="64" height="76" rx="6" fill="#eaf7ff"/><circle cx="40" cy="98" r="5" fill="#d0eaff"/><text x="-3" y="137" class="node">UE 2</text></g><g transform="translate(1152 874)"><rect x="0" y="0" width="80" height="109" rx="14" fill="#1e76cf"/><rect x="8" y="12" width="64" height="76" rx="6" fill="#eaf7ff"/><circle cx="40" cy="98" r="5" fill="#d0eaff"/><text x="-3" y="137" class="node">UE 3</text></g></g>
+
+  <!-- targets and echo arcs -->
+  <g stroke="#ef7b28" fill="none" stroke-width="3" opacity=".8"><path d="M1383 893q52-45 103 0"/><path d="M1372 911q64-61 126 0"/><path d="M1629 893q52-45 103 0"/><path d="M1618 911q64-61 126 0"/></g>
+  <g filter="url(#shadow)"><g transform="translate(1418 909)"><circle cx="18" cy="18" r="18" fill="#ef7b28"/><path d="M18 0v36M0 18h36" stroke="white" stroke-width="3"/><text x="-26" y="75" class="node">Target 1</text></g><g transform="translate(1664 909)"><circle cx="18" cy="18" r="18" fill="#ef7b28"/><path d="M18 0v36M0 18h36" stroke="white" stroke-width="3"/><text x="-26" y="75" class="node">Target 2</text></g></g>
+
+  <!-- Legend and semantic callout -->
+  <g transform="translate(72 700)"><rect x="0" y="0" width="600" height="150" rx="18" fill="white" stroke="#c3dceb" stroke-width="2"/><text x="28" y="33" class="label">Signal and resource semantics</text><path d="M30 62h73" stroke="#1769d1" stroke-width="6" marker-end="url(#arrowBlue)"/><text x="125" y="69" class="legend">Global communication beams  Wₖ  (all APs cooperate)</text><path d="M30 99h73" stroke="#ef7b28" stroke-width="7" marker-end="url(#arrowOrange)"/><text x="125" y="106" class="legend">Dedicated sensing waveform  Sₚ  (only if bₘₚ = 1)</text><path d="M30 132h73" stroke="#31a56b" stroke-width="3" stroke-dasharray="8 7"/><text x="125" y="139" class="legend">Fronthaul / sensing data coordination</text></g>
+  <g transform="translate(720 995)"><rect x="0" y="0" width="1120" height="56" rx="16" fill="#fff5eb" stroke="#efb37e" stroke-width="2"/><text x="28" y="36" font-family="Arial,sans-serif" font-size="20" font-weight="600" fill="#9a4d16">bₘₚ authorizes dedicated sensing only — communication covariances remain globally cooperative.</text></g>
+</svg>

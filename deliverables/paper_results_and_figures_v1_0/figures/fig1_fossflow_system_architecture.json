@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "title": "Cell-Free ISAC: asymmetric sensing gating",
+  "description": "FossFLOW-native architecture diagram for the participation-constrained Cell-Free ISAC model.",
+  "icons": [],
+  "colors": [
+    { "id": "comm", "value": "#1d70d6" },
+    { "id": "sense", "value": "#f07f24" },
+    { "id": "fronthaul", "value": "#2ca46c" },
+    { "id": "cluster", "value": "#dfeefa" },
+    { "id": "targetzone", "value": "#fff0df" }
+  ],
+  "items": [
+    { "id": "cpu", "name": "Central processor", "icon": "storage", "description": "Joint robust beamforming and AP-target sensing clustering." },
+    { "id": "ap1", "name": "AP 1", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ap2", "name": "AP 2", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ap3", "name": "AP 3", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ap4", "name": "AP 4", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ap5", "name": "AP 5", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ap6", "name": "AP 6", "icon": "block", "description": "Distributed access point with N_t transmit antennas." },
+    { "id": "ue1", "name": "UE 1", "icon": "user", "description": "Single-antenna user equipment." },
+    { "id": "ue2", "name": "UE 2", "icon": "user", "description": "Single-antenna user equipment." },
+    { "id": "ue3", "name": "UE 3", "icon": "user", "description": "Single-antenna user equipment." },
+    { "id": "target1", "name": "Target 1", "icon": "function-module", "description": "Tracked target served by an authorized sensing cluster." },
+    { "id": "target2", "name": "Target 2", "icon": "function-module", "description": "Tracked target served by an authorized sensing cluster." }
+  ],
+  "views": [
+    {
+      "id": "isac-overview",
+      "name": "Cell-Free ISAC architecture",
+      "items": [
+        { "id": "cpu", "tile": { "x": 0, "y": -8 }, "labelHeight": 82 },
+        { "id": "ap1", "tile": { "x": -10, "y": 0 }, "labelHeight": 62 },
+        { "id": "ap2", "tile": { "x": -6, "y": 0 }, "labelHeight": 62 },
+        { "id": "ap3", "tile": { "x": -2, "y": 0 }, "labelHeight": 62 },
+        { "id": "ap4", "tile": { "x": 2, "y": 0 }, "labelHeight": 62 },
+        { "id": "ap5", "tile": { "x": 6, "y": 0 }, "labelHeight": 62 },
+        { "id": "ap6", "tile": { "x": 10, "y": 0 }, "labelHeight": 62 },
+        { "id": "ue1", "tile": { "x": -8, "y": 8 }, "labelHeight": 56 },
+        { "id": "ue2", "tile": { "x": -2, "y": 8 }, "labelHeight": 56 },
+        { "id": "ue3", "tile": { "x": 4, "y": 8 }, "labelHeight": 56 },
+        { "id": "target1", "tile": { "x": 7, "y": 8 }, "labelHeight": 56 },
+        { "id": "target2", "tile": { "x": 11, "y": 8 }, "labelHeight": 56 }
+      ],
+      "rectangles": [
+        { "id": "apcluster", "color": "cluster", "from": { "x": -11, "y": -1 }, "to": { "x": 11, "y": 2 } },
+        { "id": "targets", "color": "targetzone", "from": { "x": 6, "y": 6 }, "to": { "x": 12, "y": 10 } }
+      ],
+      "textBoxes": [
+        { "id": "heading", "tile": { "x": -10, "y": -11 }, "content": "CELL-FREE ISAC WITH ASYMMETRIC SENSING GATING", "fontSize": 0.72, "orientation": "X" },
+        { "id": "cpuText", "tile": { "x": -1, "y": -5 }, "content": "Cloud fronthaul: synchronization and sensing-data exchange", "fontSize": 0.45, "orientation": "X" },
+        { "id": "commText", "tile": { "x": -10, "y": 5 }, "content": "Blue: global cooperative communication beams W_k (not gated by b_mp)", "fontSize": 0.45, "orientation": "X" },
+        { "id": "senseText", "tile": { "x": 0, "y": 11 }, "content": "Orange: dedicated sensing waveform S_p, authorized only when b_mp = 1", "fontSize": 0.45, "orientation": "X" },
+        { "id": "semanticText", "tile": { "x": -8, "y": 12 }, "content": "b_mp controls dedicated sensing authorization; communication remains globally cooperative.", "fontSize": 0.42, "orientation": "X" }
+      ],
+      "connectors": [
+        { "id": "f1", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f1a", "ref": { "item": "cpu" } }, { "id": "f1b", "ref": { "item": "ap1" } }] },
+        { "id": "f2", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f2a", "ref": { "item": "cpu" } }, { "id": "f2b", "ref": { "item": "ap2" } }] },
+        { "id": "f3", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f3a", "ref": { "item": "cpu" } }, { "id": "f3b", "ref": { "item": "ap3" } }] },
+        { "id": "f4", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f4a", "ref": { "item": "cpu" } }, { "id": "f4b", "ref": { "item": "ap4" } }] },
+        { "id": "f5", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f5a", "ref": { "item": "cpu" } }, { "id": "f5b", "ref": { "item": "ap5" } }] },
+        { "id": "f6", "color": "fronthaul", "width": 5, "style": "DASHED", "showArrow": true, "anchors": [{ "id": "f6a", "ref": { "item": "cpu" } }, { "id": "f6b", "ref": { "item": "ap6" } }] },
+        { "id": "c11", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c11a", "ref": { "item": "ap1" } }, { "id": "c11b", "ref": { "item": "ue1" } }] },
+        { "id": "c12", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c12a", "ref": { "item": "ap1" } }, { "id": "c12b", "ref": { "item": "ue2" } }] },
+        { "id": "c21", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c21a", "ref": { "item": "ap2" } }, { "id": "c21b", "ref": { "item": "ue1" } }] },
+        { "id": "c22", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c22a", "ref": { "item": "ap2" } }, { "id": "c22b", "ref": { "item": "ue2" } }] },
+        { "id": "c23", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c23a", "ref": { "item": "ap2" } }, { "id": "c23b", "ref": { "item": "ue3" } }] },
+        { "id": "c32", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c32a", "ref": { "item": "ap3" } }, { "id": "c32b", "ref": { "item": "ue2" } }] },
+        { "id": "c33", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c33a", "ref": { "item": "ap3" } }, { "id": "c33b", "ref": { "item": "ue3" } }] },
+        { "id": "c43", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c43a", "ref": { "item": "ap4" } }, { "id": "c43b", "ref": { "item": "ue3" } }] },
+        { "id": "c52", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c52a", "ref": { "item": "ap5" } }, { "id": "c52b", "ref": { "item": "ue2" } }] },
+        { "id": "c53", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c53a", "ref": { "item": "ap5" } }, { "id": "c53b", "ref": { "item": "ue3" } }] },
+        { "id": "c63", "color": "comm", "width": 3, "style": "SOLID", "anchors": [{ "id": "c63a", "ref": { "item": "ap6" } }, { "id": "c63b", "ref": { "item": "ue3" } }] },
+        { "id": "s11", "color": "sense", "width": 8, "style": "SOLID", "showArrow": true, "anchors": [{ "id": "s11a", "ref": { "item": "ap1" } }, { "id": "s11b", "ref": { "item": "target1" } }] },
+        { "id": "s31", "color": "sense", "width": 8, "style": "SOLID", "showArrow": true, "anchors": [{ "id": "s31a", "ref": { "item": "ap3" } }, { "id": "s31b", "ref": { "item": "target1" } }] },
+        { "id": "s41", "color": "sense", "width": 8, "style": "SOLID", "showArrow": true, "anchors": [{ "id": "s41a", "ref": { "item": "ap4" } }, { "id": "s41b", "ref": { "item": "target1" } }] },
+        { "id": "s52", "color": "sense", "width": 8, "style": "SOLID", "showArrow": true, "anchors": [{ "id": "s52a", "ref": { "item": "ap5" } }, { "id": "s52b", "ref": { "item": "target2" } }] },
+        { "id": "s62", "color": "sense", "width": 8, "style": "SOLID", "showArrow": true, "anchors": [{ "id": "s62a", "ref": { "item": "ap6" } }, { "id": "s62b", "ref": { "item": "target2" } }] }
+      ]
+    }
+  ],
+  "fitToScreen": true
+}

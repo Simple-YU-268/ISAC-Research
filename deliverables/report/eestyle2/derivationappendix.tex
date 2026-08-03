@@ -1,0 +1,61 @@
+% Original proof appendix copied from
+% ../math_derivation_tex_v10/math_derivation_en.tex (article scaffold omitted).
+\chapter{Mathematical Proofs}
+
+\section{Proof of Theorem~\ref{thm:p3-structure}}\label{app:proof-p3}
+
+This appendix proves Theorem~\ref{thm:p3-structure}.
+
+The feasible region of (P3) is the intersection of the LMI set (P3-C1), the linear equalities/inequalities (P3-C2)/(P3-C3b)/(P3-C4'a)/(P3-C4'b)/(P3-C5'), the LMI set (P3-C3), the positive-semidefinite cones (P3-C6)/(P3-C7), the scalar half-space (P3-C8), and the box constraints (P3-C9). The LMI set, the linear-inequality/equality set, the positive-semidefinite cone, the scalar half-space, and the box set are all convex; the intersection of finitely many convex sets is convex, so the feasible region of (P3) is convex.
+
+The objective $F(\{\mat{W}_k\}, \{b_{mp}\}, \{\mat{S}_p\}) = \sum_k \tr(\mat{W}_k) + \sum_p \tr(\mat{S}_p) + \eta_b \sum_{m,p} (b_{mp} - b_{mp}^2)$ is linear in $(\{\mat{W}_k\}, \{\mat{S}_p\})$ and is a ``linear $- \eta_b \cdot$ quadratic'' DC form in $\{b_{mp}\}$. The constraint matrices are affine in $(\{\mat{W}_k\}, \{\mat{S}_p\})$ and linear in $\{b_{mp}\}$, so (P3) is a DC program.
+
+For complexity, the total number of decision variables is $n = K \cdot (MN_t)^2 + P \cdot (MN_t)^2 + K + P \cdot N_\theta^2 + MP$ ($K$ matrices $\mat{W}_k \in \mathbb{H}_+^{MN_t}$, $P$ matrices $\mat{S}_p \in \mathbb{H}_+^{MN_t}$, $K$ S-Procedure relaxation variables $\mu_k$, $P$ auxiliary matrices $\mat{M}_p \in \mathbb{H}_+^{N_\theta \times N_\theta}$, and $MP$ scalars $b_{mp}$); the number of inequality constraints is $m = K + P + P + P + MP + M + P_{\text{active}} + K + P + K + 2MP = 3K + 4P + M + 3MP + P_{\text{active}}$ ((P3-C1): $K$; (P3-C2): $P$; (P3-C3): $P$; (P3-C3b): $P$; (P3-C4'a): $MP$; (P3-C4'b): $M$; (P3-C5'): $P_{\text{active}}$; (P3-C6): $K$; (P3-C7): $P$; (P3-C8): $K$; (P3-C9): $2MP$); the largest LMI constraint size is $\ell = \max\{MN_t + 1, 2 N_\theta\}$. Each SCA subproblem (P3-SCA-$t$) is a standard convex SDP, solvable in polynomial time by interior-point methods.
+
+\section{Proof of Theorem~\ref{thm:sca-conv}}\label{app:proof-sca-conv}
+
+This appendix proves the convergence of the objective sequence of Algorithm~\ref{alg:sca-joint} and the limiting property $b_{mp} \to \{0,1\}$.
+
+Denote the objective of the $t$-th SCA subproblem \eqref{eq:p3-sca} by
+\[
+P^{(t)}(\mat{W}_k, b_{mp}) \triangleq \sum_{k=1}^K \tr(\mat{W}_k) + \sum_{p=1}^P \tr(\mat{S}_p) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] + \eta_b \sum_{m, p} (1 - 2 b_{mp}^{(t)}) \, b_{mp}.
+\]
+Let the optimal solution of the $t$-th iteration be $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \{\mat{S}_p^{(t+1)}\}, \ldots)$. Define the true penalty objective as
+\[
+\tilde{P}^{(t)} \triangleq \sum_{k=1}^K \tr(\mat{W}_k^{(t+1)}) + \sum_{p=1}^P \tr(\mat{S}_p^{(t+1)}) + \eta_{\text{rank}} \sum_{k=1}^K \rho(\mat{W}_k^{(t+1)}) + \eta_b \sum_{m, p} g(b_{mp}^{(t+1)}).
+\]
+
+\paragraph{Key inequality (1).} Since $\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H$ is a subgradient of $\lambda_{\max}(\mat{W}_k)$ at $\mat{W}_k^{(t)}$, by the first-order condition for convex functions,
+\[
+\lambda_{\max}(\mat{W}_k^{(t+1)}) \geq \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)} \big),
+\]
+equivalently $\rho(\mat{W}_k^{(t+1)}) \leq \tr(\mat{W}_k^{(t+1)}) - \tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)})$. Likewise, the first-order Taylor expansion of the concave $g$ at $b_{mp}^{(t)}$ gives $g(b_{mp}^{(t+1)}) \leq (1-2b_{mp}^{(t)}) b_{mp}^{(t+1)} + (b_{mp}^{(t)})^2$ (where $(b_{mp}^{(t)})^2$ is a constant). Combining both inequalities yields
+\[
+\tilde{P}^{(t)} \leq P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
+\]
+
+\paragraph{Key inequality (2).} Taking the iterate $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$ as a feasible point of the $t$-th subproblem (constraints (P3-C1)--(P3-C9) are still satisfied at the iterate, since (P3-C1)--(P3-C9) are convex in $(\mat{W}_k, \{\mat{S}_p\}, b_{mp})$), its subproblem objective value is
+\begin{align*}
+P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) 
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) \\
+&\quad + \eta_{\text{rank}} \sum_k \Big[\tr(\mat{W}_k^{(t)}) - \tr\big(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}\big)\Big] \\
+&\quad + \eta_b \sum_{m,p} (1 - 2b_{mp}^{(t)}) b_{mp}^{(t)} \\
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \sum_p \tr(\mat{S}_p^{(t)}) + \eta_{\text{rank}} \sum_k \rho(\mat{W}_k^{(t)}) + \eta_b \sum_{m,p} \big(b_{mp}^{(t)} - 2(b_{mp}^{(t)})^2\big) \\
+&= \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
+\end{align*}
+where the third line uses $\tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}) = \lambda_{\max}(\mat{W}_k^{(t)})$ (by the leading-eigenvector definition) and the fourth line uses $g(b_{mp}^{(t)}) = b_{mp}^{(t)} - (b_{mp}^{(t)})^2$ to compare with the definition of $\tilde{P}^{(t-1)}$ (the difference is exactly $-\eta_b \sum (b_{mp}^{(t)})^2$). Since $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\})$ is optimal for the subproblem,
+\[
+P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) \leq P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) = \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
+\]
+
+\paragraph{Monotone non-increase.} Combining the two inequalities gives
+\[
+\tilde{P}^{(t)} \leq \big(\tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2\big) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2 = \tilde{P}^{(t-1)},
+\]
+i.e.\ the true objective sequence $\{\tilde{P}^{(t)}\}$ is monotonically non-increasing.
+
+\paragraph{Convergence.} The true objective $\tilde{P}^{(t)}$ is monotonically non-increasing and physically bounded below by $0$ (power terms and penalty terms are non-negative); by the monotone convergence theorem $\{\tilde{P}^{(t)}\}$ converges.
+
+\paragraph{Recovery condition.} The nonnegative deficiencies $g(b)$ and $\rho(\mat{W})$ quantify departure from binary and rank-one structure. Increasing the associated penalties encourages smaller deficiencies, but a finite penalty does not by itself prove that either deficiency converges to zero. If an obtained limit point has $g(b_{mp}^\star)=0$ and $\rho(\mat{W}_k^\star)=0$, then $b_{mp}^\star\in\{0,1\}$ and $\rank(\mat{W}_k^\star)=1$. These conditions, together with direct constraint validation after beamformer extraction, certify recovery for that solution.
+
+\paragraph{Recovery of the original constraints.} At a limit point with $(\rho,g)=(0,0)$, the recovered $\vect{w}_k^\star=\sqrt{\lambda_{\max}(\mat{W}_k^\star)}\vect{u}_{\max,k}^\star$ and $b_{mp}^\star\in\{0,1\}$ satisfy the lifted constraints through the transformation chain of (P3). The rank-one property permits beamformer extraction, but the extraction and fixed binary associations must be substituted back into (P1-C1)--(P1-C7') and directly validated. Only this final validation certifies feasibility of the recovered physical design.

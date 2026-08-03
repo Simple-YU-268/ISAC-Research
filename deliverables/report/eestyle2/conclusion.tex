@@ -1,0 +1,51 @@
+\chapter{Conclusion and Future Work}\label{ch:future_work}
+
+\section{Conclusion}
+
+This thesis investigated how a cell-free ISAC transmitter can minimize total
+transmit power while providing robust communication QoS and target-specific
+sensing service with a physically implementable AP--target topology. The
+resulting design keeps communication beamforming globally cooperative, while
+binary association variables authorize only the dedicated sensing covariance
+of each target. This separation aligns the sensing topology, the
+target-specific FIM/PCRB requirement, and the dedicated sensing power directly
+controlled by the optimization.
+
+The formulated mixed-integer problem jointly accounts for worst-case
+communication SINR, sensing SINR, matrix PCRB, dedicated-sensing
+authorization, and total AP-power limits. Covariance lifting, the
+S-Procedure, and a Schur-complement representation yield solver-ready robust
+and tracking constraints. A dual DC-penalty SCA procedure then reduces both
+rank-one and binary deficiencies, and direct validation distinguishes a
+recovered physical design from a relaxed optimization point.
+
+The numerical results support three bounded conclusions. First,
+topology-aware recovery improves physical feasibility relative to nearest-AP
+and random topology rules in the tested ordinary and pressure geometries.
+Second, robust design incurs a modest transmit-power increase while markedly
+reducing observed outage within the specified CSI-uncertainty model. Third,
+the dual-DC workflow provides recovery-quality evidence through small rank and
+binary residuals before physical validation. The larger-dimensional experiment
+also demonstrates usable recovery behaviour at the tested scale, at a higher
+computational cost than fixed-topology baselines. These are empirical,
+configuration-specific findings; they do not establish global optimality,
+universal relaxation tightness, or asymptotic scalability.
+
+\section{Future Work}
+
+The immediate priority is broader, reproducible validation. Future experiments
+should report feasibility, recovered physical transmit power, worst-case
+communication SINR, sensing SINR, PCRB, per-AP power, and
+association-cardinality residuals for every sweep, while preserving the
+distinction between relaxed and recovered solutions. Larger independent seed
+sets, confidence intervals, and systematic PCRB, cluster-size, and CSI-error
+sweeps are needed to quantify the robustness--sensing--power trade-off more
+reliably.
+
+The model can also be extended beyond its single-interval assumptions through
+dynamic target-state prediction across scheduling intervals, uncertainty in
+sensing channels and target parameters, fronthaul or processing costs for
+sensing clusters, and distributed implementations for larger cell-free
+networks. Each extension should retain direct validation of the recovered
+physical variables so that additional modelling flexibility does not obscure
+the communication, sensing, tracking, and AP-power guarantees.

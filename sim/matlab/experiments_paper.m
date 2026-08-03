@@ -118,9 +118,9 @@ plot(cfg.N_req_list, [nreq_result.nearest.conditional_sensing_sinr_db], 'r--s', 
 grid on; xlabel('N_{req}'); ylabel('Mean sensing SINR [dB] | feasible');
 
 subplot(2,2,4);
-plot(cfg.N_req_list, [nreq_result.proposed.conditional_active_aps], 'b-o', 'LineWidth', 1.5); hold on;
-plot(cfg.N_req_list, [nreq_result.nearest.conditional_active_aps], 'r--s', 'LineWidth', 1.5);
-grid on; xlabel('N_{req}'); ylabel('Activated APs | feasible');
+plot(cfg.N_req_list, [nreq_result.proposed.conditional_authorized_aps], 'b-o', 'LineWidth', 1.5); hold on;
+plot(cfg.N_req_list, [nreq_result.nearest.conditional_authorized_aps], 'r--s', 'LineWidth', 1.5);
+grid on; xlabel('N_{req}'); ylabel('Authorized APs | feasible');
 saveas(gcf, fullfile(out_dir, [save_tag, '_fig4_conditional_performance_vs_nreq.png']));
 
 %% Figure 5: robustness at the selected feasible operating point -----------
@@ -184,7 +184,7 @@ if ~any(is_feasible)
     stats.conditional_pcrb = NaN;
     stats.conditional_sensing_sinr_db = NaN;
     stats.conditional_outage = NaN;
-    stats.conditional_active_aps = NaN;
+    stats.conditional_authorized_aps = NaN;
     return;
 end
 valid = records(is_feasible);
@@ -194,7 +194,7 @@ stats.conditional_rate = mean(cellfun(@(r) r.sum_rate, valid));
 stats.conditional_pcrb = mean(cellfun(@(r) mean(r.pcrb), valid));
 stats.conditional_sensing_sinr_db = mean(cellfun(@(r) mean(r.sens_sinr_db), valid));
 stats.conditional_outage = mean(cellfun(@(r) r.outage, valid));
-stats.conditional_active_aps = mean(cellfun(@(r) r.active_aps, valid));
+stats.conditional_authorized_aps = mean(cellfun(@(r) r.authorized_aps, valid));
 end
 
 function rec = run_trial(cfg, nreq, mode, design_eps, eval_eps, index)
@@ -202,7 +202,7 @@ prm = make_scenario(cfg, nreq, design_eps, cfg.Base_seed + index);
 rec.feasible = false;
 rec.status = '';
 rec.power = NaN; rec.sum_rate = NaN; rec.pcrb = NaN; rec.sens_sinr_db = NaN;
-rec.outage = NaN; rec.active_aps = NaN;
+rec.outage = NaN; rec.authorized_aps = NaN;
 
 switch mode
     case 'proposed'
@@ -229,7 +229,9 @@ rec.power = res.final_obj;
 rec.sum_rate = res.sum_rate;
 rec.pcrb = res.pcrb;
 rec.sens_sinr_db = res.sens_sinr_db;
-rec.active_aps = sum(any(res.b > 0.5, 2));
+% Count APs with at least one binary association. This is an authorization
+% count, not a count of APs with nonzero dedicated sensing power.
+rec.authorized_aps = sum(any(res.b > 0.5, 2));
 rec.outage = evaluate_outage(res.W, res.S_p, prm, eval_eps, 200);
 end
 
@@ -282,15 +284,15 @@ end
 function summary = make_summary_table(nreq_list, result)
 summary = table(nreq_list(:), [result.proposed.feasibility]', ...
     [result.nearest.feasibility]', [result.proposed.conditional_power]', ...
-    [result.nearest.conditional_power]', [result.proposed.conditional_active_aps]', ...
-    [result.nearest.conditional_active_aps]', [result.proposed.conditional_rate]', ...
+    [result.nearest.conditional_power]', [result.proposed.conditional_authorized_aps]', ...
+    [result.nearest.conditional_authorized_aps]', [result.proposed.conditional_rate]', ...
     [result.nearest.conditional_rate]', [result.proposed.conditional_pcrb]', ...
     [result.nearest.conditional_pcrb]', [result.proposed.conditional_sensing_sinr_db]', ...
     [result.nearest.conditional_sensing_sinr_db]', [result.proposed.conditional_outage]', ...
     [result.nearest.conditional_outage]', ...
     'VariableNames', {'N_req', 'proposed_feasibility', 'nearest_feasibility', ...
     'proposed_power_given_feasible_W', 'nearest_power_given_feasible_W', ...
-    'proposed_active_APs_given_feasible', 'nearest_active_APs_given_feasible', ...
+    'proposed_authorized_APs_given_feasible', 'nearest_authorized_APs_given_feasible', ...
     'proposed_rate_given_feasible', 'nearest_rate_given_feasible', ...
     'proposed_mean_PCRB_given_feasible', 'nearest_mean_PCRB_given_feasible', ...
     'proposed_sensing_SINR_dB_given_feasible', 'nearest_sensing_SINR_dB_given_feasible', ...

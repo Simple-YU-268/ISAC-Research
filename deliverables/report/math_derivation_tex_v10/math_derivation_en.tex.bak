@@ -1,0 +1,409 @@
+\documentclass[12pt,a4paper]{article}
+
+% English support
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Math packages
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Page layout
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% Theorem environments (English labels)
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+% Custom commands (identical to Chinese version)
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Robust Beamforming Optimization for Cell-Free ISAC Systems\\Mathematical Derivation}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+%==============================================================================
+\section{Problem Formulation}\label{sec:formulation}
+%==============================================================================
+
+The decision variables of the original problem (P1) are the per-AP beamforming vectors $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$, the sensing covariance matrices $\mat{Z}_m \in \mathbb{H}_+^{N_t}$, and the AP--target soft-assignment weights $b_{mp} \in [0,1]$ ($b_{mp}=1$ means AP $m$ fully serves target $p$, $b_{mp}=0$ means AP $m$ does not participate in sensing for target $p$; equivalent to the original $\{0,1\}$ binary indicator after the DC relaxation in \S\ref{sec:relaxation}-E):
+\begin{align}
+\min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad
+& \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\
+\text{s.t.} \quad
+& \min_{\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k, \quad \forall k, \tag{P1-C1} \\
+& \text{SINR}_{S,p} := \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P}, \tag{P1-C2} \\
+& \tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P}, \tag{P1-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_{p \in \mathcal{P}^{\text{active}}} b_{mp}, \quad \forall m \in \mathcal{M}, \tag{P1-C4'a} \label{eq:p1c4a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \in \mathcal{M}, \tag{P1-C4'b} \label{eq:p1c4b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}}, \tag{P1-C5'} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M}, \tag{P1-C6} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m \in \mathcal{M}, p \in \mathcal{P}. \tag{P1-C7'}
+\end{align}
+where $\vect{w}_k \triangleq [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t}$ is the cooperative stacked beamforming vector from all APs to user $k$, obtained by stacking the per-AP variables; $\mat{R}_X \triangleq \sum_{k=1}^{K} \vect{w}_k \vect{w}_k^H + \sum_m \mat{Z}_m$ (precisely defined in the lifted form of \S\ref{sec:relaxation}-A); and $\mat{E}_m \in \mathbb{R}^{MN_t \times MN_t}$ is the diagonal selection matrix that extracts the antenna block of AP $m$ from $\mat{R}_X$. The FIM $\mat{J}_p^{\text{data}}$ in (P1-C3) takes the following original form for a multi-dimensional target state $\boldsymbol{\theta}_p \in \mathbb{R}^{N_\theta}$ (typical ISAC scenarios involve 2D/3D position, or angle+range with $N_\theta \in \{2, 3, 4\}$):
+\begin{equation}\label{eq:fim-original}
+\mat{J}_p^{\text{data}}(\mat{R}_X) = \frac{2}{\sigma_s^2} \Real\!\left\{ \mat{D}_p^H \big( \mat{R}_X^T \otimes \mat{I}_{N_\theta} \big) \mat{D}_p \right\} \in \mathbb{H}_+^{N_\theta \times N_\theta},
+\end{equation}
+where $\mat{D}_p \triangleq \partial \vect{g}_p / \partial \boldsymbol{\theta}_p \in \mathbb{C}^{MN_t \times N_\theta}$ is the partial-derivative matrix of the steering vector and $\otimes$ is the Kronecker product; the CRB matrix is $\mat{C}_p = (\mat{J}_p^{\text{data}})^{-1}$ and (P1-C3) reads $\tr(\mat{C}_p) = \tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track},p}$, an upper bound on the sum of mean-squared errors of the $N_\theta$-dimensional target state. \eqref{eq:fim-original} is an affine function of $\mat{R}_X$ (since $\mat{R}_X^T \otimes \mat{I}_{N_\theta}$ is affine in $\mat{R}_X^T$ and $\mat{D}_p^H \cdot \mat{R}_X^T \cdot \mat{D}_p$ is affine in $\mat{R}_X$), so $\mat{J}_p^{\text{data}}$ retains the trace-of-inverse form in the lifted domain (P2) and must not be simplified to $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma$ (that shorthand holds only for scalar parameters $N_\theta = 1$, and is invalid for $N_\theta \geq 2$ multi-dimensional target tracking); at $N_\theta = 1$ the FIM degenerates to the scalar $\frac{2}{\sigma_s^2} \|\mat{D}_p^H \mat{R}_X^{1/2}\|^2$ and the constraint reduces to $\mat{J}_p^{\text{data}} \geq 1/\Gamma$ (the v5/v6 shorthand $\tr(\mat{F}_p \mat{R}_X) \geq 1/\Gamma$), which is self-consistent with \eqref{eq:fim-original}. The two coupled power constraints (P1-C4'a)/(P1-C4'b) jointly implement the ``hard-shutdown + full-power release'' physical logic through a Sum Big-M form: when AP $m$ is not assigned to any sensing target ($\sum_{p \in \mathcal{P}^{\text{active}}} b_{mp} = 0$), the right-hand side of (P1-C4'a) collapses to $0$ and physically forces the shutdown of all RF transmission at that AP---$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) = 0$, corresponding to $\vect{w}_{m,k} = \mat{0}$ and $\mat{Z}_m = \mat{0}$; in the lifted domain (P2) this means $\tr(\mat{E}_m \mat{R}_X) = 0$, so the antenna block of AP $m$ contributes nothing to the global $\mat{R}_X$ and the AP physically disappears from the communication SINR (P1-C1) (its contribution to both numerator and denominator vanishes) as well as from the sensing FIM $\mat{J}_p^{\text{data}}$ (an affine function of $\mat{R}_X$), without any modification to the SINR/FIM formula itself. Conversely, as soon as AP $m$ is selected for at least one target ($\sum_p b_{mp} \geq 1$), the right-hand side of (P1-C4'a) becomes $\geq P_{\max}$ and the constraint is automatically inactive; the standard hardware limit (P1-C4'b) then takes over, allowing AP $m$ to pour up to the full $P_{\max}$ into communication and sensing cooperation. This Sum Big-M formulation embeds AP selection strictly into the physical power budget, is the physical foundation that allows the subsequent dual DC penalty framework to achieve a closed-form mathematical solution, and introduces no new decision variables (the coefficient of $b_{mp}$ in (P1-C4'a) is the constant $P_{\max}$); the \S3 dual DC penalty SCA derivation only needs to update the coefficient of (P1-C4') from $1/N_{\text{req}}$ to $1$ and to add the new standard hardware limit (P1-C4'b).
+
+Problem (P1) is non-convex. Its non-convexity stems from five independent sources distributed across different constraints. The communication worst-case SINR constraint (P1-C1) carries a fractional quadratic structure: the numerator $|\vect{h}_k^H \vect{w}_k|^2$ and the denominator $\sum_{j \neq k} |\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2$ are both quadratic functions of the beamforming vector $\vect{w}_k$, so their ratio is a non-convex function on the manifold where the denominator is positive~[1]. Compounding this, the worst-case quantifier $\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$ is semi-infinite, and the resulting set $\{\vect{w} : \min_{\Delta\vect{h} \in \mathcal{B}_\epsilon} \text{SINR}_k(\Delta\vect{h}) \geq \gamma_k\}$ is not closed under convex combinations. The position PCRB constraint (P1-C3) requires $\tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track}, p}$; although the composite function $\tr(\mat{J}^{-1})$ is strictly convex on $\mat{J} \succ \mat{0}$, so that (P1-C3) itself defines a convex set, the constraint involves the nonlinear matrix inverse and must be transformed into an LMI via the Schur complement before standard SDP solvers can handle it. The binarity of the AP--target soft-assignment weights $b_{mp}$ in (P1-C7'), equivalently rewritten as $g(b) = b - b^2 = 0$, manifests itself as a concave penalty since $g(b) \geq 0$ for $b \in [0,1]$ and $g$ is strictly concave. The per-AP power constraints (P1-C4'a) and (P1-C4'b) have on the left-hand side a convex sum of squared norms $\sum_k \|\vect{w}_{m,k}\|^2$ plus a linear trace term $\tr(\mat{Z}_m)$ (extracted by $\mat{E}_m$), and right-hand sides $P_{\max} \cdot \sum_p b_{mp}$ (AP-selection coupled) and $P_{\max}$ (standard hardware upper bound) respectively; both constraints are convex in the joint variable space $(\{\vect{w}\}, \mat{Z}, b)$ (the box $0 \le b_{mp} \le 1$ together with the linear sum $\sum_p b_{mp}$ is convex). The PSD cone $\mat{Z}_m \succeq \mat{0}$ itself ((P1-C6)), the linear sensing SINR $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$ ((P1-C2)), and the box constraint $0 \leq b_{mp} \leq 1$ ((P1-C7')) are individually convex, but because of the five non-convex/nonlinear sources above the overall problem remains a non-convex MINLP. In \S\ref{sec:relaxation} we address each source by a dedicated step of the convexification chain (the rank-1 constraint that arises after covariance lifting is treated as a sixth source and is recovered jointly with the binarity of $b_{mp}$ by the dual DC penalty SCA framework of \S3; the binarity of $b_{mp}$ is already in the (P1) domain as a box + DC penalty, hence is handled in \S3 in the same SCA loop).
+
+%==============================================================================
+\section{Solution of the Optimization Problem}\label{sec:relaxation}
+%==============================================================================
+
+This section solves the problem along the six non-convex/nonlinear sources identified at the end of \S\ref{sec:formulation}. The SINR fraction and the semi-infinite uncertainty are converted into LMIs via cross-multiplication (\S\ref{sec:relaxation}-C step 1) followed by the S-Procedure (\S\ref{sec:relaxation}-C step 2); the trace of the PCRB matrix inverse is losslessly converted into an LMI by the Schur complement (\S\ref{sec:relaxation}-D); the binarity of the AP--target soft-assignment weights $b_{mp}$ is handled by continuous relaxation plus a DC penalty added to the objective (\S\ref{sec:relaxation}-E), which shares a unified dual-DC-penalty SCA framework with the rank-1 constraint in \S3.
+
+\subsection*{A. Problem Transformation (P2)}
+
+To prepare for the semidefinite relaxation, we lift the vector variables in (P1) into covariance matrices, i.e.\ we define $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$ and $\mat{R}_X \triangleq \sum_{k=1}^K \mat{W}_k + \mat{Z}$, where the sensing covariance $\mat{Z} \in \mathbb{H}_+^{MN_t}$ collects the sensing covariance components of all APs, yielding (P2):
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}_{k\in\mathcal{K}}, \mat{Z} \in \mathbb{H}_+^{MN_t}, \\ \{b_{mp}\}_{m\in\mathcal{M},p\in\mathcal{P}}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad
+& (\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|: \tr(\hat{\mat{H}}_k(\Delta\vect{h}_k) \mat{W}_k) - \gamma_k \sum_{j \neq k} \tr(\hat{\mat{H}}_k(\Delta\vect{h}_k) \mat{W}_j) \geq \gamma_k \sigma_c^2), \quad \forall k, \tag{P2-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \in \mathcal{P}, \tag{P2-C2} \\
+& \tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}, \tag{P2-C3} \label{eq:p2c3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_{p \in \mathcal{P}^{\text{active}}} b_{mp}, \quad \forall m \in \mathcal{M}, \tag{P2-C4'a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \in \mathcal{M}, \tag{P2-C4'b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}}, \tag{P2-C5'} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \in \mathcal{K}, \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0}, \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \in \mathcal{K}, \tag{P2-C7} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m \in \mathcal{M}, p \in \mathcal{P}. \tag{P2-C8'}
+\end{align}
+Here $\mat{J}_p^{\text{data}}(\mat{R}_X) = \frac{2}{\sigma_s^2} \Real\!\left\{ \mat{D}_p^H \big( \mat{R}_X^T \otimes \mat{I}_{N_\theta} \big) \mat{D}_p \right\} \in \mathbb{H}_+^{N_\theta \times N_\theta}$ is the data-dependent Fisher Information Matrix ($\mat{D}_p = \partial \vect{g}_p / \partial \boldsymbol{\theta}_p \in \mathbb{C}^{MN_t \times N_\theta}$; see the definition at the end of \S\ref{sec:formulation}) and $\hat{\mat{H}}_k(\Delta\vect{h}_k) \triangleq (\hat{\vect{h}}_k + \Delta\vect{h}_k)(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H$. Note that $\mat{Z}$ in (P2) is the stacked sensing covariance, physically corresponding to the assumption that ``all $M$ APs transmit sensing beams'' in a global-cooperation sense; $b_{mp}$ adjusts the per-AP available power budget indirectly through (P2-C4'a)/(P2-C4'b), while (P2-C2) sensing SINR is still computed with full-AP cooperation (this is the standard cell-free ISAC assumption).
+
+(P1) and (P2) are strictly equivalent: the variable mapping $\vect{w}_k \leftrightarrow \mat{W}_k = \vect{w}_k \vect{w}_k^H$ is a bijection (the rank-1 constraint guarantees recoverability), and every constraint is rewritten equivalently through identities such as $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$. The box constraint (P2-C9) replaces the binary constraint (P1-C7'); introducing the DC penalty (detailed in \S\ref{sec:relaxation}-E) does not change the feasible region of (P2). The overall equivalence transformation introduces no relaxation gap.
+
+Problem (P2) is a rewrite of (P1) in the lifted covariance domain. The covariance lifting preserves five of the six sources identified in \S\ref{sec:formulation}: the SINR fractional structure in (P2-C1) (NC1); the soft-assignment equality and box constraints in (P2-C5)/(P2-C9) (NC3, softened); and the beam-power-allocation coupling under the diagonal selection matrix $\mat{E}_m$ in (P2-C4'a)/(P2-C4'b) (NC5). The semi-infinite worst-case quantifier (NC2) is rewritten in the (P2) domain as a quadratic form in $\Delta\vect{h}_k$, to be handled by the S-Procedure in \S\ref{sec:relaxation} Step~3. The PCRB constraint (P2-C3) already involves the matrix inverse in (P1), and after lifting it remains in the form $\tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track},p}$, to be processed by the Schur complement in \S\ref{sec:relaxation}-D. Lifting introduces one new source of non-convexity: the rank-1 manifold constraint (NC4, (P2-C8)) requiring $\mat{W}_k = \vect{w}_k \vect{w}_k^H$. The PSD cone constraints (P2-C6) and (P2-C7) are themselves convex, and (P2-C2) (sensing SINR) becomes an affine function of $\mat{Z}$ in the lifted domain through the identity $\vect{g}_p^H \mat{Z} \vect{g}_p = \tr(\vect{g}_p \vect{g}_p^H \mat{Z})$. The residual non-convex/nonlinear sources in the (P2) domain are handled jointly by the convexification chain of \S\ref{sec:relaxation} and the dual DC penalty SCA framework of \S3.
+
+\subsection*{B. Semi-Definite Relaxation}
+\addcontentsline{toc}{subsection}{B. Semi-Definite Relaxation}
+
+The NC4 in (P2) is addressed by SDR: the rank-1 manifold $\mathcal{F}_{\text{rank-1}}$ is itself non-convex, and SDR relaxes (P2-C8) to $\mat{W}_k \succeq \mat{0}$ only, i.e.
+\begin{equation}
+\mat{W}_k \succeq \mat{0}, \quad \forall k, \tag{S1.1}
+\end{equation}
+The feasible region is enlarged from $\mathcal{F}_{\text{rank-1}}$ to the positive semidefinite cone $\mathcal{F}_{\text{SDR}}$, and the SDR solution provides a lower bound on the original problem, $P_{\text{SDR}}^* \leq P_{\text{P2}}^*$. For the joint structure of per-user SINR + cell-free cooperation + robust uncertainty, neither the multi-group multicasting tightness condition $G_k \leq 2$~[2] nor the robust MISO condition $N_t \leq 2$~[3] directly applies, and Gaussian randomization must be used to recover a feasible rank-1 solution when $\rank(\mat{W}_k^*) > 1$. Specifically, $L \in [100, 1000]$ Gaussian random vectors are generated and the candidate that satisfies the constraints and is optimal in the objective is selected; however, this post-processing has no tight performance-loss upper bound.
+
+\subsection*{C. S-Procedure}
+\addcontentsline{toc}{subsection}{C. S-Procedure}
+
+This subsection handles the residual semi-infinite robust uncertainty in NC1 in two steps: first the original SINR robust inequality is cross-multiplied into a quadratic form (an equivalent rewrite of (P2-C1), no longer a fraction), and then the S-Procedure reduces the universal quantifier over $\Delta\vect{h}_k$ to an LMI in the S-Procedure relaxation variable $\mu_k$.
+
+\textbf{Step 1 -- Cross-multiplication.} Fix any worst-case $\Delta\vect{h}_k$ satisfying $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$. Because $\sigma_c^2 > 0$ guarantees that the denominator is strictly positive, the SINR inequality can be cross-multiplied directly into the quadratic form
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j \neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2, \tag{S2.1}
+\end{equation}
+which is a strict equivalence rather than an approximation; strict positivity of the denominator guarantees that the implication holds in both directions. Since $\sigma_c^2$ contains no decision variable, the fraction can be eliminated without a first-order Taylor approximation, thus avoiding the accumulation of SCA iteration error.
+
+\textbf{Step 2 -- S-Procedure.} Restoring $\Delta\vect{h}_k$ as a variable and defining $\mat{A}_k \triangleq \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, (P2-C1) is rewritten as a quadratic inequality in $\Delta\vect{h}_k$:
+\[
+\tilde{f}_1(\Delta\vect{h}) = (\hat{\vect{h}} + \Delta\vect{h})^H \mat{A}_k (\hat{\vect{h}} + \Delta\vect{h}) - \sigma_c^2 \geq 0, \quad \forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|,
+\]
+and the uncertainty set is described by $\tilde{f}_2(\Delta\vect{h}) = \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 - \|\Delta\vect{h}_k\|^2 \geq 0$. For this single quadratic constraint on a norm ball, the universal quantifier admits, via the S-Procedure~[1], a finite LMI equivalent condition:
+
+\begin{lemma}\textbf{(S-Procedure).}\label{lem:s-procedure}
+Let $\tilde{f}_m(\Delta\vect{h}) = (\Delta\vect{h})^H \mat{A}_m (\Delta\vect{h}) + 2\Real\{(\Delta\vect{h})^H \vect{b}_m\} + c_m$, $m \in \{1, 2\}$. Then the implication ``$\tilde{f}_1(\Delta\vect{h}) \geq 0 \Rightarrow \tilde{f}_2(\Delta\vect{h}) \geq 0$'' holds \emph{if and only if} there exists $\mu \geq 0$ such that
+\[
+\begin{bmatrix} \mat{A}_2 + \mu \mat{A}_1 & \vect{b}_2 + \mu \vect{b}_1 \\ \vect{b}_2^H + \mu \vect{b}_1^H & c_2 + \mu c_1 \end{bmatrix} \succeq \mat{0},
+\]
+This is the original form of the S-Procedure~[1, \S4.3], which requires no additional hypotheses in the norm-ball setting where $\tilde{f}_2$ describes the convex set $\{ \Delta\vect{h} : \|\Delta\vect{h}\|_2 \leq \epsilon_h \|\hat{\vect{h}}\|_2 \}$.
+\end{lemma}
+
+Applying Lemma~\ref{lem:s-procedure} directly to the implication $\tilde{f}_1 \geq 0 \Rightarrow \tilde{f}_2 \geq 0$ (where $\tilde{f}_2$ describes the norm-ball uncertainty set), the worst-case robust form of (P2-C1) can be written as the following LMI:
+\begin{equation}
+\exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}. \tag{S3.1}
+\end{equation}
+The newly introduced $\mu_k \geq 0$ is the S-Procedure relaxation variable.
+
+\begin{assumption}[Channel Normalization]\label{ass:channel_norm}
+For every $k \in \mathcal{K}$, the channel estimate satisfies $\|\hat{\vect{h}}_k\|_2 = 1$. This normalization is absorbed into the term $\mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2$ in the lower-right block of the LMI matrix (S3.1), so that the final (P3-C1) expression does not contain $\|\hat{\vect{h}}_k\|^2$.
+\end{assumption}
+
+\subsection*{D. PCRB Constraint: Schur Complement LMI Transformation}
+\addcontentsline{toc}{subsection}{D. PCRB Constraint: Schur Complement LMI Transformation}
+
+The PCRB constraint (P1-C3) remains in the lifted domain as
+\begin{equation}
+\tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}, \tag{P2-C3}
+\end{equation}
+where $\mat{J}_p^{\text{data}} \succ \mat{0}$ is an affine function of $\mat{R}_X$. The matrix-inverse map $\mat{J} \mapsto \mat{J}^{-1}$ is strictly matrix-convex on the positive-definite cone, and the trace operator $\tr(\cdot)$ is a linear order-preserving map; therefore the composite $\tr(\mat{J}^{-1})$ is a strictly convex function and the constraint (P2-C3) itself defines a convex set. However, the constraint involves the nonlinear matrix inverse; to make it directly processable by an interior-point SDP solver, this subsection losslessly converts it into an LMI via the Schur complement.
+
+Introduce an auxiliary Hermitian matrix variable $\mat{M}_p \in \mathbb{H}^{N_\theta \times N_\theta}$ (where $N_\theta$ is the dimension of the target parameter to be estimated). The original constraint can be split equivalently as
+\begin{subequations}\label{eq:crb_decouple}
+\begin{align}
+\mat{M}_p - (\mat{J}_p^{\text{data}})^{-1} \succeq \mat{0}, \quad \forall p \in \mathcal{P}, \label{eq:crb_mat_ineq} \\
+\tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}. \label{eq:crb_trace_ineq}
+\end{align}
+\end{subequations}
+Since $\mat{J}_p^{\text{data}} \succ \mat{0}$, by the Schur complement lemma, \eqref{eq:crb_mat_ineq} is equivalent to
+\begin{equation}\label{eq:crb_lmi}
+\begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \in \mathcal{P}.
+\end{equation}
+Therefore, the PCRB constraint (P2-C3) is converted completely and without approximation into the linear matrix inequalities in $(\mat{R}_X, \{\mat{M}_p\})$:
+\begin{subequations}\label{eq:crb_lmi_final}
+\begin{align}
+& \begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \in \mathcal{P}, \label{eq:crb_lmi_final_a} \\
+& \tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}. \label{eq:crb_lmi_final_b}
+\end{align}
+\end{subequations}
+This transformation introduces no relaxation gap and avoids outer SCA iterations.
+
+\subsection*{E. AP--Target Soft Assignment: Continuous Relaxation with DC Penalty}
+\addcontentsline{toc}{subsection}{E. AP--Target Soft Assignment: Continuous Relaxation with DC Penalty}
+
+This subsection completely replaces the path-loss heuristic AP selection of the original literature. The original formulation peels off the binary constraint $\{0,1\}$ of (P2-C8), sorts APs by the large-scale fading $\text{PL}(d_{m,p})$, fixes the top-$N_{\text{req}}$ APs as the serving set $\mathcal{M}_p$, and solves the inner SDP over the fixed set; this procedure is a $K$-medoid variant and is NP-hard, the outer heuristic loop cannot provide any global optimality guarantee, and is inconsistent with the rigorous DC-penalty SCA framework used for the rank-1 constraint in \S3. The rigorous replacement given here is as follows: merge the box constraint $0 \leq b_{mp} \leq 1$ of (P2-C9) with the binarity $b_{mp} \in \{0,1\}$ into the equivalent form
+\begin{subequations}\label{eq:b-rewrite}
+\begin{align}
+& 0 \leq b_{mp} \leq 1, \tag{E.1a} \\
+& g(b_{mp}) \triangleq b_{mp} - b_{mp}^2 = 0. \tag{E.1b}
+\end{align}
+\end{subequations}
+For $b \in [0,1]$, $g(b) = b - b^2 \geq 0$ holds and $g$ is a concave function of $b$ (since $g''(b) = -2 < 0$); reformulating the equality constraint (E.1b) as a penalty term added to the objective gives
+\begin{equation}
+\min \quad \underbrace{\sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z})}_{\text{original objective}} \; + \; \eta_b \underbrace{\sum_{m \in \mathcal{M}, p \in \mathcal{P}} g(b_{mp})}_{= \sum_{m,p} (b_{mp} - b_{mp}^2)} \quad \text{s.t. (P2-C1)} \sim \text{(P2-C9)} \setminus \{\text{(P2-C9)}\}, \tag{P2-DCP}
+\end{equation}
+where $\eta_b \geq 0$ is the penalty factor; the objective exhibits a DC structure (``convex function $+$ concave function $\times \eta_b$'') and the box constraints (P2-C9) are kept in their convex form, but the term $-\eta_b b_{mp}^2$ in the objective is concave in $b_{mp}$, so (P2-DCP) is not a convex optimization problem and this non-convexity is handled jointly with the rank-1 constraint by the dual DC penalty SCA framework in \S3. For $b_{mp} \in \{0,1\}$ we have $g(b_{mp}) = 0$ and the penalty incurs no cost on binary solutions; for $b_{mp} \in (0,1)$ we have $g(b_{mp}) > 0$ and the penalty grows with $\eta_b$, so a sufficiently large $\eta_b$ forces any finite objective value of (P2-DCP) to satisfy $g(b_{mp}) \to 0$ and therefore $b_{mp}^\star \in \{0,1\}$ (see Theorem~\ref{thm:sca-conv} in \S3 for details). After introducing the $\eta_b$ concave penalty, (P2-DCP) has exactly the same mathematical structure as the rank-1 penalty $\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k)$ introduced in \S3-A---both are ``convex $-$ convex'' DC forms---so the SCA framework designed in \S3 can carry both penalties simultaneously: within a single SCA iteration we perform an eigendecomposition of $\mat{W}_k$ and a first-order Taylor expansion of $g$ at $b_{mp}$, yielding a unified convex SDP subproblem in the variables $(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z}, \{\mu_k\}, \{\mat{M}_p\})$. The box constraint $0 \leq b_{mp} \leq 1$ of (P2-DCP) restricts the SCA cold start; in practice we may use a \emph{large-scale-fading heuristic} to generate the initial point---for each target $p$, sort APs by $\text{PL}(d_{m,p})$ in ascending order, set $b_{mp}^{(0)} = 1$ for the top-$N_{\text{req}}$ APs and $b_{mp}^{(0)} = 0$ for the rest; this value automatically satisfies the box constraint and the equality (P2-C5), and is at most one step away from the $\{0,1\}$ boundary. \emph{This heuristic serves only as a cold-start aid for SCA and is no longer the final solver}---the final solution is determined by the iteration limit of the dual DC penalty and is theoretically independent of the initial-point choice (the latter only affects convergence speed).
+
+\subsection*{F. Consolidation (P3): Final Form with Dual DC Penalties}
+\addcontentsline{toc}{subsection}{F. Consolidation (P3): Final Form with Dual DC Penalties}
+
+Applying the SDR step of \S-B ((S1.1)), the S-Procedure step of \S-C ((S2.1) + (S3.1)), the Schur complement of \S-D (\eqref{eq:crb_lmi_final}), and the continuous relaxation + DC penalty of \S-E (box (P2-C9) + (P2-DCP)) to (P2), we obtain the final problem (P3):
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}, \\ \{\mat{M}_p\}, \{b_{mp}\}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m, p} (b_{mp} - b_{mp}^2) \tag{P3} \\
+\text{s.t.} \quad
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \label{eq:p3c1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \label{eq:p3c2} \\
+& \begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \tag{P3-C3} \label{eq:p3c3} \\
+& \tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C3b} \label{eq:p3c3b} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_p b_{mp}, \quad \forall m \tag{P3-C4'a} \label{eq:p3c4a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C4'b} \label{eq:p3c4b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P3-C5'} \label{eq:p3c5} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C6} \label{eq:p3c6} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C7} \label{eq:p3c7} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C8} \label{eq:p3c8} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m, p. \tag{P3-C9} \label{eq:p3c9}
+\end{align}
+where $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$, $\mat{J}_p^{\text{data}}$ is an affine function of $\mat{R}_X$, and $\mat{E}_m$ is the antenna-block-extraction diagonal matrix. The feasible region of (P3) is the intersection of the LMI set (P3-C1), the LMI set (P3-C3), the linear equalities/inequalities (P3-C2)/(P3-C4)/(P3-C5'a)/(P3-C5'b)/(P3-C6), the positive-semidefinite cones (P3-C7)/(P3-C8), the scalar half-space (P3-C9), and the box constraints (P3-C10); each of these sets is convex, so the feasible region is convex. The objective $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m,p} (b_{mp} - b_{mp}^2)$ is linear in $(\{\mat{W}_k\}, \mat{Z})$ and is a ``linear $-\eta_b \cdot$ quadratic'' DC form in $\{b_{mp}\}$, and the overall objective is DC (non-convex) in $(\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\})$, so (P3) is not a convex SDP and its non-convexity is solved by the dual DC penalty SCA framework of \S3.
+
+\begin{theorem}[Structural Properties of (P3)]\label{thm:p3-structure}
+The feasible region of (P3) is convex; the objective is a DC function of $(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z})$; the constraint matrices are affine in $(\{\mat{W}_k\}, \mat{Z})$ and linear in $\{b_{mp}\}$. Hence (P3) is a difference-of-convex program (DCP), and a stationary point can be obtained by the dual DC penalty SCA framework of \S3.
+\end{theorem}
+
+\begin{proof}
+See Appendix \ref{app:proof-p3}.
+\end{proof}
+
+%==============================================================================
+\section{Joint DC Penalty SCA Framework: Rank-One and Binary Recovery}\label{sec:sca}
+%==============================================================================
+
+The feasible region of (P3) is convex but its objective is DC; obtaining the global optimum directly is hard, but \emph{any stationary point of (P3) satisfying the Karush--Kuhn--Tucker (KKT) conditions is an engineering-acceptable solution}. This section designs a dual DC penalty SCA framework: the concave term $-\eta_b b_{mp}^2$ in the (P3) objective and the concave term $-\eta_{\text{rank}} \lambda_{\max}(\mat{W}_k)$ (corresponding to the missing rank-1 property) are linearized simultaneously within the same SCA loop, and each iteration solves a standard convex SDP. This section also presents Gaussian randomization / leading-eigenvector extraction as a baseline post-processing.
+
+\subsection*{A. Unified Characterization of the Dual DC Penalties}
+
+For any positive-semidefinite matrix $\mat{W}_k \succeq \mat{0}$, it has rank one if and only if its trace equals its largest eigenvalue:
+\begin{equation}\label{eq:rank1-equivalence}
+\rank(\mat{W}_k) = 1 \quad \Longleftrightarrow \quad \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0.
+\end{equation}
+Since $\lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k)$ always holds for PSD matrices, define the rank-deficiency measure
+\begin{equation}\label{eq:rho-def}
+\rho(\mat{W}_k) \triangleq \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) \geq 0.
+\end{equation}
+For $b \in [0,1]$, define the binarity-deficiency measure
+\begin{equation}\label{eq:g-def}
+g(b) \triangleq b - b^2 = b(1-b) \geq 0, \quad g''(b) = -2 < 0 \;\; (\text{strictly concave}).
+\end{equation}
+$\rho(\mat{W}_k)$ and $g(b_{mp})$ are mathematically isomorphic---both are ``convex $-$ convex'' DC forms, vanish on the desired constraint set, and are positive when the constraint is violated; this isomorphism is the mathematical foundation that allows the two penalties to share a single SCA framework. Adding the rank-1 penalty $\eta_{\text{rank}} \sum_k \rho(\mat{W}_k)$ to the (P3) objective gives
+\begin{equation}\label{eq:p3-dcp}
+\min \quad \underbrace{\sum_k \tr(\mat{W}_k) + \tr(\mat{Z})}_{\text{original objective}} + \underbrace{\eta_{\text{rank}} \sum_k \rho(\mat{W}_k)}_{\text{rank-1 penalty (DC)}} + \underbrace{\eta_b \sum_{m,p} g(b_{mp})}_{\text{binarity penalty (DC)}} \quad \text{s.t. (P3-C1)} \sim \text{(P3-C10)}.
+\end{equation}
+All constraints of (P3-DCP) are convex (inherited from the convex feasible region of (P3)), and the only non-convexity comes from the two DC penalty terms in the objective.
+
+\subsection*{B. SCA Linearization: Simultaneous First-Order Taylor Expansion of Both DC Terms}
+\addcontentsline{toc}{subsection}{B. SCA Linearization}
+
+At iteration $t$, let the current iterate be $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$. Perform the eigendecomposition
+\begin{equation}
+\mat{W}_k^{(t)} = \sum_{i=1}^{r_k} \lambda_{k,i} \, \vect{u}_{k,i} \vect{u}_{k,i}^H, \quad \lambda_{k,1} \geq \lambda_{k,2} \geq \cdots \geq \lambda_{k,r_k} > 0,
+\end{equation}
+where the leading eigenvector is $\vect{u}_{\max,k}^{(t)} \triangleq \vect{u}_{k,1}$. By the convexity of $\lambda_{\max}(\mat{W}_k)$, its first-order Taylor expansion provides a global lower bound:
+\begin{equation}\label{eq:lambda-lb}
+\lambda_{\max}(\mat{W}_k) \geq \lambda_{\max}(\mat{W}_k^{(t)}) + \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H (\mat{W}_k - \mat{W}_k^{(t)}) \Big) = \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \Big).
+\end{equation}
+Substituting this into the rank-1 penalty of (P3-DCP) yields a global upper bound (the concave term is replaced by its upper bound, the subproblem minimizes, and the true objective is a lower bound of the subproblem optimum):
+\begin{equation}\label{eq:rho-linearized}
+\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k) - \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \Big) \triangleq \hat{\rho}^{(t)}(\mat{W}_k).
+\end{equation}
+The first-order Taylor expansion of the concave $g(b) = b - b^2$ at $b^{(t)}$ gives the global overestimator
+\begin{equation}\label{eq:g-linearized}
+g(b) \leq g(b^{(t)}) + g'(b^{(t)})(b - b^{(t)}) = b^{(t)} - (b^{(t)})^2 + (1 - 2b^{(t)})(b - b^{(t)}),
+\end{equation}
+and after removing the constant term $b^{(t)} - (b^{(t)})^2 - (1 - 2b^{(t)}) b^{(t)} = (b^{(t)})^2$ (which does not affect minimization), the linearized penalty is
+\begin{equation}\label{eq:g-linearized-clean}
+g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
+\end{equation}
+Substituting \eqref{eq:rho-linearized} and \eqref{eq:g-linearized-clean} into (P3-DCP) gives the convex SDP subproblem at iteration $t$:
+\begin{equation}\label{eq:p3-sca}
+\begin{aligned}
+\min_{\substack{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}, \\ \{\mat{M}_p\}, \{b_{mp}\}}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] \\
+& \qquad + \eta_b \sum_{m, p} (1 - 2b_{mp}^{(t)}) \, b_{mp} \\
+\text{s.t.} \quad & \text{(P3-C1)--(P3-C10)}.
+\end{aligned}
+\end{equation}
+The objective of \eqref{eq:p3-sca} is linear in $(\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\})$ (the $\eta_{\text{rank}}$ term combines $\tr(\mat{W}_k)$ with $-\tr(\vect{u}_{\max,k}^{(t)}(\vect{u}_{\max,k}^{(t)})^H \mat{W}_k)$ to form $\tr((\mat{I} - \vect{u}_{\max,k}^{(t)}(\vect{u}_{\max,k}^{(t)})^H) \mat{W}_k)$, and the $\eta_b$ term is linear in $b_{mp}$), and the constraints (P3-C1)--(P3-C10) are all LMI / linear / positive-semidefinite / box, so (P3-SCA-$t$) is a standard convex SDP that can be efficiently solved by interior-point solvers such as MOSEK/SDPT3. Update the iterate $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$ and repeat.
+
+\begin{algorithm}[htbp]
+\caption{Dual DC Penalty SCA Iteration (Joint Rank-One and Binary Recovery)}
+\label{alg:sca-joint}
+\begin{algorithmic}[1]
+\Require Initial feasible point $\{\mat{W}_k^{(0)}, b_{mp}^{(0)}\}$ (generated by the heuristic of \S\ref{sec:relaxation}-E), penalty factors $\eta_{\text{rank}}, \eta_b > 0$, tolerance $\varepsilon > 0$, maximum number of iterations $T_{\max}$.
+\Ensure Rank-one (or approximately rank-one) beamforming covariance $\{\mat{W}_k^\star\}$, binary AP--target assignment $\{b_{mp}^\star \in \{0,1\}\}$, sensing covariance $\mat{Z}^\star$.
+\State Solve the unpenalized ($\eta_{\text{rank}} = \eta_b = 0$) problem (P3) to obtain an initial SDR solution; this solution may have $b_{mp} \notin \{0,1\}$ when $\eta_b = 0$, but it is feasible as an SCA starting point. Report infeasible if no such solution exists.
+\For{$t = 0, 1, \ldots, T_{\max}-1$}
+    \For{each $k \in \mathcal{K}$}
+        \State Eigendecompose $\mat{W}_k^{(t)}$ to obtain the leading eigenvector $\vect{u}_{\max,k}^{(t)}$.
+    \EndFor
+    \For{each $(m, p)$}
+        \State Compute the $g'$ coefficient $c_{mp}^{(t)} = 1 - 2 b_{mp}^{(t)}$.
+    \EndFor
+    \State Solve the convex SDP \eqref{eq:p3-sca} to obtain $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$.
+    \State Compute $\delta_{\text{rank}}^{(t)} = \sum_k \rho(\mat{W}_k^{(t+1)})$ and $\delta_b^{(t)} = \sum_{m,p} g(b_{mp}^{(t+1)})$.
+    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$ and $\delta_b^{(t)} \leq \varepsilon$ and the change in objective $|P^{(t+1)} - P^{(t)}| \leq \varepsilon$}
+        \State \textbf{break}.
+    \EndIf
+\EndFor
+\State For each $k$, set $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^{(t+1)})} \, \vect{u}_{\max,k}^{(t+1)}$.
+\State For each $(m, p)$, round $b_{mp}^\star = \mathbb{1}[b_{mp}^{(t+1)} \geq 0.5]$ (if $\delta_b^{(t)}$ is sufficiently small, the rounding incurs no cost).
+\State \Return $\{\vect{w}_k^\star, b_{mp}^\star, \mat{Z}^\star\}$.
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Dual DC SCA Convergence]\label{thm:sca-conv}
+The objective sequence $\{P^{(t)}\}$ produced by Algorithm~\ref{alg:sca-joint} is monotonically non-increasing and bounded below, hence convergent. Moreover, a sufficient condition for both penalty sequences $\{\sum_k \rho(\mat{W}_k^{(t)})\}$ and $\{\sum_{m,p} g(b_{mp}^{(t)})\}$ to converge to zero is that the penalty factors $\eta_{\text{rank}}$ and $\eta_b$ are sufficiently large; at a limit point, if $\rho(\mat{W}_k^\star) = 0$ (for every $k$) and $g(b_{mp}^\star) = 0$ (for every $(m, p)$), then the recovered $\{\vect{w}_k^\star, b_{mp}^\star\}$ strictly satisfies the original constraints (P1-C1)--(P1-C7').
+\end{theorem}
+
+\begin{proof}
+See Appendix \ref{app:proof-sca-conv}.
+\end{proof}
+
+\subsection*{C. Baseline: Gaussian Randomization / Eigen-Extraction}
+\addcontentsline{toc}{subsection}{C. Baseline: Gaussian Randomization / Eigen-Extraction}
+
+If one pursues the fastest single-SDP run, the master problem (P3) with $\eta_{\text{rank}} = \eta_b = 0$ can be solved directly and the rank-one and binary solutions are recovered by post-processing: $\mat{W}_k$ is recovered as $\vect{w}_k^\star$ via leading-eigenvector extraction and power scaling in Algorithm~\ref{alg:rank1}, and $b_{mp}$ is rounded to $\{0,1\}$ by a threshold of $0.5$. It must be emphasized that this kind of post-processing breaks the strict robust-SINR guarantee of the S-Procedure and the exact satisfaction of the box constraints, and additional power scaling may be required in practice to restore feasibility.
+
+\begin{algorithm}[htbp]
+\caption{Rank-One Beamforming Extraction (Baseline Post-Processing)}
+\label{alg:rank1}
+\begin{algorithmic}[1]
+\Require Converged solution $\{\mat{W}_k^\star, \mat{Z}^\star, b_{mp}^\star\}$.
+\Ensure Rank-one beamforming vectors $\{\vect{w}_k^\star\}$.
+\For{each $k \in \mathcal{K}$}
+    \State Compute the eigendecomposition $\mat{W}_k^\star = \mat{U}_k \mat{\Lambda}_k \mat{U}_k^H$.
+    \State Extract the leading eigenvector: $\tilde{\vect{w}}_k = \sqrt{\lambda_{\max}(\mat{\Lambda}_k)} \cdot \mat{u}_k^{\max}$.
+    \State Scale to satisfy the per-AP power: $\vect{w}_k^\star = \eta_k \tilde{\vect{w}}_k$, where $\eta_k$ is chosen so that $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m^\star) \leq P_{\max}$ for every $m$.
+\EndFor
+\If{$\{\vect{w}_k^\star, b_{mp}^\star\}$ satisfies all of (P1-C1)--(P1-C7')}
+    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$.
+\Else
+    \State Apply a power-scaling fallback: $\vect{w}_k^\star \leftarrow \alpha \vect{w}_k^\star$, with $\alpha \in (0, 1]$ chosen to restore feasibility.
+    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$.
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+After the convexification chain of \S\ref{sec:relaxation} and the dual DC penalty SCA of \S3, all physical constraints of (P3) (robust SINR, PCRB, sensing SINR, AP power, AP--target assignment, box) have been exactly convexified or transformed into terms that can be handled by the DC framework; the binarity of $b_{mp}$ and the rank-one property of $\mat{W}_k$ are recovered simultaneously within the same SCA loop, avoiding the optimality loss caused by an outer heuristic search.
+
+\appendix
+\section{Proof of Theorem~\ref{thm:p3-structure}}\label{app:proof-p3}
+
+This appendix proves Theorem~\ref{thm:p3-structure}.
+
+The feasible region of (P3) is the intersection of the LMI set (P3-C1), the linear equalities/inequalities (P3-C2)/(P3-C4)/(P3-C5'a)/(P3-C5'b)/(P3-C6), the LMI set (P3-C3), the positive-semidefinite cones (P3-C7)/(P3-C8), the scalar half-space (P3-C9), and the box constraints (P3-C10). The LMI set, the linear-inequality/equality set, the positive-semidefinite cone, the scalar half-space, and the box set are all convex; the intersection of finitely many convex sets is convex, so the feasible region of (P3) is convex.
+
+The objective $F(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z}) = \sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m,p} (b_{mp} - b_{mp}^2)$ is linear in $(\{\mat{W}_k\}, \mat{Z})$ and is a ``linear $- \eta_b \cdot$ quadratic'' DC form in $\{b_{mp}\}$. The constraint matrices are affine in $(\{\mat{W}_k\}, \mat{Z})$ and linear in $\{b_{mp}\}$, so (P3) is a DC program.
+
+For complexity, the total number of decision variables is $n = K \cdot (MN_t)^2 + (MN_t)^2 + K + P \cdot N_\theta^2 + MP$ ($K$ matrices $\mat{W}_k \in \mathbb{H}_+^{MN_t}$, one matrix $\mat{Z} \in \mathbb{H}_+^{MN_t}$, $K$ S-Procedure relaxation variables $\mu_k$, $P$ auxiliary matrices $\mat{M}_p \in \mathbb{H}_+^{N_\theta \times N_\theta}$, and $MP$ scalars $b_{mp}$); the number of inequality constraints is $m = K + P + P + M + P_{\text{active}} + K + 1 + K + 2MP$; the largest LMI constraint size is $\ell = \max\{MN_t + 1, 2 N_\theta\}$. Each SCA subproblem (P3-SCA-$t$) is a standard convex SDP, solvable in polynomial time by interior-point methods.
+
+\section{Proof of Theorem~\ref{thm:sca-conv}}\label{app:proof-sca-conv}
+
+This appendix proves the convergence of the objective sequence of Algorithm~\ref{alg:sca-joint} and the limiting property $b_{mp} \to \{0,1\}$.
+
+Denote the objective of the $t$-th SCA subproblem \eqref{eq:p3-sca} by
+\[
+P^{(t)}(\mat{W}_k, b_{mp}) \triangleq \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] + \eta_b \sum_{m, p} (1 - 2 b_{mp}^{(t)}) \, b_{mp}.
+\]
+Let the optimal solution of the $t$-th iteration be $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \ldots)$. Define the true penalty objective as
+\[
+\tilde{P}^{(t)} \triangleq \sum_{k=1}^K \tr(\mat{W}_k^{(t+1)}) + \tr(\mat{Z}^{(t+1)}) + \eta_{\text{rank}} \sum_{k=1}^K \rho(\mat{W}_k^{(t+1)}) + \eta_b \sum_{m, p} g(b_{mp}^{(t+1)}).
+\]
+
+\paragraph{Key inequality (1).} Since $\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H$ is a subgradient of $\lambda_{\max}(\mat{W}_k)$ at $\mat{W}_k^{(t)}$, by the first-order condition for convex functions,
+\[
+\lambda_{\max}(\mat{W}_k^{(t+1)}) \geq \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)} \big),
+\]
+equivalently $\rho(\mat{W}_k^{(t+1)}) \leq \tr(\mat{W}_k^{(t+1)}) - \tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)})$. Likewise, the first-order Taylor expansion of the concave $g$ at $b_{mp}^{(t)}$ gives $g(b_{mp}^{(t+1)}) \leq (1-2b_{mp}^{(t)}) b_{mp}^{(t+1)} + (b_{mp}^{(t)})^2$ (where $(b_{mp}^{(t)})^2$ is a constant). Combining both inequalities yields
+\[
+\tilde{P}^{(t)} \leq P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
+\]
+
+\paragraph{Key inequality (2).} Taking the iterate $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$ as a feasible point of the $t$-th subproblem (constraints (P3-C1)--(P3-C10) are still satisfied at the iterate, since (P3-C1)--(P3-C9) are convex in $(\mat{W}_k, \mat{Z}, b_{mp})$ and (P3-C10) is satisfied by the iterate), its subproblem objective value is
+\begin{align*}
+P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) 
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \tr(\mat{Z}^{(t)}) \\
+&\quad + \eta_{\text{rank}} \sum_k \Big[\tr(\mat{W}_k^{(t)}) - \tr\big(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}\big)\Big] \\
+&\quad + \eta_b \sum_{m,p} (1 - 2b_{mp}^{(t)}) b_{mp}^{(t)} \\
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \tr(\mat{Z}^{(t)}) + \eta_{\text{rank}} \sum_k \rho(\mat{W}_k^{(t)}) + \eta_b \sum_{m,p} \big(b_{mp}^{(t)} - 2(b_{mp}^{(t)})^2\big) \\
+&= \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
+\end{align*}
+where the third line uses $\tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}) = \lambda_{\max}(\mat{W}_k^{(t)})$ (by the leading-eigenvector definition) and the fourth line uses $g(b_{mp}^{(t)}) = b_{mp}^{(t)} - (b_{mp}^{(t)})^2$ to compare with the definition of $\tilde{P}^{(t-1)}$ (the difference is exactly $-\eta_b \sum (b_{mp}^{(t)})^2$). Since $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\})$ is optimal for the subproblem,
+\[
+P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) \leq P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) = \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
+\]
+
+\paragraph{Monotone non-increase.} Combining the two inequalities gives
+\[
+\tilde{P}^{(t)} \leq \big(\tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2\big) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2 = \tilde{P}^{(t-1)},
+\]
+i.e.\ the true objective sequence $\{\tilde{P}^{(t)}\}$ is monotonically non-increasing.
+
+\paragraph{Convergence.} The true objective $\tilde{P}^{(t)}$ is monotonically non-increasing and physically bounded below by $0$ (power terms and penalty terms are non-negative); by the monotone convergence theorem $\{\tilde{P}^{(t)}\}$ converges.
+
+\paragraph{Limiting property $b_{mp} \to \{0,1\}$.} When $\eta_b$ is sufficiently large, a finite objective value requires $\sum_{m,p} g(b_{mp}^{(t)})$ to stay close to zero, otherwise $\eta_b \sum g$ would drive the objective to infinity. Hence there exists $\eta_{b,0}$ such that for all $\eta_b \geq \eta_{b,0}$, the sequence $\sum_{m,p} g(b_{mp}^{(t)}) \to 0$. Since $g(b) \geq 0$ and $g$ is continuous, $g(b_{mp}^{(t)}) \to 0$ implies $b_{mp}^{(t)} \to \{0,1\}$ (because $g^{-1}(0) \cap [0,1] = \{0, 1\}$). Likewise, when $\eta_{\text{rank}} \geq \eta_{\text{rank},0}$, $\sum_k \rho(\mat{W}_k^{(t)}) \to 0$ and hence $\rank(\mat{W}_k^\star) = 1$.
+
+\paragraph{Recovery of the original constraints.} At a limit point with $(\rho, g) = (0, 0)$, the recovered $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^\star)} \vect{u}_{\max,k}^\star$ and $b_{mp}^\star \in \{0,1\}$, when substituted into (P1), satisfy all constraints through the convexification equivalence chain of (P3): (P1-C1)/(P1-C2)/(P1-C3) are guaranteed by (P3-C1)/(P3-C2)/(P3-C3) + (P3-C4); (P1-C4'a)/(P1-C4'b)/(P1-C5')/(P1-C6)/(P1-C7') are guaranteed by (P3-C5'a)/(P3-C5'b)/(P3-C6)/(P3-C8)/(P3-C10); the rank-1 property guarantees that $\mat{W}_k^\star$ can be recovered as $\vect{w}_k^\star$. Hence (P1-C1)--(P1-C7') are all satisfied.
+
+\begin{thebibliography}{9}
+\bibitem{Boyd2004}
+S. Boyd and L. Vandenberghe, \emph{Convex Optimization}. Cambridge, U.K.: Cambridge University Press, 2004.
+
+\bibitem{Luo2010}
+Z.-Q. Luo, W.-K. Ma, A. M.-C. So, Y. Ye, and S. Zhang, ``Semidefinite relaxation of quadratic optimization problems,'' \emph{IEEE Signal Process. Mag.}, vol. 27, no. 3, pp. 20--34, May 2010.
+
+\bibitem{Huang2010}
+Y. Huang and D. P. Palomar, ``Rank-constrained separable semidefinite programming with applications to optimal beamforming,'' \emph{IEEE Trans. Signal Process.}, vol. 58, no. 2, pp. 664--678, Feb. 2010.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,409 @@
+\documentclass[12pt,a4paper]{article}
+
+% 中文支持
+\usepackage{xeCJK}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\setCJKmonofont{Heiti SC}
+
+% 数学包
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% 页面设置
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% 定理环境
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{proposition}{命题}
+\newtheorem{assumption}{假设}
+\newtheorem{remark}{注记}
+
+% 自定义命令
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\norm}[1]{\|#1\|_2}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\Real}{\text{Re}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\textbf{Cell-Free ISAC 系统鲁棒波束成形优化\\数学推导}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+%==============================================================================
+\section{问题建模}\label{sec:formulation}
+%==============================================================================
+
+本章数学推导的原始 (P1) 问题决策变量为 per-AP 波束 $\vect{w}_{m,k} \in \mathbb{C}^{N_t}$、感知协方差 $\mat{Z}_m \in \mathbb{H}_+^{N_t}$、AP-target 软分配权重 $b_{mp} \in [0,1]$（$b_{mp}=1$ 表示 AP $m$ 全力服务 target $p$，$b_{mp}=0$ 表示 AP $m$ 不参与对 target $p$ 的 sensing；与原文献的 $\{0,1\}$ 二元指示等价）。具体形式为
+\begin{align}
+\min_{\substack{\{\vect{w}_{m,k}\}_{m \in \mathcal{M}, k \in \mathcal{K}}, \{\mat{Z}_m\}_{m \in \mathcal{M}}, \\ \{b_{mp}\}_{m \in \mathcal{M}, p \in \mathcal{P}}}} \quad
+& \sum_{m=1}^{M} \Big( \sum_{k=1}^{K} \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) \Big) \tag{P1-objective} \\
+\text{s.t.} \quad
+& \min_{\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|} \frac{|(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_k|^2}{\sum_{j \neq k} |(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H \vect{w}_j|^2 + \sigma_c^2} \geq \gamma_k, \quad \forall k, \tag{P1-C1} \\
+& \text{SINR}_{S,p} := \frac{|\vect{g}_p^H \mat{Z} \vect{g}_p|}{\sigma_s^2} \geq \gamma_S^{\text{PoD}}, \quad \forall p \in \mathcal{P}, \tag{P1-C2} \\
+& \tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track}, p}, \quad \forall p \in \mathcal{P}, \tag{P1-C3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_{p \in \mathcal{P}^{\text{active}}} b_{mp}, \quad \forall m \in \mathcal{M}, \tag{P1-C4'a} \label{eq:p1c4a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \in \mathcal{M}, \tag{P1-C4'b} \label{eq:p1c4b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}}, \tag{P1-C5'} \\
+& \mat{Z}_m \succeq \mat{0}, \quad \forall m \in \mathcal{M}, \tag{P1-C6} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m \in \mathcal{M}, p \in \mathcal{P}. \tag{P1-C7'}
+\end{align}
+其中 $\vect{w}_k \triangleq [\vect{w}_{1,k}^T, \vect{w}_{2,k}^T, \ldots, \vect{w}_{M,k}^T]^T \in \mathbb{C}^{MN_t}$ 为所有 AP 到用户 $k$ 的协作合并波束向量，由 per-AP 变量堆叠得到；$\mat{R}_X \triangleq \sum_{k=1}^{K} \vect{w}_k \vect{w}_k^H + \sum_m \mat{Z}_m$（在 §2-A 的 lifted 形式中精确定义）；$\mat{E}_m \in \mathbb{R}^{MN_t \times MN_t}$ 是从 $\mat{R}_X$ 中提取 AP $m$ 天线子块的对角选择矩阵。约束 (P1-C3) 中 $\mat{J}_p^{\text{data}}$ 是数据依赖的 Fisher 信息矩阵，对多维目标状态 $\boldsymbol{\theta}_p \in \mathbb{R}^{N_\theta}$（典型 ISAC 场景为 2D/3D 位置、或角度+距离的 $N_\theta \in \{2, 3, 4\}$）的原始形式为
+\begin{equation}\label{eq:fim-original}
+\mat{J}_p^{\text{data}}(\mat{R}_X) = \frac{2}{\sigma_s^2} \Real\!\left\{ \mat{D}_p^H \big( \mat{R}_X^T \otimes \mat{I}_{N_\theta} \big) \mat{D}_p \right\} \in \mathbb{H}_+^{N_\theta \times N_\theta},
+\end{equation}
+其中 $\mat{D}_p \triangleq \partial \vect{g}_p / \partial \boldsymbol{\theta}_p \in \mathbb{C}^{MN_t \times N_\theta}$ 是导向矢量对状态参数的偏导数矩阵，$\otimes$ 为 Kronecker 积；CRB 矩阵为 $\mat{C}_p = (\mat{J}_p^{\text{data}})^{-1}$，(P1-C3) 即 $\tr(\mat{C}_p) = \tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track},p}$，等价于对 $N_\theta$ 维目标状态施以均方误差之和上界。\eqref{eq:fim-original} 关于 $\mat{R}_X$ 是仿射函数（$\mat{R}_X^T \otimes \mat{I}_{N_\theta}$ 关于 $\mat{R}_X^T$ 仿射、$\mat{D}_p^H \cdot \mat{R}_X^T \cdot \mat{D}_p$ 关于 $\mat{R}_X$ 仿射），故 $\mat{J}_p^{\text{data}}$ 在 lifted 域 (P2) 中保持 trace-of-inverse 形式，**不应**简化为 $\tr(\mat{F}_p \mat{R}_X) \geq \Gamma$（该简写仅在 $N_\theta = 1$ 的标量参数场景下成立，$N_\theta \geq 2$ 时需严格使用 \eqref{eq:fim-original}）；$N_\theta = 1$ 时 $\mat{D}_p = \nabla_{\boldsymbol{\theta}_p} \vect{g}_p \in \mathbb{C}^{MN_t \times 1}$、$\mat{J}_p^{\text{data}}$ 退化为标量 $\frac{2}{\sigma_s^2} \|\mat{D}_p^H \mat{R}_X^{1/2}\|^2$、约束退化为 $\mat{J}_p^{\text{data}} \geq 1/\Gamma$，即 v5/v6 中使用的标量简写 $\tr(\mat{F}_p \mat{R}_X) \geq 1/\Gamma$，与 \eqref{eq:fim-original} 自洽。约束 (P1-C4'a)/(P1-C4'b) 是 Sum Big-M 形式的双功率约束，二者共同实现"硬关断 + 满功率释放"的物理逻辑：当 AP $m$ 未被分配给任何感知目标（$\sum_{p \in \mathcal{P}^{\text{active}}} b_{mp} = 0$）时，(P1-C4'a) 右侧为 $0$，物理上强制关断该 AP 的所有射频发射——$\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m) = 0$，对应 $\vect{w}_{m,k} = \mat{0}$ 与 $\mat{Z}_m = \mat{0}$；在 lifted 域 (P2) 中这意味着 $\tr(\mat{E}_m \mat{R}_X) = 0$，AP $m$ 的天线子块对全局 $\mat{R}_X$ 的贡献恒为零，该 AP 自然从通信 SINR (P1-C1) 的分子与分母、以及感知 FIM $\mat{J}_p^{\text{data}}$（作为 $\mat{R}_X$ 的仿射函数）中物理消失，无需修改 SINR / FIM 公式本身；反之，当 AP $m$ 至少被选中服务 1 个目标（$\sum_p b_{mp} \geq 1$）时，(P1-C4'a) 右侧 $\geq P_{\max}$ 而自动失效，由 (P1-C4'b) 接管限制，AP $m$ 可倾泻高达 $P_{\max}$ 的完整能量用于通信和感知协作；该 Sum Big-M 形式将"AP 选择"严格嵌入到物理层的功率预算中，是后续双 DC 惩罚框架取得数学闭环的物理基础，且 $b_{mp}$ 系数为常数 $P_{\max}$、不引入新决策变量，§3 的双 DC 惩罚 SCA 推导只需将 (P1-C4') 系数从 $1/N_{\text{req}}$ 改为 $1$、同时新增标准硬件上限 (P1-C4'b) 即可。
+
+问题 (P1) 是非凸的。其非凸性源自五条独立来源，分布在不同约束中。通信最差情况 SINR 约束 (P1-C1) 携带分式二次结构：分子 $|\vect{h}_k^H \vect{w}_k|^2$ 与分母 $\sum_{j \neq k} |\vect{h}_k^H \vect{w}_j|^2 + \sigma_c^2$ 在波束向量 $\vect{w}_k$ 上均为二次函数，因此其比值在分母为正的流形上是非凸函数~[1]。叠加于其上，最差情况量词 $\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$ 是半无限的，由此得到的集合 $\{\vect{w} : \min_{\Delta\vect{h} \in \mathcal{B}_\epsilon} \text{SINR}_k(\Delta\vect{h}) \geq \gamma_k\}$ 对凸组合不封闭。位置 PCRB 约束 (P1-C3) 要求 $\tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track}, p}$；虽然复合函数 $\tr(\mat{J}^{-1})$ 在 $\mat{J} \succ \mat{0}$ 上是严格凸函数，从而 (P1-C3) 本身定义凸集，但该约束涉及矩阵逆的非线性运算，需要通过 Schur 补转化为 LMI 以进入标准 SDP 求解器。AP-target 软分配权重 $b_{mp}$ 的二元性 (P1-C7') 在 $\sum_{m,p}(b_{mp} - b_{mp}^2) = 0$ 的等价重写下表现为凹惩罚 $g(b) = b - b^2$（$b \in [0,1]$ 上 $g \geq 0$）。每 AP 功率约束 (P1-C4'a) 与 (P1-C4'b) 左侧均为凸范数平方和 $\sum_k \|\vect{w}_{m,k}\|^2$ 与线性迹项 $\tr(\mat{Z}_m)$ 之和（经 $\mat{E}_m$ 提取），右侧分别是 $P_{\max} \cdot \sum_p b_{mp}$（耦合 AP 选择）与 $P_{\max}$（标准硬件上限）；两条约束在 $(\{\vect{w}\}, \mat{Z}, b)$ 三类变量上保凸（box $0 \le b_{mp} \le 1$ 与线性分摊 $\sum_p b_{mp}$ 保凸）。PSD 锥 $\mat{Z}_m \succeq \mat{0}$ 本身（(P1-C6)）、线性感知 SINR $\tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2$（(P1-C2)）以及 box 约束 $0 \leq b_{mp} \leq 1$（(P1-C7')）自身是凸的，但由于上述五条非凸/非线性来源，整体问题仍是非凸 MINLP。我们将在 \S\ref{sec:relaxation} 中通过凸化链逐项处理每个来源（协方差提升后出现的 rank-1 约束视为第六条非凸源，由 §3 双 DC 惩罚 SCA 联合处理；上述 $b_{mp}$ 二元性在 (P1) 域已由 box + DC 惩罚统一处理，故在 §3 中与 rank-1 共享同一 SCA 框架）。
+
+%==============================================================================
+\section{优化问题求解}\label{sec:relaxation}
+%==============================================================================
+
+本节沿 \S\ref{sec:formulation} 末识别出的六条非凸/非线性来源逐项求解。其中，SINR 分式与半无限不确定性经交叉相乘（\S\ref{sec:relaxation}-C step 1）和 S-Procedure（\S\ref{sec:relaxation}-C step 2）化为 LMI；PCRB 矩阵逆迹由 Schur 补无损转化为 LMI（\S\ref{sec:relaxation}-D）；AP-target 软分配权重 $b_{mp}$ 的二元性通过连续松弛 + DC 惩罚加入目标函数（\S\ref{sec:relaxation}-E），与 §3 中 rank-1 约束共享统一的双 DC 惩罚 SCA 框架。
+
+\subsection*{A. 协方差提升 (Covariance Lifting) (P2)}
+
+为后续半定松弛做准备，将 (P1) 中向量变量提升为协方差矩阵，即定义 $\mat{W}_k = \vect{w}_k \vect{w}_k^H \in \mathbb{H}_+^{MN_t}$、$\mat{R}_X \triangleq \sum_{k=1}^K \mat{W}_k + \mat{Z}$，其中感知协方差 $\mat{Z} \in \mathbb{H}_+^{MN_t}$ 收集所有 AP 的感知协方差分量，得到 (P2)：
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}_{k\in\mathcal{K}}, \mat{Z} \in \mathbb{H}_+^{MN_t}, \\ \{b_{mp}\}_{m\in\mathcal{M},p\in\mathcal{P}}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) \tag{P2} \\
+\text{s.t.} \quad
+& (\forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|: \tr(\hat{\mat{H}}_k(\Delta\vect{h}_k) \mat{W}_k) - \gamma_k \sum_{j \neq k} \tr(\hat{\mat{H}}_k(\Delta\vect{h}_k) \mat{W}_j) \geq \gamma_k \sigma_c^2), \quad \forall k, \tag{P2-C1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \in \mathcal{P}, \tag{P2-C2} \\
+& \tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}, \tag{P2-C3} \label{eq:p2c3} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_{p \in \mathcal{P}^{\text{active}}} b_{mp}, \quad \forall m \in \mathcal{M}, \tag{P2-C4'a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \in \mathcal{M}, \tag{P2-C4'b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}}, \tag{P2-C5} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \in \mathcal{K}, \tag{P2-C5} \\
+& \mat{Z} \succeq \mat{0}, \tag{P2-C6} \\
+& \rank(\mat{W}_k) = 1, \quad \forall k \in \mathcal{K}, \tag{P2-C7} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m \in \mathcal{M}, p \in \mathcal{P}. \tag{P2-C9}
+\end{align}
+其中 $\mat{J}_p^{\text{data}}(\mat{R}_X) = \frac{2}{\sigma_s^2} \Real\!\left\{ \mat{D}_p^H \big( \mat{R}_X^T \otimes \mat{I}_{N_\theta} \big) \mat{D}_p \right\} \in \mathbb{H}_+^{N_\theta \times N_\theta}$ 为数据依赖的 Fisher 信息矩阵（$\mat{D}_p = \partial \vect{g}_p / \partial \boldsymbol{\theta}_p \in \mathbb{C}^{MN_t \times N_\theta}$，详见 \S\ref{sec:formulation} 末段），$\hat{\mat{H}}_k(\Delta\vect{h}_k) \triangleq (\hat{\vect{h}}_k + \Delta\vect{h}_k)(\hat{\vect{h}}_k + \Delta\vect{h}_k)^H$。注意 (P2) 中 $\mat{Z}$ 是 stacked sensing covariance，物理上对应"全部 $M$ 个 AP 都发射 sensing beam"的全局协作假设；$b_{mp}$ 通过 (P2-C4'a)/(P2-C4'b) 间接调节每 AP 的可用功率预算，但 (P2-C2) 感知 SINR 仍按全 AP 协作计算（这是 cell-free ISAC 的标准假设）。
+
+(P1) 与 (P2) 严格等价：变量映射 $\vect{w}_k \leftrightarrow \mat{W}_k = \vect{w}_k \vect{w}_k^H$ 在一一对应（rank-1 约束保证可恢复），所有约束均通过 $\tr(\vect{x}\vect{x}^H \mat{W}) = \vect{x}^H \mat{W} \vect{x}$ 等恒等式等价改写。box 约束 (P2-C9) 替换了 (P1-C7')；DC 惩罚的引入（详见 \S\ref{sec:relaxation}-E）不改变 (P2) 的可行域。整体等价变换未引入任何松弛误差。
+
+问题 (P2) 在 lifted 协方差域中重写 (P1)。协方差提升保留了 \S\ref{sec:formulation} 中识别出的六条来源中的五条：(P2-C1) 中的 SINR 分式结构（NC1）；(P2-C5)/(P2-C9) 软分配等式与 box 约束（NC3 + 软化）；(P2-C4'a)/(P2-C4'b) 在对角选择矩阵 $\mat{E}_m$ 下的波束-功率-分配耦合（NC5）。半无限最差情况量词（NC2）在 (P2) 域被改写为关于 $\Delta\vect{h}_k$ 的二次形式，将由 \S\ref{sec:relaxation} Step 3 的 S-Procedure 处理。PCRB 约束 (P2-C3) 在 (P1) 中已含矩阵逆，lifting 后保持 $\tr((\mat{J}_p^{\text{data}})^{-1}) \leq \Gamma_{\text{Track},p}$ 形式，将在 \S\ref{sec:relaxation}-D 由 Schur 补处理。Lifting 新增一项非凸性：rank-1 流形约束（NC4, (P2-C7)）要求 $\mat{W}_k = \vect{w}_k \vect{w}_k^H$。PSD 锥约束 (P2-C5) 与 (P2-C6) 自身是凸的，(P2-C2)（感知 SINR）在 lifted 域通过恒等式 $\vect{g}_p^H \mat{Z} \vect{g}_p = \tr(\vect{g}_p \vect{g}_p^H \mat{Z})$ 变为关于 $\mat{Z}$ 的仿射函数。(P2) 域中残留的非凸/非线性来源由 \S\ref{sec:relaxation} 的凸化链 + \S3 双 DC 惩罚 SCA 框架联合处理。
+
+\subsection*{B. 半定松弛 (Semi-Definite Relaxation)}
+
+(P2) 中 NC4 的处理由 SDR 实现：rank-1 流形 $\mathcal{F}_{\text{rank-1}}$ 本身非凸，SDR 把 (P2-C7) 松弛为仅 $\mat{W}_k \succeq \mat{0}$，即
+\begin{equation}
+\mat{W}_k \succeq \mat{0}, \quad \forall k, \tag{S1.1}
+\end{equation}
+可行域由 $\mathcal{F}_{\text{rank-1}}$ 扩为半正定锥 $\mathcal{F}_{\text{SDR}}$，SDR 解作为原问题的下界 $P_{\text{SDR}}^* \leq P_{\text{P2}}^*$。对于 per-user SINR + cell-free 协作 + 鲁棒不确定性联合的结构，多组 multicasting 的 $G_k \leq 2$~[2] 与鲁棒 MISO 的 $N_t \leq 2$~[3] 两个紧致条件均不直接适用，需用 Gaussian 随机化在 $\text{rank}(\mat{W}_k^*) > 1$ 时恢复可行 rank-1 解。具体地，生成 $L \in [100, 1000]$ 组高斯随机向量，从生成的候选解中选取满足约束且目标最优者，但该后处理方式并无紧致性能损失上界。
+
+\subsection*{C. S-Procedure}
+
+本节处理 NC1 中剩余的半无限鲁棒不确定性，分两步：先把原 SINR 鲁棒不等式交叉相乘化为二次型 (P2-C1 的等价改写、不再分式)，再借 S-Procedure 将对 $\Delta\vect{h}_k$ 的全称量化降为关于 S-Procedure 松弛变量 $\mu_k$ 的 LMI。
+
+\textbf{Step 1 -- 交叉相乘 (Cross-multiplication).} 固定任一满足 $\|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|$ 的最坏情况 $\Delta\vect{h}_k$，SINR 不等式在 $\sigma_c^2 > 0$ 保证分母恒正的条件下，可直接交叉相乘化为二次型
+\begin{equation}
+\tr(\hat{\mat{H}}_k \mat{W}_k) - \gamma_k \sum_{j \neq k} \tr(\hat{\mat{H}}_k \mat{W}_j) \geq \gamma_k \sigma_c^2, \tag{S2.1}
+\end{equation}
+这是严格等价而非近似，分母为正保证双向成立；鉴于 $\sigma_c^2$ 不含决策变量，无需一阶 Taylor 近似即可消去分式，从而避免 SCA 迭代误差的累积。
+
+\textbf{Step 2 -- S-Procedure.} 把 $\Delta\vect{h}_k$ 恢复为变量、定义 $\mat{A}_k \triangleq \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$，(P2-C1) 改写为关于 $\Delta\vect{h}_k$ 的二次不等式
+\[
+\tilde{f}_1(\Delta\vect{h}) = (\hat{\vect{h}} + \Delta\vect{h})^H \mat{A}_k (\hat{\vect{h}} + \Delta\vect{h}) - \sigma_c^2 \geq 0, \quad \forall \|\Delta\vect{h}_k\| \leq \epsilon_h \|\hat{\vect{h}}_k\|,
+\]
+不确定集由 $\tilde{f}_2(\Delta\vect{h}) = \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 - \|\Delta\vect{h}_k\|^2 \geq 0$ 描述。对该单二次约束在范数球上的全称量化，由 S-Procedure~[1] 给出一个有限的 LMI 等价条件：
+
+\begin{lemma}\textbf{(S-Procedure).}\label{lem:s-procedure}
+设 $\tilde{f}_m(\Delta\vect{h}) = (\Delta\vect{h})^H \mat{A}_m (\Delta\vect{h}) + 2\Real\{(\Delta\vect{h})^H \vect{b}_m\} + c_m$，$m \in \{1, 2\}$。则蕴含式 ``$\tilde{f}_1(\Delta\vect{h}) \geq 0 \Rightarrow \tilde{f}_2(\Delta\vect{h}) \geq 0$'' \emph{成立当且仅当} 存在 $\mu \geq 0$ 使得
+\[
+\begin{bmatrix} \mat{A}_2 + \mu \mat{A}_1 & \vect{b}_2 + \mu \vect{b}_1 \\ \vect{b}_2^H + \mu \vect{b}_1^H & c_2 + \mu c_1 \end{bmatrix} \succeq \mat{0},
+\]
+此为 S-Procedure 的原初形式~[1, \S4.3]，对 $\tilde{f}_2$ 描述凸集 $\{ \Delta\vect{h} : \|\Delta\vect{h}\|_2 \leq \epsilon_h \|\hat{\vect{h}}\|_2 \}$ 的范数球场景无额外前提要求。
+\end{lemma}
+
+由 Lemma~\ref{lem:s-procedure} 直接应用于 $\tilde{f}_1 \geq 0 \Rightarrow \tilde{f}_2 \geq 0$ 的蕴含式（其中 $\tilde{f}_2$ 描述范数球不确定集），(P2-C1) 的最坏情况鲁棒形式可写为以下 LMI：
+\begin{equation}
+\exists \mu_k \geq 0: \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.2ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2 \end{bmatrix} \succeq \mat{0}. \tag{S3.1}
+\end{equation}
+新增的 $\mu_k \geq 0$ 是 S-Procedure 松弛变量。
+
+\begin{assumption}[信道归一化]\label{ass:channel_norm}
+对所有 $k \in \mathcal{K}$，信道估计满足 $\|\hat{\vect{h}}_k\|_2 = 1$。该归一化吸收进 LMI 矩阵 (S3.1) 右下角 $\mu_k \epsilon_h^2 \|\hat{\vect{h}}_k\|^2$ 项，使最终 (P3-C1) 公式不含 $\|\hat{\vect{h}}_k\|^2$。
+\end{assumption}
+
+\subsection*{D. PCRB 约束：Schur 补 LMI 变换}
+
+PCRB 约束 (P1-C3) 在 lifted 域中保持为
+\begin{equation}
+\tr\big((\mat{J}_p^{\text{data}})^{-1}\big) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}, \tag{P2-C3}
+\end{equation}
+其中 $\mat{J}_p^{\text{data}} \succ \mat{0}$ 是 $\mat{R}_X$ 的仿射函数。矩阵求逆映射 $\mat{J} \mapsto \mat{J}^{-1}$ 在正定锥上严格矩阵凸，且迹算子 $\tr(\cdot)$ 是线性保序算子；因此复合函数 $\tr(\mat{J}^{-1})$ 是严格凸函数，约束 (P2-C3) 本身定义凸集。然而该约束含矩阵逆的非线性运算，为使其可直接被内点法 SDP 求解器处理，本节通过 Schur 补将其无损转化为 LMI。
+
+引入辅助 Hermitian 矩阵变量 $\mat{M}_p \in \mathbb{H}^{N_\theta \times N_\theta}$（$N_\theta$ 为待估计目标参数维度），原约束可等价拆分为
+\begin{subequations}\label{eq:crb_decouple}
+\begin{align}
+\mat{M}_p - (\mat{J}_p^{\text{data}})^{-1} \succeq \mat{0}, \quad \forall p \in \mathcal{P}, \label{eq:crb_mat_ineq} \\
+\tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}. \label{eq:crb_trace_ineq}
+\end{align}
+\end{subequations}
+由于 $\mat{J}_p^{\text{data}} \succ \mat{0}$，根据 Schur 补引理，\eqref{eq:crb_mat_ineq} 等价于
+\begin{equation}\label{eq:crb_lmi}
+\begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \in \mathcal{P}.
+\end{equation}
+因此，PCRB 约束 (P2-C3) 被完全、无近似地转化为关于 $(\mat{R}_X, \{\mat{M}_p\})$ 的线性矩阵不等式
+\begin{subequations}\label{eq:crb_lmi_final}
+\begin{align}
+& \begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \in \mathcal{P}, \label{eq:crb_lmi_final_a} \\
+& \tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \in \mathcal{P}. \label{eq:crb_lmi_final_b}
+\end{align}
+\end{subequations}
+该变换无松弛误差，避免了 SCA 外层迭代。
+
+\subsection*{E. AP-target 软分配：连续松弛 + DC 惩罚}
+
+本节彻底替代原文献的 path-loss 启发式 AP 选择方案。原文献将 (P2-C8) 的二元约束 $\{0,1\}$ 单独剥离出来、按大尺度衰落 $\text{PL}(d_{m,p})$ 排序后固定 top-$N_{\text{req}}$ AP 服务集 $\mathcal{M}_p$，再在固定集上求内层 SDP；该方案属 $K$-medoid 变种、本质 NP-hard，启发式外层循环无法给出全局最优性保证，与 §3 中"rank-1 约束用 DC 惩罚 SCA 严密恢复"的整体风格不一致。本节给出的严密替代方案如下：将 (P2-C9) 的 box 约束 $0 \leq b_{mp} \leq 1$ 与二元性 $b_{mp} \in \{0,1\}$ 合并为如下等价形式：
+\begin{subequations}\label{eq:b-rewrite}
+\begin{align}
+& 0 \leq b_{mp} \leq 1, \tag{E.1a} \\
+& g(b_{mp}) \triangleq b_{mp} - b_{mp}^2 = 0. \tag{E.1b}
+\end{align}
+\end{subequations}
+对于 $b \in [0,1]$，$g(b) = b - b^2 \geq 0$ 恒成立，且 $g$ 是 $b$ 的凹函数（$g''(b) = -2 < 0$）；将 (E.1b) 的等式约束通过惩罚项加入目标函数：
+\begin{equation}
+\min \quad \underbrace{\sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z})}_{\text{原目标}} \; + \; \eta_b \underbrace{\sum_{m \in \mathcal{M}, p \in \mathcal{P}} g(b_{mp})}_{= \sum_{m,p} (b_{mp} - b_{mp}^2)} \quad \text{s.t. (P2-C1)} \sim \text{(P2-C9)} \setminus \{\text{(P2-C9)}\}, \tag{P2-DCP}
+\end{equation}
+其中 $\eta_b \geq 0$ 为惩罚因子；目标函数呈现"凸函数 $+$ 凹函数 × $\eta_b$"的 DC 结构，约束 (P2-C9) 仅保留 box 形式（box 集是凸的），但目标中 $-\eta_b b_{mp}^2$ 项在 $b_{mp}$ 上是凹函数，故 (P2-DCP) 不是凸优化问题，该非凸性将在 \S3 中与 rank-1 约束一起、由双 DC 惩罚 SCA 联合处理。$b_{mp} \in \{0,1\}$ 时 $g(b_{mp}) = 0$、惩罚项对二元解无任何代价，$b_{mp} \in (0,1)$ 时 $g(b_{mp}) > 0$、惩罚项随 $\eta_b$ 增大而增大；只要 $\eta_b$ 足够大，(P2-DCP) 的任何有限目标值都强制 $g(b_{mp}) \to 0$，从而 $b_{mp}^\star \in \{0,1\}$（详见 \S3 Theorem~2）。引入 $\eta_b$ 凹惩罚后 (P2-DCP) 与 \S3-A 中 rank-1 凹惩罚 $\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k)$ 在数学结构上完全对偶——两者都是"凸函数 $-$ 凸函数"的 DC 形式，\S3 设计的 SCA 框架可同时承载两套惩罚：同一次 SCA 迭代内对 $\mat{W}_k$ 做特征分解、对 $b_{mp}$ 做一阶 Taylor 展开，得到关于 $(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z}, \{\mu_k\}, \{\mat{M}_p\})$ 的统一凸 SDP 子问题。(P2-DCP) 的 box 约束 $0 \leq b_{mp} \leq 1$ 决定 SCA 冷启动不能任意；工程上可采用 \emph{大尺度衰落启发式} 生成初始点——对每个 target $p$ 按 $\text{PL}(d_{m,p})$ 升序选 top-$N_{\text{req}}$ 个 AP 置 $b_{mp}^{(0)} = 1$，其余置 $0$，该值自动满足 box 约束与 (P2-C5) 等式且距 $\{0,1\}$ 边界最远不超过一步；需强调 \emph{该启发式仅作为 SCA 冷启动辅助、不再是最终求解策略}——最终解由双 DC 惩罚的迭代极限决定，理论上与初始点选择无关（仅影响收敛速度）。
+
+\subsection*{F. 整理 (P3)：含双 DC 惩罚的最终形式}
+
+将 §B 步骤 SDR（(S1.1)）、§C 步骤 S-Procedure（(S2.1) + (S3.1)）、§D Schur 补（\eqref{eq:crb_lmi_final}）、§E 连续松弛 + DC 惩罚（box (P2-C9) + (P2-DCP)）应用于 (P2)，得到最终问题 (P3)：
+\begin{align}
+\min_{\substack{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}, \\ \{\mat{M}_p\}, \{b_{mp}\}}} \quad
+& \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m, p} (b_{mp} - b_{mp}^2) \tag{P3} \\
+\text{s.t.} \quad
+& \begin{bmatrix} \mat{A}_k + \mu_k \mat{I} & \mat{A}_k \hat{\vect{h}}_k \\[1.5ex] \hat{\vect{h}}_k^H \mat{A}_k & \hat{\vect{h}}_k^H \mat{A}_k \hat{\vect{h}}_k - \sigma_c^2 - \mu_k \epsilon_h^2 \end{bmatrix} \succeq \mat{0}, \quad \forall k \tag{P3-C1} \label{eq:p3c1} \\
+& \tr(\vect{g}_p \vect{g}_p^H \mat{Z}) \geq \gamma_S^{\text{PoD}} \sigma_s^2, \quad \forall p \tag{P3-C2} \label{eq:p3c2} \\
+& \begin{bmatrix} \mat{M}_p & \mat{I} \\ \mat{I} & \mat{J}_p^{\text{data}} \end{bmatrix} \succeq \mat{0}, \quad \forall p \tag{P3-C3} \label{eq:p3c3} \\
+& \tr(\mat{M}_p) \leq \Gamma_{\text{Track},p}, \quad \forall p \tag{P3-C4} \label{eq:p3c4} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max} \cdot \sum_p b_{mp}, \quad \forall m \tag{P3-C5'a} \label{eq:p3c5a} \\
+& \tr(\mat{E}_m \mat{R}_X) \leq P_{\max}, \quad \forall m \tag{P3-C5'b} \label{eq:p3c5b} \\
+& \sum_{m=1}^{M} b_{mp} = N_{\text{req}}, \quad \forall p \in \mathcal{P}^{\text{active}} \tag{P3-C6} \label{eq:p3c6} \\
+& \mat{W}_k \succeq \mat{0}, \quad \forall k \tag{P3-C7} \label{eq:p3c7} \\
+& \mat{Z} \succeq \mat{0} \tag{P3-C8} \label{eq:p3c8} \\
+& \mu_k \geq 0, \quad \forall k \tag{P3-C9} \label{eq:p3c9} \\
+& 0 \leq b_{mp} \leq 1, \quad \forall m, p. \tag{P3-C10} \label{eq:p3c10}
+\end{align}
+其中 $\mat{A}_k = \frac{1}{\gamma_k} \mat{W}_k - \sum_{j \neq k} \mat{W}_j$、$\mat{J}_p^{\text{data}}$ 是 $\mat{R}_X$ 的仿射函数、$\mat{E}_m$ 为天线子块提取对角矩阵。(P3) 的可行域由 (P3-C1) LMI、(P3-C3) LMI、(P3-C2)/(P3-C4)/(P3-C5'a)/(P3-C5'b)/(P3-C6) 线性等式/不等式、(P3-C7)/(P3-C8) 半正定锥、(P3-C9) 标量半空间、(P3-C10) box 约束的交集构成，每一集合均为凸集，故可行域是凸集；其目标函数 $\sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m,p} (b_{mp} - b_{mp}^2)$ 在 $(\{\mat{W}_k\}, \mat{Z})$ 上线性，在 $\{b_{mp}\}$ 上是"线性 $-\eta_b \cdot$ 二次"的 DC 形式，整体目标函数在 $(\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\})$ 上是 DC（非凸），故 (P3) 不是凸 SDP，其非凸性由 §3 双 DC 惩罚 SCA 框架求解。
+
+\begin{theorem}[(P3) 的结构性质]\label{thm:p3-structure}
+(P3) 的可行域为凸集；目标函数是关于 $(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z})$ 的 DC 函数；约束矩阵关于 $(\{\mat{W}_k\}, \mat{Z})$ 仿射、关于 $\{b_{mp}\}$ 线性；故 (P3) 是 DC 规划（difference of convex program），可由 \S3 双 DC 惩罚 SCA 框架求稳定点。
+\end{theorem}
+
+\begin{proof}
+详见附录 \ref{app:proof-p3}。
+\end{proof}
+
+%==============================================================================
+\section{双 DC 惩罚 SCA 框架：秩一与二元联合恢复}\label{sec:sca}
+%==============================================================================
+
+(P3) 的可行域凸、目标函数 DC；其全局最优难以直接求取，但 \emph{任何满足 (P3) Karush-Kuhn-Tucker (KKT) 条件的稳定点都是工程可接受的解}。本节设计一个双 DC 惩罚 SCA 框架：(P3) 目标中的 $-\eta_b b_{mp}^2$ 凹项与"rank-1 缺失"对应的 $-\eta_{\text{rank}} \lambda_{\max}(\mat{W}_k)$ 凹项在同一 SCA 循环内被同步线性化，每次迭代求解一个标准凸 SDP。本节同时给出 Gaussian randomization / 主特征向量提取作为基准后处理。
+
+\subsection*{A. 双 DC 惩罚的统一表征}
+
+对任意半正定矩阵 $\mat{W}_k \succeq \mat{0}$，其秩为 1 的充要条件是它的迹等于最大特征值：
+\begin{equation}\label{eq:rank1-equivalence}
+\rank(\mat{W}_k) = 1 \quad \Longleftrightarrow \quad \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) = 0.
+\end{equation}
+由于 $\lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k)$ 对 PSD 矩阵恒成立，定义秩亏量
+\begin{equation}\label{eq:rho-def}
+\rho(\mat{W}_k) \triangleq \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) \geq 0.
+\end{equation}
+对 $b \in [0,1]$，定义二元亏量
+\begin{equation}\label{eq:g-def}
+g(b) \triangleq b - b^2 = b(1-b) \geq 0, \quad g''(b) = -2 < 0 \;\; (\text{严格凹}).
+\end{equation}
+$\rho(\mat{W}_k)$ 与 $g(b_{mp})$ 在数学结构上完全同构——均为"凸函数 $-$ 凸函数"的 DC 形式，且在期望的"满足约束"集合上为零、在违反约束时为正；这是本节双 DC 惩罚能共享同一 SCA 框架的数学基础。在 (P3) 目标上额外加入 rank-1 惩罚 $\eta_{\text{rank}} \sum_k \rho(\mat{W}_k)$，得到
+\begin{equation}\label{eq:p3-dcp}
+\min \quad \underbrace{\sum_k \tr(\mat{W}_k) + \tr(\mat{Z})}_{\text{原目标}} + \underbrace{\eta_{\text{rank}} \sum_k \rho(\mat{W}_k)}_{\text{秩一惩罚 (DC)}} + \underbrace{\eta_b \sum_{m,p} g(b_{mp})}_{\text{二元惩罚 (DC)}} \quad \text{s.t. (P3-C1)} \sim \text{(P3-C10)}.
+\end{equation}
+(P3-DCP) 的约束全部凸（继承自 (P3) 的凸可行域），唯一非凸性来自目标中两个 DC 惩罚项。
+
+\subsection*{B. SCA 线性化：双 DC 的同步一阶 Taylor 展开}
+
+在第 $t$ 次迭代，设当前迭代点为 $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$。对 $\mat{W}_k^{(t)}$ 做特征分解
+\begin{equation}
+\mat{W}_k^{(t)} = \sum_{i=1}^{r_k} \lambda_{k,i} \, \vect{u}_{k,i} \vect{u}_{k,i}^H, \quad \lambda_{k,1} \geq \lambda_{k,2} \geq \cdots \geq \lambda_{k,r_k} > 0,
+\end{equation}
+其中主特征向量为 $\vect{u}_{\max,k}^{(t)} \triangleq \vect{u}_{k,1}$。由 $\lambda_{\max}(\mat{W}_k)$ 的凸性，其一阶 Taylor 展开给出全局下界：
+\begin{equation}\label{eq:lambda-lb}
+\lambda_{\max}(\mat{W}_k) \geq \lambda_{\max}(\mat{W}_k^{(t)}) + \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H (\mat{W}_k - \mat{W}_k^{(t)}) \Big) = \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \Big).
+\end{equation}
+将上式代入 (P3-DCP) 的 rank-1 惩罚即得全局上界（凹项被上界替代，子问题求极小对应真实目标下界）：
+\begin{equation}\label{eq:rho-linearized}
+\rho(\mat{W}_k) = \tr(\mat{W}_k) - \lambda_{\max}(\mat{W}_k) \leq \tr(\mat{W}_k) - \tr\Big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \Big) \triangleq \hat{\rho}^{(t)}(\mat{W}_k).
+\end{equation}
+对 $g(b) = b - b^2$ 在 $b^{(t)}$ 处作一阶 Taylor 展开（凹函数的一阶 Taylor 给全局过估计）：
+\begin{equation}\label{eq:g-linearized}
+g(b) \leq g(b^{(t)}) + g'(b^{(t)})(b - b^{(t)}) = b^{(t)} - (b^{(t)})^2 + (1 - 2b^{(t)})(b - b^{(t)}),
+\end{equation}
+去除常数项 $b^{(t)} - (b^{(t)})^2 - (1 - 2b^{(t)}) b^{(t)} = (b^{(t)})^2$（该常数不影响最小化）后，线性化惩罚为
+\begin{equation}\label{eq:g-linearized-clean}
+g(b) \leq (1 - 2b^{(t)}) \, b + \text{const} \triangleq \hat{g}^{(t)}(b).
+\end{equation}
+将 \eqref{eq:rho-linearized} 与 \eqref{eq:g-linearized-clean} 代入 (P3-DCP)，得到第 $t$ 次迭代的凸 SDP 子问题
+\begin{equation}\label{eq:p3-sca}
+\begin{aligned}
+\min_{\substack{\{\mat{W}_k\}, \mat{Z}, \{\mu_k\}, \\ \{\mat{M}_p\}, \{b_{mp}\}}} \quad & \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] \\
+& \qquad + \eta_b \sum_{m, p} (1 - 2b_{mp}^{(t)}) \, b_{mp} \\
+\text{s.t.} \quad & \text{(P3-C1)--(P3-C10)}.
+\end{aligned}
+\end{equation}
+子问题 \eqref{eq:p3-sca} 的目标函数关于 $(\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\})$ 是线性函数（$\eta_{\text{rank}}$ 项中 $\tr(\mat{W}_k)$ 与 $-\tr(\vect{u}_{\max,k}^{(t)}(\vect{u}_{\max,k}^{(t)})^H \mat{W}_k)$ 合并为 $\tr((\mat{I} - \vect{u}_{\max,k}^{(t)}(\vect{u}_{\max,k}^{(t)})^H) \mat{W}_k)$；$\eta_b$ 项为 $b_{mp}$ 的线性函数），约束 (P3-C1)--(P3-C10) 全部为 LMI/线性/半正定锥/box，故 (P3-SCA-t) 是标准凸 SDP，可用 MOSEK/SDPT3 等内点法求解器高效求解。更新迭代点 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$ 后重复该过程。
+
+\begin{algorithm}[htbp]
+\caption{双 DC 惩罚 SCA 迭代（秩一 + 二元联合恢复）}
+\label{alg:sca-joint}
+\begin{algorithmic}[1]
+\Require 初始可行点 $\{\mat{W}_k^{(0)}, b_{mp}^{(0)}\}$（\S2-E 末段启发式生成）、惩罚因子 $\eta_{\text{rank}}, \eta_b > 0$、容差 $\varepsilon > 0$、最大迭代次数 $T_{\max}$。
+\Ensure 秩一（或近似秩一）波束协方差 $\{\mat{W}_k^\star\}$、二元 AP-target 分配 $\{b_{mp}^\star \in \{0,1\}\}$、感知协方差 $\mat{Z}^\star$。
+\State 求解无惩罚 ($\eta_{\text{rank}} = \eta_b = 0$) 的 (P3) 获得初始 SDR 解；该解对应 $\eta_b = 0$ 时 $b_{mp}$ 可能非 $\{0,1\}$，但作为 SCA 起点可行。若不可行则报告 infeasible。
+\For{$t = 0, 1, \ldots, T_{\max}-1$}
+    \For{每个 $k \in \mathcal{K}$}
+        \State 对 $\mat{W}_k^{(t)}$ 特征分解，得主特征向量 $\vect{u}_{\max,k}^{(t)}$。
+    \EndFor
+    \For{每个 $(m, p)$}
+        \State 计算 $g'$ 系数 $c_{mp}^{(t)} = 1 - 2 b_{mp}^{(t)}$。
+    \EndFor
+    \State 求解凸 SDP \eqref{eq:p3-sca} 得 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \{\mu_k^{(t+1)}\}, \{\mat{M}_p^{(t+1)}\})$。
+    \State 计算 $\delta_{\text{rank}}^{(t)} = \sum_k \rho(\mat{W}_k^{(t+1)})$、$\delta_b^{(t)} = \sum_{m,p} g(b_{mp}^{(t+1)})$。
+    \If{$\delta_{\text{rank}}^{(t)} \leq \varepsilon$ 且 $\delta_b^{(t)} \leq \varepsilon$ 且目标变化 $|P^{(t+1)} - P^{(t)}| \leq \varepsilon$}
+        \State \textbf{break}。
+    \EndIf
+\EndFor
+\State 对每个 $k$，令 $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^{(t+1)})} \, \vect{u}_{\max,k}^{(t+1)}$。
+\State 对每个 $(m, p)$，舍入 $b_{mp}^\star = \mathbb{1}[b_{mp}^{(t+1)} \geq 0.5]$（若 $\delta_b^{(t)}$ 已充分小则舍入无代价）。
+\State \Return $\{\vect{w}_k^\star, b_{mp}^\star, \mat{Z}^\star\}$。
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[双 DC SCA 收敛性]\label{thm:sca-conv}
+由 Algorithm~\ref{alg:sca-joint} 产生的目标序列 $\{P^{(t)}\}$ 单调非增且有下界，因此收敛。此外，惩罚项序列 $\{\sum_k \rho(\mat{W}_k^{(t)})\}$ 与 $\{\sum_{m,p} g(b_{mp}^{(t)})\}$ 收敛到 0 的充分条件是惩罚因子 $\eta_{\text{rank}}, \eta_b$ 足够大；在收敛点处，若 $\rho(\mat{W}_k^\star) = 0$（对所有 $k$）且 $g(b_{mp}^\star) = 0$（对所有 $(m, p)$），则恢复出的 $\{\vect{w}_k^\star, b_{mp}^\star\}$ 严格满足原问题 (P1-C1)--(P1-C7')。
+\end{theorem}
+
+\begin{proof}
+请见附录 \ref{app:proof-sca-conv}。
+\end{proof}
+
+\subsection*{C. 基线：Gaussian 随机化 / 主特征向量提取}
+
+若追求单次 SDP 的极速运行，可直接求解 $\eta_{\text{rank}} = \eta_b = 0$ 的 (P3) 主问题，再通过后处理恢复 rank-1 + 二元解：$\mat{W}_k$ 通过 Algorithm~\ref{alg:rank1} 的主特征向量提取 + 功率缩放恢复为 $\vect{w}_k^\star$，$b_{mp}$ 按阈值 0.5 舍入为 $\{0,1\}$。需要强调的是，这种后处理方式会破坏 S-Procedure 严格保证的鲁棒 SINR 约束与 box 约束的精确满足，实践中可能需要额外的功率缩放来恢复可行性。
+
+\begin{algorithm}[htbp]
+\caption{秩一波束提取（基线后处理）}
+\label{alg:rank1}
+\begin{algorithmic}[1]
+\Require 收敛解 $\{\mat{W}_k^\star, \mat{Z}^\star, b_{mp}^\star\}$。
+\Ensure 秩一波束向量 $\{\vect{w}_k^\star\}$。
+\For{每个 $k \in \mathcal{K}$}
+    \State 计算特征分解 $\mat{W}_k^\star = \mat{U}_k \mat{\Lambda}_k \mat{U}_k^H$。
+    \State 提取主导特征向量：$\tilde{\vect{w}}_k = \sqrt{\lambda_{\max}(\mat{\Lambda}_k)} \cdot \mat{u}_k^{\max}$。
+    \State 缩放以满足每 AP 功率：$\vect{w}_k^\star = \eta_k \tilde{\vect{w}}_k$，$\eta_k$ 使 $\sum_k \|\vect{w}_{m,k}\|^2 + \tr(\mat{Z}_m^\star) \leq P_{\max}$ 对所有 $m$ 成立。
+\EndFor
+\If{$\{\vect{w}_k^\star, b_{mp}^\star\}$ 满足所有 (P1-C1)--(P1-C7')}
+    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$。
+\Else
+    \State 应用功率缩放回退：$\vect{w}_k^\star \leftarrow \alpha \vect{w}_k^\star$，$\alpha \in (0, 1]$ 恢复可行性。
+    \State \Return $\{\vect{w}_k^\star, b_{mp}^\star\}$。
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+经过 \S\ref{sec:relaxation} 的凸化链 + \S3 双 DC 惩罚 SCA，(P3) 中的所有物理约束（鲁棒 SINR、PCRB、感知 SINR、AP 功率、AP-target 关联、box）均被精确凸化或转化为可由 DC 框架处理的非凸项；$b_{mp}$ 的二元性与 $\mat{W}_k$ 的 rank-1 性质在同一 SCA 循环内被同步恢复，避免了外层启发式搜索带来的最优性损失。
+
+\appendix
+\section{Proof of Theorem~\ref{thm:p3-structure}}\label{app:proof-p3}
+
+本附录给出定理 \ref{thm:p3-structure} 的证明。
+
+(P3) 的可行域由 (P3-C1) LMI、(P3-C2)/(P3-C4)/(P3-C5'a)/(P3-C5'b)/(P3-C6) 线性等式/不等式、(P3-C3) LMI、(P3-C7)/(P3-C8) 半正定锥、(P3-C9) 标量半空间、(P3-C10) box 约束的交集构成。LMI 集、线性不等式/等式集、半正定锥、标量半空间、box 集均为凸集；有限个凸集的交集仍是凸集，故 (P3) 的可行域是凸集。
+
+(P3) 的目标函数 $F(\{\mat{W}_k\}, \{b_{mp}\}, \mat{Z}) = \sum_k \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_b \sum_{m,p} (b_{mp} - b_{mp}^2)$ 关于 $(\{\mat{W}_k\}, \mat{Z})$ 线性、关于 $\{b_{mp}\}$ 是"线性 $- \eta_b \cdot$ 二次"的 DC 形式。约束矩阵关于 $(\{\mat{W}_k\}, \mat{Z})$ 仿射、关于 $\{b_{mp}\}$ 线性，故 (P3) 是 DC 规划。
+
+就复杂度而言，决策变量总数 $n = K \cdot (MN_t)^2 + (MN_t)^2 + K + P \cdot N_\theta^2 + MP$（$K$ 个 $\mat{W}_k \in \mathbb{H}_+^{MN_t}$、1 个 $\mat{Z} \in \mathbb{H}_+^{MN_t}$、$K$ 个 S-Procedure 松弛变量 $\mu_k$、$P$ 个辅助矩阵 $\mat{M}_p \in \mathbb{H}_+^{N_\theta \times N_\theta}$、$MP$ 个标量 $b_{mp}$）；不等式约束数 $m = K + P + P + M + P_{\text{active}} + K + 1 + K + 2MP$；最大 LMI 约束尺寸 $\ell = \max\{MN_t + 1, 2 N_\theta\}$。每次 SCA 子问题 (P3-SCA-t) 是标准凸 SDP，由内点法在多项式时间求解。
+
+\section{Proof of Theorem~\ref{thm:sca-conv}}\label{app:proof-sca-conv}
+
+本附录给出 Algorithm~\ref{alg:sca-joint} 目标序列收敛性以及 $b_{mp} \to \{0,1\}$ 极限性质的证明。
+
+记第 $t$ 次 SCA 子问题 \eqref{eq:p3-sca} 的目标函数为
+\[
+P^{(t)}(\mat{W}_k, b_{mp}) \triangleq \sum_{k=1}^K \tr(\mat{W}_k) + \tr(\mat{Z}) + \eta_{\text{rank}} \sum_{k=1}^K \Big[ \tr(\mat{W}_k) - \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k \big) \Big] + \eta_b \sum_{m, p} (1 - 2 b_{mp}^{(t)}) \, b_{mp}.
+\]
+设第 $t$ 次迭代的最优解为 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\}, \mat{Z}^{(t+1)}, \ldots)$。真实惩罚目标定义为
+\[
+\tilde{P}^{(t)} \triangleq \sum_{k=1}^K \tr(\mat{W}_k^{(t+1)}) + \tr(\mat{Z}^{(t+1)}) + \eta_{\text{rank}} \sum_{k=1}^K \rho(\mat{W}_k^{(t+1)}) + \eta_b \sum_{m, p} g(b_{mp}^{(t+1)}).
+\]
+
+\paragraph{关键不等式 (1).} 由于 $\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H$ 是 $\lambda_{\max}(\mat{W}_k)$ 在 $\mat{W}_k^{(t)}$ 处的次梯度，由凸函数一阶条件有
+\[
+\lambda_{\max}(\mat{W}_k^{(t+1)}) \geq \tr\big( \vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)} \big),
+\]
+等价地 $\rho(\mat{W}_k^{(t+1)}) \leq \tr(\mat{W}_k^{(t+1)}) - \tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t+1)})$。同理，凹函数 $g$ 在 $b_{mp}^{(t)}$ 处一阶 Taylor 给出过估计
+\[
+g(b_{mp}^{(t+1)}) = b_{mp}^{(t+1)} - (b_{mp}^{(t+1)})^2 \leq (1 - 2b_{mp}^{(t)}) b_{mp}^{(t+1)} + (b_{mp}^{(t)})^2,
+\]
+其中 $(b_{mp}^{(t)})^2$ 为常数。结合两式得
+\[
+\tilde{P}^{(t)} \leq P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) + \eta_{\text{rank}} \cdot 0 + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
+\]
+其中 $\eta_{\text{rank}} \cdot 0 = 0$ 是因为 $\rho(\mat{W}_k^{(t+1)})$ 的线性化上界在 $\mat{W}_k^{(t+1)}$ 处的值**正好**等于 $\rho(\mat{W}_k^{(t+1)})$ 本身（无多余常数项）；$b$-端的常数项 $\eta_b \sum (b_{mp}^{(t)})^2$ 来自 $g$ 的一阶 Taylor 高估计、将在 (2) 中被吸收。
+
+\paragraph{关键不等式 (2).} 取迭代点 $(\{\mat{W}_k^{(t)}\}, \{b_{mp}^{(t)}\})$ 作为第 $t$ 次子问题的可行点（约束 (P3-C1)--(P3-C10) 在迭代点处仍满足，因 (P3-C1)--(P3-C10) 关于 $(\mat{W}_k, \mat{Z}, b_{mp})$ 凸、(P3-C10) box 在迭代点满足），其子问题目标值为
+\begin{align*}
+P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) 
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \tr(\mat{Z}^{(t)}) \\
+&\quad + \eta_{\text{rank}} \sum_k \Big[\tr(\mat{W}_k^{(t)}) - \tr\big(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}\big)\Big] \\
+&\quad + \eta_b \sum_{m,p} (1 - 2b_{mp}^{(t)}) b_{mp}^{(t)} \\
+&= \sum_k \tr(\mat{W}_k^{(t)}) + \tr(\mat{Z}^{(t)}) + \eta_{\text{rank}} \sum_k \rho(\mat{W}_k^{(t)}) + \eta_b \sum_{m,p} \big(b_{mp}^{(t)} - 2(b_{mp}^{(t)})^2\big) \\
+&= \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2,
+\end{align*}
+其中第三行利用了 $\tr(\vect{u}_{\max,k}^{(t)} (\vect{u}_{\max,k}^{(t)})^H \mat{W}_k^{(t)}) = \lambda_{\max}(\mat{W}_k^{(t)})$（主特征向量定义），第四行利用了 $g(b_{mp}^{(t)}) = b_{mp}^{(t)} - (b_{mp}^{(t)})^2$ 与 $\tilde{P}^{(t-1)}$ 的定义对比（差恰好 $-\eta_b \sum (b_{mp}^{(t)})^2$）。由于 $(\{\mat{W}_k^{(t+1)}\}, \{b_{mp}^{(t+1)}\})$ 是子问题最优解，有
+\[
+P^{(t)}(\mat{W}_k^{(t+1)}, b_{mp}^{(t+1)}) \leq P^{(t)}(\mat{W}_k^{(t)}, b_{mp}^{(t)}) = \tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2.
+\]
+
+\paragraph{单调非增.} 结合上述两式得
+\[
+\tilde{P}^{(t)} \leq \big(\tilde{P}^{(t-1)} - \eta_b \sum_{m,p} (b_{mp}^{(t)})^2\big) + \eta_b \sum_{m,p} (b_{mp}^{(t)})^2 = \tilde{P}^{(t-1)},
+\]
+即真实目标函数序列 $\{\tilde{P}^{(t)}\}$ 单调非增。
+
+\paragraph{收敛性结论.} 真实目标 $\tilde{P}^{(t)}$ 单调非增、且关于 $(\{\mat{W}_k\}, \mat{Z}, \{b_{mp}\})$ 的物理下界为 0（功率非负、惩罚非负），故由单调收敛定理 $\{\tilde{P}^{(t)}\}$ 收敛。
+
+\paragraph{$b_{mp} \to \{0,1\}$ 极限性质.} 当 $\eta_b$ 足够大时，有限目标值要求 $\sum_{m,p} g(b_{mp}^{(t)})$ 不能远离 0，否则 $\eta_b \sum g$ 会驱使目标值趋向无穷大。因此存在 $\eta_{b,0}$ 使得对所有 $\eta_b \geq \eta_{b,0}$，序列 $\sum_{m,p} g(b_{mp}^{(t)}) \to 0$。由 $g(b) \geq 0$ 与 $g$ 的连续性，$g(b_{mp}^{(t)}) \to 0$ 蕴含 $b_{mp}^{(t)} \to \{0,1\}$（因 $g^{-1}(0) \cap [0,1] = \{0, 1\}$）。同理，$\eta_{\text{rank}} \geq \eta_{\text{rank},0}$ 时 $\sum_k \rho(\mat{W}_k^{(t)}) \to 0$，从而 $\rank(\mat{W}_k^\star) = 1$。
+
+\paragraph{原始约束恢复.} 在 $(\rho, g) = (0, 0)$ 的收敛点，恢复出的 $\vect{w}_k^\star = \sqrt{\lambda_{\max}(\mat{W}_k^\star)} \vect{u}_{\max,k}^\star$、$b_{mp}^\star \in \{0,1\}$ 代入 (P1) 后，所有约束由 (P3) 的凸化等价链严格保持：(P1-C1)/(P1-C2)/(P1-C3) 由 (P3-C1)/(P3-C2)/(P3-C3) + (P3-C4) 保证；(P1-C4'a)/(P1-C4'b)/(P1-C5')/(P1-C6)/(P1-C7') 由 (P3-C5'a)/(P3-C5'b)/(P3-C6)/(P3-C7)/(P3-C10) 保证；rank-1 性质保证 $\mat{W}_k^\star$ 可恢复为 $\vect{w}_k^\star$。故 (P1-C1)--(P1-C7') 全部满足。
+
+\begin{thebibliography}{9}
+\bibitem{Boyd2004}
+S. Boyd and L. Vandenberghe, \emph{Convex Optimization}. Cambridge, U.K.: Cambridge University Press, 2004.
+
+\bibitem{Luo2010}
+Z.-Q. Luo, W.-K. Ma, A. M.-C. So, Y. Ye, and S. Zhang, ``Semidefinite relaxation of quadratic optimization problems,'' \emph{IEEE Signal Process. Mag.}, vol. 27, no. 3, pp. 20--34, May 2010.
+
+\bibitem{Huang2010}
+Y. Huang and D. P. Palomar, ``Rank-constrained separable semidefinite programming with applications to optimal beamforming,'' \emph{IEEE Trans. Signal Process.}, vol. 58, no. 2, pp. 664--678, Feb. 2010.
+\end{thebibliography}
+
+\end{document}
