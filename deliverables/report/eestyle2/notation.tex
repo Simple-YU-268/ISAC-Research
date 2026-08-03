@@ -1,0 +1,34 @@
+\chapter*{Notation}\label{notation}
+\addcontentsline{toc}{chapter}{Notation}
+
+Bold lower-case and upper-case letters denote vectors and matrices,
+respectively. $(\cdot)^T$, $(\cdot)^H$, $\operatorname{tr}(\cdot)$, and
+$\lVert\cdot\rVert_2$ denote transpose, Hermitian transpose, trace, and the
+Euclidean norm.
+
+{\small
+\begin{description}
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\item[$\mathcal{M},\mathcal{K},\mathcal{P}$] Sets of APs, communication users, and sensing targets.
+\item[$M,K,P$] Numbers of APs, communication users, and sensing targets.
+\item[$N_t$, $N=MN_t$] Antennas per AP and total stacked transmit dimension.
+\item[$\mathcal{P}^{\mathrm{active}}$] Targets requiring sensing service in the current scheduling interval.
+\item[$N_{\mathrm{req}}$] Number of APs authorized for each active target.
+\item[$\vect{w}_{m,k}$, $\vect{w}_k$] Beamformer from AP $m$ to user $k$, and its network-wide stacked form.
+\item[$\mat{W}_k$] Lifted communication covariance, $\vect{w}_k\vect{w}_k^H$.
+\item[$\mat{S}_p$] Network-wide covariance of the dedicated sensing waveform for target $p$.
+\item[$\mat{R}_X$] Total transmit covariance, $\sum_k\mat{W}_k+\sum_p\mat{S}_p$.
+\item[$b_{mp}$] Binary authorization indicator for AP $m$ to allocate dedicated sensing power to target $p$.
+\item[$\mat{E}_m$] Diagonal matrix selecting the antenna block of AP $m$.
+\item[$\hat{\vect{h}}_k$, $\Delta\vect{h}_k$, $\vect{h}_k$] Nominal channel, channel error, and uncertain stacked channel of user $k$.
+\item[$\epsilon_h$] Relative radius of the norm-bounded CSI uncertainty set.
+\item[$\vect{g}_p$, $\mat{D}_p$] Sensing response vector and its derivative matrix for target $p$.
+\item[$\mat{J}_p^{\mathrm{data}}$, $\mat{M}_p$] Data FIM and auxiliary matrix used in the PCRB Schur-complement LMI.
+\item[$\gamma_k$, $\gamma_S^{\mathrm{PoD}}$] Required communication SINR and sensing-SINR threshold.
+\item[$\Gamma_{\mathrm{Track},p}$] Maximum permitted trace PCRB for target $p$.
+\item[$\sigma_c^2$, $\sigma_s^2$] Communication-noise and sensing-noise powers.
+\item[$P_{\max}$] Per-AP total transmit-power budget.
+\item[$\mu_k$] Nonnegative S-Procedure multiplier for user $k$.
+\end{description}
+}

@@ -1,0 +1,73 @@
+\chapter{Problem Formulation}\label{ch:problem_formulation}
+
+\section{Power-Minimizing Joint Design}\label{sec:joint_problem}
+
+The system model in Chapter~\ref{ch:system_model} separates globally
+cooperative communication transmission from target-specific sensing
+participation.  The design objective is to minimize the total transmit power
+while meeting robust communication, detection, tracking, AP-power, and
+sensing-cluster requirements.  The original mixed-integer problem is
+\begin{subequations}\label{prob:p1}
+\begin{align}
+ \underset{\{\vect{w}_k\},\{\mats{S}_p\},\{b_{mp}\}}{\operatorname{minimize}}
+ \quad & \sum_{k\in\mathcal{K}}\|\vect{w}_k\|_2^2+
+ \sum_{p\in\mathcal{P}}\Tr(\mats{S}_p) \tag{P1}\\
+ \text{subject to}\quad
+ & \eqref{eq:robust_sinr_system}, \quad \forall k\in\mathcal{K},
+ \tag{P1-C1}\\
+ & \eqref{eq:sensing_sinr_model}, \quad \forall p\in\mathcal{P},
+ \tag{P1-C2}\\
+ & \eqref{eq:pcrb_system}, \quad \forall p\in\mathcal{P},
+ \tag{P1-C3}\\
+ & \Tr(\mats{E}_m\mats{S}_p)\leq P_{\max}b_{mp},
+ \quad \forall m\in\mathcal{M},\ p\in\mathcal{P}, \tag{P1-C4a}\\
+ & \Tr(\mats{E}_m\mats{R}_X)\leq P_{\max},
+ \quad \forall m\in\mathcal{M}, \tag{P1-C4b}\\
+ & \sum_{m\in\mathcal{M}}b_{mp}=N_{\mathrm{req}},
+ \quad \forall p\in\mathcal{P}^{\mathrm{active}}, \tag{P1-C5}\\
+ & \mats{S}_p\succeq\mats{0},
+ \quad \forall p\in\mathcal{P}, \tag{P1-C6}\\
+ & b_{mp}\in\{0,1\},
+ \quad \forall m\in\mathcal{M},\ p\in\mathcal{P}. \tag{P1-C7}
+\end{align}
+\end{subequations}
+The total covariance $\mats{R}_X$ is given in \eqref{eq:total_covariance}.
+Constraint (P1-C4a) controls only the dedicated sensing covariance of target
+$p$, whereas (P1-C4b) is the physical AP transmit-power limit.  This
+two-sided distinction is essential: replacing them by a single sum Big-M
+constraint would describe a different system and could incorrectly gate
+communication beamforming.
+
+\section{Sources of Difficulty}\label{sec:problem_difficulties}
+
+Problem (P1) is a mixed-integer non-convex program.  Its principal sources of
+difficulty are as follows.
+\begin{enumerate}
+    \item The robust communication constraint contains a fractional quadratic
+    SINR and must hold for infinitely many channel errors in the ball
+    \eqref{eq:csi_uncertainty}.
+    \item The matrix inverse in the PCRB constraint is nonlinear, even though
+    its epigraph has an exact semidefinite representation.
+    \item The binary sensing-cluster indicators create combinatorial
+    complexity and couple topology to the target-specific sensing power gate.
+    \item After covariance lifting, the communication covariances must be
+    rank one to correspond to physical beamforming vectors.
+\end{enumerate}
+The sensing SINR, the dedicated sensing gate, the AP hardware constraint, and
+the cluster-cardinality equality are affine once the covariance variables are
+used.  The following chapter converts the robust and PCRB constraints into
+linear matrix inequalities (LMIs), relaxes the two discrete/non-convex
+structures in a controlled way, and recovers a physically validated binary
+solution.
+
+\section{Interpretation of the Resource Trade-Off}\label{sec:resource_tradeoff}
+
+The association variables do not directly constrain user beamforming.
+Instead, they decide which AP blocks may contribute to each target-specific
+covariance $\mats{S}_p$.  Those sensing covariances both consume the common
+per-AP power budget and, without receiver-side cancellation, contribute to
+communication interference.  Hence a sensing topology that is favorable only
+in geometric distance can still be physically infeasible after robust user
+QoS and PCRB requirements are imposed.  This motivates the joint
+topology-and-beamforming recovery procedure introduced in
+Chapter~\ref{ch:solution_method}.

@@ -1,0 +1,64 @@
+\chapter{Introduction}\label{ch:intro}
+
+\section{Motivation}
+
+Sixth-generation wireless networks must provide reliable connectivity and
+timely awareness of the surrounding environment for applications such as
+industrial automation, intelligent transport, and autonomous aerial systems
+\autocite{dongSensingService6G2023,kaushikIntegratedSensingCommunications2024}.
+\autocite{liuIntegratedSensingCommunications2022,liuJointRadarCommunication2020}
+Integrated sensing and communication (ISAC) addresses this requirement by
+sharing spectrum, radio hardware, and spatial degrees of freedom between data
+delivery and sensing. The resulting benefit is compelling, but the shared
+resources also create a fundamental allocation problem: power assigned to
+communication, dedicated sensing, and interference protection cannot be chosen
+independently.
+
+Cell-free massive MIMO makes this problem both more promising and more
+challenging. A central processing unit can coordinate distributed access points
+(APs) to serve users cooperatively, thereby creating spatial diversity for
+communication and sensing without fixed cell boundaries
+\autocite{femeniasScalableCellfreeMassive2025,demirhanCellfreeISACMIMO2025}.
+\autocite{maoCommunicationSensingRegion2024,liNetworkedISAC2024}
+However, each AP has a finite transmit-power budget. Selecting which APs may
+illuminate each target therefore changes the sensing geometry and the remaining
+power available for globally cooperative communication. The decision must also
+remain reliable when the communication channel state information (CSI) is
+imperfect.
+
+\section{Research Gap, Problem, and Contributions}
+
+Existing cooperative ISAC formulations establish the value of spatial
+cooperation, yet three connected gaps remain for the design considered here.
+First, a sensing association is often difficult to interpret when the model
+does not distinguish a target's dedicated sensing waveform from the globally
+cooperative communication signal. Second, perfect-CSI formulations can lose
+their communication quality-of-service (QoS) guarantee under channel error.
+Third, a relaxed semidefinite or continuous association solution is not itself
+a physical beamforming and topology design; rank-one and binary recovery must
+be assessed after the relaxation is solved.
+
+This thesis addresses these gaps through robust downlink resource allocation
+for a cell-free ISAC network. The objective is to minimize total transmit power
+while satisfying worst-case communication SINR, target detection, and tracking
+accuracy requirements. The central design choice is a known,
+target-specific sensing covariance for each target. Its binary AP--target
+association variable authorizes dedicated sensing power only; it does not gate
+the globally cooperative communication beamformers. This separation makes the
+topology decision physically interpretable and permits each target's Fisher
+information and PCRB requirement to be evaluated from its own probing
+covariance.
+
+\section{Thesis Organization}
+
+Chapter~\ref{ch:literature_review} narrows the literature from cooperative
+ISAC to the four design requirements that motivate this thesis: cooperative
+resource allocation, robust QoS, multi-target tracking accuracy, and
+recoverable sensing topology. Chapter~\ref{ch:system_model} then defines the
+network roles, the robust communication model, and the target-specific sensing
+model. Chapter~\ref{ch:solution_method} formulates the power-minimization
+problem and derives the lifted LMI and dual-DC recovery framework. Chapter
+\ref{ch:results} evaluates the proposed workflow through topology, robustness,
+recovery, and scalability evidence. Finally,
+Chapter~\ref{ch:future_work} answers the research problem from the accumulated
+evidence and identifies the validation work that remains.

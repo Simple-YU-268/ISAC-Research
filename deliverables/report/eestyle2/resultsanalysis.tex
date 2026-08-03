@@ -1,0 +1,181 @@
+\chapter{Numerical Evaluation and Results Analysis}\label{ch:results}
+
+This chapter tests the three links in the thesis contribution chain: whether
+topology-aware recovery improves physically realizable sensing designs, whether
+the robust formulation protects communication QoS under CSI uncertainty, and
+whether the complete workflow remains useful after recovery and at a larger
+network dimension. Each result is interpreted with its feasibility evidence,
+not only with a conditional performance average.
+
+\section{Evaluation Protocol, Metrics, and Baselines}
+
+The experiments use the result sets stored with the paper figures. A run is
+counted as physically feasible only after binary association recovery,
+rank-one beamformer extraction or fixed-topology re-solution, and direct
+validation of the recovered design. The validation checks the robust
+communication SINR, sensing SINR, matrix PCRB, per-AP transmit-power limit,
+and association cardinality. Consequently, an SDR solution or a continuous
+association vector is not reported as a feasible physical design by itself.
+
+All compared methods use common random scenarios within a sweep. Feasibility
+rates are therefore unconditional statistics over those scenarios. Power,
+runtime, rate, sensing-SINR, and PCRB summaries marked ``conditional'' are
+computed only over the recovered designs that pass physical validation. The
+baselines separate different design choices: FIM-greedy and nearest-AP methods
+fix topology according to sensing geometry, random topology removes geometry
+awareness, and relaxation or single-penalty variants isolate the recovery
+mechanism. This protocol ensures that a low conditional power is never read as
+an advantage when it is accompanied by frequent infeasibility.
+
+\section{Topology-Recovery Advantage in Ordinary and Stress Geometries}
+
+Figure~\ref{fig:method_nreq} compares topology-recovery strategies over 30
+common seeds for a six-AP configuration. The proposed full recovery and the
+FIM-greedy topology are physically feasible in all displayed cluster-size
+settings. In contrast, the nearest-AP baseline is infeasible in 20\% of cases
+at $N_{\mathrm{req}}=2$, and the random-topology baseline is substantially
+less reliable for small and intermediate cluster sizes. The comparison shows
+that the recovery workflow can identify physically usable sensing support where
+purely local or random topology rules fail; the comparison is not evidence that
+relaxation alone is exact.
+
+The cardinality equality in (P1-C5') is a resource-allocation requirement, not
+a monotone performance knob. Increasing $N_{\mathrm{req}}$ changes the
+authorized sensing geometry and the feasible power allocation simultaneously,
+so conditional power need not vary monotonically. The PCRB ratios remain close
+to one in feasible recovered cases, which is consistent with the tracking
+constraint being active at the solution.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig10_method_comparison_vs_nreq.png}
+    \caption{Topology-method comparison versus required sensing APs per target.
+    Feasibility is measured over all common scenarios; power, rate,
+    sensing-SINR, and PCRB summaries are conditional on physically feasible
+    recovered designs.}
+    \label{fig:method_nreq}
+\end{figure}
+
+Figure~\ref{fig:pressure_geometries} asks whether the same topology advantage
+persists when the geometry is deliberately unfavorable. With colocated edge
+users and targets, and again with crowded targets, the proposed full recovery
+and FIM-greedy topology remain feasible in all shown cases. The nearest-AP
+topology loses feasibility in the edge-colocated setting and falls to roughly
+24\% in the crowded setting. When it succeeds in the crowded case, its
+conditional power approaches $300$~mW, whereas the proposed and FIM-greedy
+methods remain near $50$~mW. The physical mechanism is geometric: selecting
+the nearest APs alone can exhaust useful sensing directions or AP power under
+crowding. The evidence is limited to the tested pressure configurations, but
+it demonstrates why feasibility must accompany every conditional comparison.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig12_pressure_geometries.png}
+    \caption{Physical feasibility and conditional power in two pressure
+    geometries. Conditional-power bars exclude infeasible recovered runs and
+    must be interpreted together with the associated feasibility rate.}
+    \label{fig:pressure_geometries}
+\end{figure}
+
+\section{Robustness--Power Trade-Off under CSI Uncertainty}
+
+Figure~\ref{fig:csi_robustness} compares the robust design with a nominal-CSI
+baseline as the normalized CSI-uncertainty radius increases. Both methods are
+certified feasible at their respective design points. When tested against
+perturbations within the uncertainty ball, the robust design has zero observed
+outage throughout the displayed sweep, whereas the nominal-CSI design has
+approximately 90\% outage for nonzero uncertainty radii. The robust protection
+raises transmit power moderately, from about $28.7$~mW at zero uncertainty to
+about $30$~mW at the largest displayed radius.
+
+This is the intended robustness--power trade-off: the additional power is
+associated with markedly improved robustness under the tested perturbations.
+It should not be interpreted as a guarantee outside the specified norm-bounded
+uncertainty model, nor as a claim that the nominal design is infeasible at the
+channel estimate itself.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig9_csi_robustness.png}
+    \caption{Robustness comparison under increasing CSI-uncertainty radius.
+    The middle panel is an empirical perturbation test and the right panel
+    reports the corresponding transmit-power cost.}
+    \label{fig:csi_robustness}
+\end{figure}
+
+\section{Recovery Mechanism and DC-SCA Stabilization}
+
+The preceding comparisons concern recovered physical designs. Figure
+\ref{fig:ablation} therefore isolates the mechanism that makes recovery
+reliable. Across 25 common scenarios, all four variants have the same observed
+physical-feasibility rate of 92\%, so the ablation does not show that one
+penalty alone enlarges the feasible set in this test. Its informative result
+is recovery quality: relaxation and rank-only variants retain a binary
+distance on the order of $10^{-1}$, whereas binary-only and dual-DC variants
+reduce the median binary distance below the $10^{-4}$ reference. The dual-DC
+variant also maintains a very small median rank residual. Thus both penalties
+are needed when the final design must be binary and rank one simultaneously.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig2_dual_dc_ablation.png}
+    \caption{Recovery ablation over 25 common scenarios. Physical feasibility
+    is evaluated after recovery; binary distance and rank residual diagnose
+    whether a relaxed solution is suitable for physical recovery.}
+    \label{fig:ablation}
+\end{figure}
+
+Figure~\ref{fig:dc_stabilization} provides the iteration-level complement to
+the ablation on the same 25 seeds. The median binary distance falls from
+approximately $0.43$ at initialization to below the recovery threshold after
+the first DC-SCA iteration, and the recovery-ready fraction remains at 100\%
+over the displayed iterations. The median rank residual stays at the
+$10^{-9}$ scale. The continuous-power trace is a continuation diagnostic only;
+it is not used to assert monotone descent of the original non-convex objective.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig5_statistical_double_dc_convergence.png}
+    \caption{Statistical dual-DC SCA stabilization over 25 complete traces.
+    The recovery-ready statistic combines a small binary distance, a small
+    rank residual, and stable topology support.}
+    \label{fig:dc_stabilization}
+\end{figure}
+
+\section{Larger-Scale Validation and Computational Cost}
+
+Figure~\ref{fig:high_dimension} examines a larger configuration with $M=12$,
+$K=6$, $P=3$, and $N_{\mathrm{req}}=3$. Over eight common seeds, the proposed
+full recovery is physically feasible in all cases, whereas the FIM-greedy and
+nearest-AP baselines achieve 75\%, and the random topology is feasible in only
+12.5\% of cases. The proposed conditional energy cost is close to the
+FIM-greedy cost and substantially below the nearest-AP and random topologies.
+Its wall-clock cost is higher than that of fixed-topology baselines because the
+workflow performs candidate generation, fixed-topology re-solves, and physical
+validation.
+
+These observations provide scalability evidence at the tested dimensions, not
+an asymptotic complexity claim. The smaller number of seeds also means that
+larger independent sweeps and confidence intervals are required before drawing
+stronger quantitative conclusions.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/fig11_m12_scalability_validation.png}
+    \caption{Scalability validation for $M=12$, $K=6$, $P=3$, and
+    $N_{\mathrm{req}}=3$ over eight common seeds. Power and runtime are
+    conditional summaries for physically feasible recovered designs.}
+    \label{fig:high_dimension}
+\end{figure}
+
+\section{Summary of Findings}
+
+The numerical evidence supports three bounded conclusions. First,
+topology-aware recovery improves physical feasibility relative to nearest and
+random topology rules in the tested ordinary and pressure geometries. Second,
+the robust formulation exchanges a modest power increase for substantially
+improved outage behaviour within the stated CSI-uncertainty model. Third, the
+dual DC penalties provide recovery-quality evidence, while the larger-scale
+experiment indicates that the validated workflow remains usable beyond the
+smallest configuration. These conclusions remain empirical: they do not prove
+global optimality, universal relaxation tightness, or asymptotic scalability.

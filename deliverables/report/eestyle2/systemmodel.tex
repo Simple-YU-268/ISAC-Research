@@ -1,0 +1,147 @@
+\chapter{System Model}\label{ch:system_model}
+
+The model is organized around a deliberate resource separation. Communication
+is a network-wide cooperative service, whereas sensing is accounted for through
+a distinct, known covariance for each target. The AP--target association will
+therefore answer a narrow physical question---which APs may allocate dedicated
+sensing power to a target---without artificially restricting the communication
+beamforming support. The following sections introduce this separation in the
+same order in which it enters the optimization problem: network resources,
+robust communication protection, and target-specific sensing accuracy.
+
+\section{Network and Signalling Model}\label{sec:network_model}
+
+We consider a downlink cell-free integrated sensing and communication (ISAC)
+network in which a central processing unit coordinates $M$ distributed access
+points (APs).  Each AP has $N_t$ transmit antennas and jointly serves $K$
+single-antenna communication users while illuminating $P$ sensing targets.  The
+AP, user, and target index sets are denoted by $\mathcal{M}=\{1,\ldots,M\}$,
+$\mathcal{K}=\{1,\ldots,K\}$, and $\mathcal{P}=\{1,\ldots,P\}$,
+respectively.  A subset $\mathcal{P}^{\mathrm{active}}\subseteq\mathcal{P}$
+contains the targets that require sensing service in the current scheduling
+interval.  The model is instantaneous within one coherence block; target-state
+prediction across blocks is outside the scope of the resource-allocation
+problem.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../paper_results_and_figures_v1_0/figures/archi.png}
+    \caption{Cell-free ISAC architecture. The CPU coordinates distributed APs
+    through fronthaul/control links (magenta). APs jointly serve users
+    through globally cooperative communication beamforming (blue), whereas
+    only associations with $b_{mp}=1$ authorize the target-specific dedicated
+    sensing covariance $\mats{S}_p$ (orange). The generic-index illustration
+    illustrates an inactive association, $b_{3,2}=0$, which denies AP 3
+    dedicated sensing power for target 2 only; it does not prevent AP 3 from
+    contributing to communication.}
+    \label{fig:system_model}
+\end{figure}
+
+Let $\vect{w}_{m,k}\in\mathbb{C}^{N_t}$ be the communication beamformer from
+AP $m$ to user $k$.  To make sensing participation explicit, a distinct
+zero-mean sensing waveform is assigned to every target.  Its network-wide
+stacked covariance is $\mats{S}_p\succeq\mats{0}$, where the stacked transmit
+dimension is $N=MN_t$.  Define the stacked communication beamformer
+\begin{equation}
+    \vect{w}_{k}\triangleq[\vect{w}_{1,k}^{\T},\ldots,
+    \vect{w}_{M,k}^{\T}]^{\T}\in\mathbb{C}^{N},
+\end{equation}
+and its covariance $\mats{W}_k=\vect{w}_k\vect{w}_k^{\H}$.  The total
+transmit covariance is therefore
+\begin{equation}\label{eq:total_covariance}
+    \mats{R}_X=\sum_{k\in\mathcal{K}}\mats{W}_k+
+    \sum_{p\in\mathcal{P}}\mats{S}_p.
+\end{equation}
+Let $\mats{E}_m\in\mathbb{R}^{N\times N}$ select the $N_t$-antenna block of
+AP $m$.  The per-AP hardware constraint is
+\begin{equation}\label{eq:ap_power_model}
+    \Tr(\mats{E}_m\mats{R}_X)\leq P_{\max},\qquad \forall m\in\mathcal{M}.
+\end{equation}
+
+\section{Robust Communication Model}\label{sec:robust_comm_model}
+
+The nominal stacked downlink channel of user $k$ is
+$\hat{\vect{h}}_k\in\mathbb{C}^{N}$.  Imperfect channel state information
+(CSI) is represented by the norm-bounded uncertainty model
+\begin{equation}\label{eq:csi_uncertainty}
+    \vect{h}_k=\hat{\vect{h}}_k+\Delta\vect{h}_k,\qquad
+    \|\Delta\vect{h}_k\|_2\leq\epsilon_h\|\hat{\vect{h}}_k\|_2.
+\end{equation}
+Let $\mats{S}_{\Sigma}\triangleq\sum_{p\in\mathcal{P}}\mats{S}_p$ denote the
+aggregate dedicated sensing covariance. It is treated as interference at a
+communication user. This conservative and implementable assumption avoids
+requiring receiver-side cancellation of the sensing waveforms. Thus the
+worst-case downlink SINR requirement is
+\begin{equation}\label{eq:robust_sinr_system}
+ \min_{\|\Delta\vect{h}_k\|_2\leq\epsilon_h\|\hat{\vect{h}}_k\|_2}
+ \frac{|(\hat{\vect{h}}_k+\Delta\vect{h}_k)^{\H}\vect{w}_k|^2}
+ {\displaystyle\sum_{j\ne k}|(\hat{\vect{h}}_k+\Delta\vect{h}_k)^{\H}\vect{w}_j|^2
+ +(\hat{\vect{h}}_k+\Delta\vect{h}_k)^{\H}
+ \mats{S}_{\Sigma}(\hat{\vect{h}}_k+\Delta\vect{h}_k)+\sigma_c^2}
+ \geq\gamma_k,\qquad \forall k\in\mathcal{K},
+\end{equation}
+where $\sigma_c^2$ is the communication-noise power and $\gamma_k$ is the
+required SINR of user $k$.
+
+\section{Target-Specific Sensing Model}\label{sec:sensing_model}
+
+The binary variable $b_{mp}\in\{0,1\}$ indicates whether AP $m$ is admitted
+to the sensing cluster of target $p$.  It authorizes dedicated sensing power
+only; it does \emph{not} restrict the globally cooperative communication
+beamformers.  For each active target, exactly $N_{\mathrm{req}}$ APs are
+admitted:
+\begin{equation}\label{eq:cluster_cardinality_model}
+    \sum_{m\in\mathcal{M}}b_{mp}=N_{\mathrm{req}},\qquad
+    \forall p\in\mathcal{P}^{\mathrm{active}}.
+\end{equation}
+The target-specific association gate is
+\begin{equation}\label{eq:dedicated_sensing_gate}
+    \Tr(\mats{E}_m\mats{S}_p)\leq P_{\max}b_{mp},
+    \qquad\forall m\in\mathcal{M},\ p\in\mathcal{P}.
+\end{equation}
+Consequently, an unselected AP cannot allocate sensing power to target $p$,
+whereas a selected AP is not forced to consume a minimum amount of power.  In
+particular, \eqref{eq:dedicated_sensing_gate} is not a gate on communication
+power and must be read jointly with the total hardware limit
+\eqref{eq:ap_power_model}.
+
+Let $\vect{g}_p\in\mathbb{C}^{N}$ be the effective sensing steering channel
+of target $p$.  The target-specific sensing SINR is
+\begin{equation}\label{eq:sensing_sinr_model}
+    \mathrm{SINR}_{S,p}=
+    \frac{\vect{g}_p^{\H}\mats{S}_p\vect{g}_p}{\sigma_s^2}
+    \geq\gamma_S^{\mathrm{PoD}},\qquad \forall p\in\mathcal{P},
+\end{equation}
+where $\sigma_s^2$ is the sensing-noise power and
+$\gamma_S^{\mathrm{PoD}}$ is the detection-related threshold.
+
+For a target state $\boldsymbol{\theta}_p\in\mathbb{R}^{N_\theta}$, let
+$\mats{D}_p=\partial\vect{g}_p/\partial\boldsymbol{\theta}_p
+\in\mathbb{C}^{N\times N_\theta}$ be the effective response derivative.
+Under the equivalent MISO sensing observation model, the data Fisher
+information matrix (FIM) is
+\begin{equation}\label{eq:fim_system}
+    \mats{J}_p^{\mathrm{data}}(\mats{S}_p)=
+    \frac{2}{\sigma_s^2}\Re\!\left\{
+    \mats{D}_p^{\H}\mats{S}_p\mats{D}_p\right\}.
+\end{equation}
+Only the known waveform covariance $\mats{S}_p$ receives sensing-information
+credit.  Communication covariances and waveforms dedicated to other targets
+are not counted in \eqref{eq:fim_system}.  Tracking accuracy is constrained
+by the matrix PCRB/CRB requirement
+\begin{equation}\label{eq:pcrb_system}
+    \Tr\!\left((\mats{J}_p^{\mathrm{data}})^{-1}\right)
+    \leq\Gamma_{\mathrm{Track},p},\qquad\forall p\in\mathcal{P}.
+\end{equation}
+For $N_\theta=1$, this reduces to the scalar lower bound
+$J_p^{\mathrm{data}}\geq1/\Gamma_{\mathrm{Track},p}$; for multi-dimensional
+states, the full matrix form is retained.  The equivalent semidefinite form
+used to solve \eqref{eq:pcrb_system} is developed in Chapter~\ref{ch:solution_method}.
+
+\paragraph{Design implication.}
+The model couples the three services through the common AP-power budget but
+keeps their roles distinguishable: communication is protected for every
+admissible CSI error, while a target receives sensing credit only from its own
+authorized covariance. Chapter~\ref{ch:solution_method} turns these
+requirements into the power-minimization problem and identifies the robust,
+matrix, rank, and binary structures that prevent a direct convex solution.
